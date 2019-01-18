@@ -1,5 +1,10 @@
 # cephgeorep
 Ceph File System Remote Sync Daemon
+For use with a Ceph file server to trickle files to a remote backup server, i.e. georeplicate your Ceph fs.
+
+## Prerequisites
+You must have a Ceph file system and rsync installed. You must also set up passwordless SSH from your sender (local) to your
+receiver (backup) with a public/private key pair to allow rsync to send your files.
 
 ## Build instructions
 Build with 'g++ -std=c++11 cephfssyncd.cpp -o cephfssyncd'
@@ -31,3 +36,8 @@ Large directory tree    (500-10,000 total dirs):  RCTIME_PROP_DELAY=5000
 Massive directory tree  (10,000+ total dirs):     RCTIME_PROP_DELAY=10000
 ```
 The 10,000 ms delay passed a test with 137,256 directories and 1,000 files with 100% sync rate.
+
+## Notes:
+If your backup server is down, cephfssyncd will try to launch rsync and fail, however it will retry the sync at 10 second
+intervals. All new files in the server created while cephfssyncd is waiting for rsync to succeed will be synced on the next 
+sync interval.
