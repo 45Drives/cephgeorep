@@ -39,5 +39,14 @@ The 10,000 ms delay passed a test with 137,256 directories and 1,000 files with 
 
 ## Notes:
 If your backup server is down, cephfssyncd will try to launch rsync and fail, however it will retry the sync at 10 second
-intervals. All new files in the server created while cephfssyncd is waiting for rsync to succeed will be synced on the next 
-sync interval.
+intervals. All new files in the server created while cephfssyncd is waiting for rsync to succeed will be synced on the next interval.
+
+```
+   ___________________
+ /o  _       ______   o\\
+|   | |  _  |  ___/     ||
+|   | |_| | | |___      ||
+|   |___  | |___  |     ||
+|       | |  ___| |     ||
+|       | | /_____/     ||
+ \o___________________o//
