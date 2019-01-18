@@ -42,11 +42,11 @@ If your backup server is down, cephfssyncd will try to launch rsync and fail, ho
 intervals. All new files in the server created while cephfssyncd is waiting for rsync to succeed will be synced on the next interval.
 
 ```
-   ___________________
- /o  _       ______   o\\
-|   | |  _  |  ___/     ||
-|   | |_| | | |___      ||
-|   |___  | |___  |     ||
-|       | |  ___| |     ||
-|       | | /_____/     ||
- \o___________________o//
+   ___________________  
+ /o  _       ______   o\\   _____       _
+|   | |  _  |  ___/     || |  __ \     (_)               
+|   | |_| | | |___      || | |  | |_ __ ___   _____  ___  
+|   |___  | |___  |     || | |  | | '__| \ \ / / _ \/ __|
+|       | |  ___| |     || | |__| | |  | |\ V /  __/\__ \
+|       | | /_____/     || |_____/|_|  |_| \_/ \___||___/
+ \o___________________o// 
