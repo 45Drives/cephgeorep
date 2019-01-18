@@ -23,6 +23,7 @@
 #         \   1
 #          2<
 #             2
+# Number of directories created = SUM ( width )^n, n = {1..depth}
 # Files are placed randomly within the tree at a random interval between 0.1 and maxwait_ seconds.
 
 #!/usr/bin/python
