@@ -10,7 +10,7 @@
 	
 */
 
-#define CONF_DIR "/etc/cephfs/"
+#define CONF_DIR "/etc/ceph/"
 #define LAST_RCTIME conf["LAST_RCTIME_DIR"] + "last_rctime"
 #define SNAP_NAME "georepsnap"
 #define XATTR_SIZE 10000
@@ -164,7 +164,7 @@ map<string,string> LoadConfig(string path){
     input.close(); //Close the file stream
     
     //	check if attributes exist/are defined
-    string attrs[] = {"SND_SYNC_DIR","RECV_SYNC_HOST","RECV_SYNC_DIR","SYNC_FREQ","IGNORE_HIDDEN","LOG_LEVEL","RCTIME_PROP_DELAY","LAST_RCTIME_DIR"};
+    string attrs[] = {"SND_SYNC_DIR","RECV_SYNC_HOST","RECV_SYNC_DIR","LAST_RCTIME_DIR","SYNC_FREQ","IGNORE_HIDDEN","RCTIME_PROP_DELAY","LOG_LEVEL"};
     vector<string> errors;
     for(string i : attrs){
 		try{
@@ -179,10 +179,11 @@ map<string,string> LoadConfig(string path){
 		cout << logstr << endl;
     }
     if(!errors.empty()){
+		cout << endl;
 		for(string i : errors){
 			cout << i << endl;
 		}
-		cout << "Please fix these errors in the config file: " + path + "cephfssyncd.conf";
+		cout << "Please fix these errors in the config file: " + path + "cephfssyncd.conf" << endl;
 		exit(1);
 	}
 	string dirs[] = {"SND_SYNC_DIR","RECV_SYNC_DIR","LAST_RCTIME_DIR"};
