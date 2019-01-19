@@ -21,9 +21,9 @@ SYNC_FREQ=10                                (frequency to check directory for ch
 IGNORE_HIDDEN=false                         (change to true to ignore files and folders starting with '.')
 RCTIME_PROP_DELAY=5000                      (delay between detecting change and taking snapshot*)
 LOG_LEVEL=1                                 (log output verbosity)
-\# 0 = minimum logging
-\# 1 = basic logging
-\# 2 = debug logging
+# 0 = minimum logging
+# 1 = basic logging
+# 2 = debug logging
 ```
 
 \* The Ceph file system has a propagation delay for recursive ctime to make its way from the changed file to the
