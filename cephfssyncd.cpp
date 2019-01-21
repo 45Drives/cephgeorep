@@ -51,7 +51,7 @@ void read_directory(const string & name, vector<string> & v);
 bool is_dir(const char* path);
 string gettime(void);
 int rsync(const string & SNAP_DIR, vector<string> & syncq);
-void exec(const char * programPath, char * const argv[], const string & SNAP_DIR);
+int exec(const char * programPath, char * const argv[], const string & SNAP_DIR);
 bool checkrootforchange(const string & path, timespec & RCTIME_1);
 void writelast_rctime(const timespec & rctime);
 timespec readlast_rctime(void);
@@ -108,7 +108,6 @@ int main(int argc, char ** argv){
 				newfiles = rsync(SNAP_DIR, syncq);
 				cout << newfiles << " files synced.\n";
 			}
-			
 		}
 		
 		cout << endl;
@@ -357,6 +356,8 @@ string gettime(void){
 int rsync(const string & SNAP_DIR, vector<string> & syncq){
 	//	Sets commandline arguments and calls execution wrapper for rsync
 	vector<string> args;
+	int returnstatus;
+	
 	args = {"-a","--relative"};	// archive mode, --relative
 	for(string i : syncq){
 		args.push_back(SNAP_DIR + "./" + i.substr(SNAP_DIR.size(), i.size()));	//	"./" cuts the path to create subdirectories after point
@@ -381,50 +382,48 @@ int rsync(const string & SNAP_DIR, vector<string> & syncq){
 	//	null terminated:
 	argv.push_back(NULL);
 	
-	exec("rsync", &argv[0], SNAP_DIR);
+	while((returnstatus = exec("rsync", &argv[0], SNAP_DIR)) == 255){	//	retry if exit code is 255
+		Log("Rsync failed. Is your remote backup server down? Trying again in 30 seconds.",0);
+		this_thread::sleep_for(chrono::seconds(30));
+	}
+	
+	if(returnstatus == 23){
+		Log("Snapshot was deleted too quickly!",0);
+		newfiles = 0;
+	}
 	
 	return newfiles;
 }
 
-void exec(const char * programPath, char * const argv[], const string & SNAP_DIR){
+int exec(const char * programPath, char * const argv[], const string & SNAP_DIR){
 	//	executes given command
-	pid_t pid = fork(); // Create a child process
-	switch (pid) {
+	
+	pid_t pid;
+	
+	int status;
+	
+	pid_t c_pid = fork(); // Create a child process
+	
+	switch (c_pid) {
 	case -1: // Error 
 		cerr << "Error: fork() failed.\n";
 		exit(1);
 	case 0: // Child process
+		pid = getpid();
+		cout << programPath << " process created with pid " << pid << c_pid << "\n";
 		execvp(programPath, argv); // Execute the program
 		cerr << "rsync failed. Try reinstalling and make sure rsync is in your path.";
 		exit(1);
 	default: // Parent process 
-		cout << programPath << " process created with pid " << pid << "\n";
-		int status;
-
-		while (!WIFEXITED(status)) {
-			int * statusptr = & status;
-			waitpid(pid, statusptr, 0); // Wait for the process to complete
-			Log("rsync exited with status " + to_string(status),1);
-			
-			switch(status){
-			case 0: //	Error free
-				Log("rsync finished with no errors",1);
-				break;
-			case 65280:
-				Log("Error: rsync failed! Is your remote backup server down? Trying again in 10 seconds.",0);
-				this_thread::sleep_for(chrono::seconds(10));
-				exec(programPath, &argv[0], SNAP_DIR);
-				break;
-			default:
-				Log("Unknown rsync error: " + to_string(status),0);
-				break;
-			}
+		if( (pid = wait(&status)) < 0){
+			cerr << "Error while waiting for child process to finish.\n";
+			exit(1);
 		}
-		
-		
 		
 		Log("Sync process exited with " + to_string(WEXITSTATUS(status)) + "\n", 2);
 	}
+	Log("Rsync exit status: " + to_string(WEXITSTATUS(status)),1);
+	return WEXITSTATUS(status);
 }
 
 bool checkrootforchange(const string & path, timespec & RCTIME_1){
