@@ -17,10 +17,7 @@
 #define ARG_SIZE 1000
 #define TESTING false
 
-enum mode {f,d};
-
 #include <iostream>
-//#include <sys/types.h>
 #include <sys/xattr.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -34,8 +31,6 @@ enum mode {f,d};
 #include <algorithm>
 #include <ctime>
 #include <thread>
-//#include <sstream>
-//#include <iterator>
 using namespace std;
 
 // Function declarations
@@ -119,6 +114,7 @@ int main(int argc, char ** argv){
 //	Function Definitions
 
 map<string,string> LoadConfig(string path){
+	//	Loads configuration file into string-string map for easy access of configuration
     ifstream input(path + "cephfssyncd.conf");
     
 	if(!input){
@@ -133,6 +129,7 @@ map<string,string> LoadConfig(string path){
 				"SYNC_FREQ=10\n"
 				"IGNORE_HIDDEN=false\n"
 				"RCTIME_PROP_DELAY=5000\n"
+				"COMPRESSION=false"
 				"LOG_LEVEL=1\n"
 				"# 0 = minimum logging\n"
 				"# 1 = basic logging\n"
@@ -141,7 +138,9 @@ map<string,string> LoadConfig(string path){
 				"# propagation delay in milliseconds\n"
 				"# Propagation delay is to account for the limit that Ceph can\n"
 				"# propagate the modification time of a file all the way back to\n"
-				"# the root of the sync directory.\n";
+				"# the root of the sync directory.\n"
+				"# Only use compression if your network connection to your\n"
+				"# backup server is slow.\n";
 		f.close();
 		input.open(path + "cephfssyncd.conf");
 	}
@@ -163,7 +162,7 @@ map<string,string> LoadConfig(string path){
     input.close(); //Close the file stream
     
     //	check if attributes exist/are defined
-    string attrs[] = {"SND_SYNC_DIR","RECV_SYNC_HOST","RECV_SYNC_DIR","LAST_RCTIME_DIR","SYNC_FREQ","IGNORE_HIDDEN","RCTIME_PROP_DELAY","LOG_LEVEL"};
+    string attrs[] = {"SND_SYNC_DIR","RECV_SYNC_HOST","RECV_SYNC_DIR","LAST_RCTIME_DIR","SYNC_FREQ","IGNORE_HIDDEN","RCTIME_PROP_DELAY","COMPRESSION","LOG_LEVEL"};
     vector<string> errors;
     for(string i : attrs){
 		try{
@@ -355,10 +354,14 @@ string gettime(void){
 
 int rsync(const string & SNAP_DIR, vector<string> & syncq){
 	//	Sets commandline arguments and calls execution wrapper for rsync
+	//	Returns number of files synced
 	vector<string> args;
 	int returnstatus;
 	
 	args = {"-a","--relative"};	// archive mode, --relative
+	if(conf["COMPRESSION"] == "1" || conf["COMPRESSION"] == "true"){
+		args.push_back("-z");
+	}
 	for(string i : syncq){
 		args.push_back(SNAP_DIR + "./" + i.substr(SNAP_DIR.size(), i.size()));	//	"./" cuts the path to create subdirectories after point
 	}
@@ -396,8 +399,8 @@ int rsync(const string & SNAP_DIR, vector<string> & syncq){
 }
 
 int exec(const char * programPath, char * const argv[], const string & SNAP_DIR){
-	//	executes given command
-	
+	//	executes given command as child process
+	//	returns exit status of child process
 	pid_t pid;
 	
 	int status;
