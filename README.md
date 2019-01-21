@@ -21,6 +21,7 @@ SYNC_FREQ=10                                (frequency to check directory for ch
 IGNORE_HIDDEN=false                         (change to true to ignore files and folders starting with '.')
 RCTIME_PROP_DELAY=5000                      (delay between detecting change and taking snapshot*)
 LOG_LEVEL=1                                 (log output verbosity)
+COPMRESSION=false                           (compresses files before sending for slow network)
 # 0 = minimum logging
 # 1 = basic logging
 # 2 = debug logging
