@@ -1,0 +1,11 @@
+[Unit]
+Description=Cephfs Sync Daemon
+After=network.service
+
+[Service]
+Type=simple
+PIDFile=/var/run/cephfssyncd.pid
+ExecStart=/usr/bin/cephfssyncd
+
+[Install]
+WantedBy=multi-user.target
