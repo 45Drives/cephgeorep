@@ -44,7 +44,6 @@ string takesnap(const timespec & rctime);
 void traversedir(const string & path, const timespec & rctime_0, vector<string> & syncq);
 void read_directory(const string & name, vector<string> & v);
 bool is_dir(const char* path);
-string gettime(void);
 int rsync(const string & SNAP_DIR, vector<string> & syncq);
 int exec(const char * programPath, char * const argv[], const string & SNAP_DIR);
 bool checkrootforchange(const string & path, timespec & RCTIME_1);
@@ -194,7 +193,7 @@ map<string,string> LoadConfig(string path){
 
 void Log(string message, int lvl){
 	if(stoi(conf["LOG_LEVEL"]) >= lvl){
-		cout << "[" << gettime() << "]: " << message << endl;
+		cout << message << endl;
 	}
 }
 
@@ -337,21 +336,6 @@ bool is_dir(const char* path){
     return S_ISDIR(buf.st_mode);
 }
 
-string gettime(void){
-	//	returns human-readable time and date
-	time_t rawtime;
-	struct tm * timeinfo;
-	char buffer[80];
-
-	time (&rawtime);
-	timeinfo = localtime(&rawtime);
-
-	strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
-	std::string str(buffer);
-	
-	return str;
-}
-
 int rsync(const string & SNAP_DIR, vector<string> & syncq){
 	//	Sets commandline arguments and calls execution wrapper for rsync
 	//	Returns number of files synced
@@ -371,7 +355,7 @@ int rsync(const string & SNAP_DIR, vector<string> & syncq){
 	args.push_back(conf["RECV_SYNC_HOST"] + ":" + conf["RECV_SYNC_DIR"]);	//	remote backup host ip and directory
 	
 	if(stoi(conf["LOG_LEVEL"]) >= 2){
-		cout << gettime() << "Executing \"rsync ";
+		cout << "Executing \"rsync ";
 		for(string i : args)
 			cout << i << " ";
 		cout << "\"" << endl;
