@@ -128,7 +128,7 @@ map<string,string> LoadConfig(string path){
 				"SYNC_FREQ=10\n"
 				"IGNORE_HIDDEN=false\n"
 				"RCTIME_PROP_DELAY=5000\n"
-				"COMPRESSION=false"
+				"COMPRESSION=false\n"
 				"LOG_LEVEL=1\n"
 				"# 0 = minimum logging\n"
 				"# 1 = basic logging\n"
