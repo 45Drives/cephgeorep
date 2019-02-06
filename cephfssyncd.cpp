@@ -254,7 +254,7 @@ int getfiles(const string & path){
 		if(strlen == -1)
 			throw;
 	} catch (...) {
-		cerr << "Error retrieving number of files in (ceph.dir.files) " + path;
+		cerr << "Error retrieving number of files (ceph.dir.files) in " + path;
 		exit(1);
 	}
 	string valuestr(value);
