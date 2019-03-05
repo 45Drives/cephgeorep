@@ -1,6 +1,6 @@
 # cephgeorep
-Ceph File System Remote Sync Daemon for Ceph Mimic
-For use with a Ceph file server to trickle files to a remote backup server, i.e. georeplicate your Ceph fs.
+Ceph File System Remote Sync Daemon for Ceph Mimic.  
+For use with a Ceph Mimic file server to trickle files to a remote backup server, i.e. georeplicate your Ceph fs.
 
 ## Prerequisites
 You must have a Ceph file system and rsync installed. You must also set up passwordless SSH from your sender (local) to your
