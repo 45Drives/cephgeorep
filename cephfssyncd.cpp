@@ -201,10 +201,9 @@ timespec getrctime(const string & path){
 	//	Returns recursive ctime of <path> or modification time of file in seconds, nanoseconds
 	timespec rctime;
 	if(is_dir(path.c_str())){
-		int strlen;
 		char value[XATTR_SIZE];
 		try{
-			strlen = getxattr(path.c_str(), "ceph.dir.rctime", value, XATTR_SIZE);
+			int strlen = getxattr(path.c_str(), "ceph.dir.rctime", value, XATTR_SIZE);
 			if(strlen == -1)
 				throw;
 		} catch (...) {
@@ -219,7 +218,14 @@ timespec getrctime(const string & path){
 		Log("rctime of " + path + " is " + to_string(rctime.tv_sec) + "." + to_string(rctime.tv_nsec), 2);
 	}else{
 		struct stat t_stat;
-		stat(path.c_str(), &t_stat);
+		try{
+			int strlen = stat(path.c_str(), &t_stat);
+			if(strlen == -1)
+				throw;
+		} catch (...) {
+			cerr << "Error retrieving mtime of " + path;
+			exit (1);
+		}
 		rctime.tv_sec = t_stat.st_mtim.tv_sec;
 		rctime.tv_nsec = t_stat.st_mtim.tv_nsec;
 		Log("rctime of " + path + " is " + to_string(rctime.tv_sec) + "." + to_string(rctime.tv_nsec), 2);
@@ -280,35 +286,25 @@ string takesnap(const timespec & rctime){
 
 void traversedir(const string & path, const timespec & rctime_0, vector<string> & syncq){
 	//	Recursively dives into directory. Reads files, dirs one at a time.
-	//	>If dir, checks if it has been updated since last snap
-	//	and isn't empty. If true, fn is recursively called with subdir as path. 
-	//	>If file, checks if file has been updated since last snapand not already 
-	//	queued. If true, file is pushed onto queue awaiting sync.
+	//	Checks if updated since last snap then:
+	//	>If dir AND isn't empty, fn is recursively called with subdir as path. 
+	//	>If file AND not already queued, file is pushed onto queue awaiting sync.
 	
 	//	Load dir's files into queue
 	Log("\nEntering " + path + "\n",2);
 	vector<string> queue;
 	read_directory(path, queue);
-	if(queue.empty())
-		return;
 	while(!queue.empty()){
 		string temp = queue.front();
 		queue.erase(queue.begin());
-		
-		if(is_dir(temp.c_str())){		//	next file is DIR
-			timespec rctime = getrctime(temp);
-			if(rctime > rctime_0){	// rctime of DIR is more recent than last snap
+		timespec rctime = getrctime(temp);
+		if(rctime > rctime_0){
+			if(is_dir(temp.c_str())){
 				if(getsubdirs(temp) > 0 || getfiles(temp) > 0)	// if temp is not empty, dive in
 					traversedir(temp + "/", rctime_0, syncq);
 			}else{
-				Log("No change in directory or below.",2);
-			}
-		}else{	//	temp is file
-			if(find(syncq.begin(),syncq.end(),temp) == syncq.end()){	//	if temp isn't already queued AND file was updated
-				timespec rctime = getrctime(temp);
-				if(rctime > rctime_0){
-					syncq.push_back(temp);	//	file is awaiting sync
-				}
+				if(find(syncq.begin(),syncq.end(),temp) == syncq.end())	//	if temp not already queued
+					syncq.push_back(temp);
 			}
 		}
 	}
@@ -415,12 +411,12 @@ int exec(const char * programPath, char * const argv[], const string & SNAP_DIR)
 
 bool checkrootforchange(const string & path, timespec & RCTIME_1){
 	//	reads rctimes/mtimes of all top-level root files and folders
-	//	updates value of RCTIME_1 to highest time over last sync time
+	//	updates value of RCTIME_1 to highest time above last sync time
 	//	returns true if any are higher than last_rctime
 	vector<string> rootfiles;
-	vector<timespec> rctimes;
 	timespec RCTIME_0 = readlast_rctime();
-	timespec temp = RCTIME_1;
+	timespec temp;
+	RCTIME_1 = RCTIME_0;
 	
 	//	load in top-level contents
 	read_directory(path, rootfiles);
@@ -428,26 +424,12 @@ bool checkrootforchange(const string & path, timespec & RCTIME_1){
 	for(string i : rootfiles){
 		Log("Checking change in: " + i,2);
 		
-		RCTIME_1 = getrctime(i);
-		Log("RCTIME of dir: " + to_string(RCTIME_1.tv_sec) + "." + to_string(RCTIME_1.tv_nsec),2);
+		temp = getrctime(i);
+		Log("RCTIME of dir: " + to_string(temp.tv_sec) + "." + to_string(temp.tv_nsec),2);
 		
-		
-		if(RCTIME_1 > RCTIME_0){
-			rctimes.push_back(RCTIME_1);
+		if(temp > RCTIME_0 && temp > RCTIME_1){
+			RCTIME_1 = temp;
 		}
-	}
-	
-	if(!rctimes.empty()){
-		timespec highest = rctimes.front();
-		for(timespec i : rctimes){
-			if(i > highest){
-				highest = i;
-			}
-		}
-		Log("Highest rctime > last: " + to_string(highest.tv_sec) + "." + to_string(highest.tv_sec),2);
-		RCTIME_1 = highest;
-	}else{
-		RCTIME_1 = temp;
 	}
 	
 	Log("rctime_0: " + to_string(RCTIME_0.tv_sec) + "." + to_string(RCTIME_0.tv_nsec), 2);
