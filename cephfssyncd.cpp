@@ -474,7 +474,6 @@ timespec readlast_rctime(void){
 	last_rctime >> RCTIME_0.tv_sec;
 	last_rctime >> RCTIME_0.tv_nsec;
 	last_rctime.close();
-	cout << endl << "RCTIME_0: " << RCTIME_0.tv_sec << '.' << RCTIME_0.tv_nsec << endl;
 	return RCTIME_0;
 }
 
