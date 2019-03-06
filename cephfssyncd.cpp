@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <ctime>
 #include <thread>
+#include <sstream>
 using namespace std;
 
 // Function declarations
@@ -442,7 +443,7 @@ void writelast_rctime(const timespec & rctime){
 	//	saves timestamp of snapshot to file
 	ofstream f;
 	f.open(LAST_RCTIME);
-	f << rctime.tv_sec << "." << rctime.tv_nsec << endl;		//	revert back to 0 nanoseconds due to slight delay in rctime update for dirs
+	f << rctime.tv_sec << endl << rctime.tv_nsec << endl;		//	revert back to 0 nanoseconds due to slight delay in rctime update for dirs
 	f.close();
 }
 
@@ -461,16 +462,14 @@ timespec readlast_rctime(void){
 		mkdir(conf["LAST_RCTIME_DIR"].c_str(), 0777);
 		ofstream f;
 		f.open(LAST_RCTIME);
-		f << "0.0";
+		f << "0" << endl << "0" << endl;
 		f.close();
 		last_rctime.open(LAST_RCTIME);
 	}
-	string temp;
-	getline(last_rctime,temp,'.');
-	RCTIME_0.tv_sec = stol(temp);
-	getline(last_rctime,temp,'\n');
-	RCTIME_0.tv_nsec = stol(temp);
+	last_rctime >> RCTIME_0.tv_sec;
+	last_rctime >> RCTIME_0.tv_nsec;
 	last_rctime.close();
+	cout << endl << "RCTIME_0: " << RCTIME_0.tv_sec << '.' << RCTIME_0.tv_nsec << endl;
 	return RCTIME_0;
 }
 
