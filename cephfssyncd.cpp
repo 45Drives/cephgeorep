@@ -315,15 +315,20 @@ void traversedir(const string & path, const timespec & rctime_0, vector<string> 
 void read_directory(const string & path, vector<string> & v){
 	//	pushes top-level contents of passed directory into queue,
 	//	returns queue
-    DIR * dirp = opendir(path.c_str());
-    struct dirent * dp;
-    while ((dp = readdir(dirp)) != NULL) {
-		if(!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") || ((conf["IGNORE_HIDDEN"] == "true") && dp->d_name[0] == '.'))		//	ignore /.. and /., ignore hidden if set
-			continue;
-		v.push_back(path + dp->d_name);
-    }
-    
-    closedir(dirp);
+    if(is_dir(path.c_str())){
+		DIR * dirp = opendir(path.c_str());
+		struct dirent * dp;
+		while ((dp = readdir(dirp)) != NULL) {
+			if(!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") || ((conf["IGNORE_HIDDEN"] == "true") && dp->d_name[0] == '.'))		//	ignore /.. and /., ignore hidden if set
+				continue;
+			v.push_back(path + dp->d_name);
+		}
+		
+		closedir(dirp);
+	}else{
+		cerr << "Error openening directory " << path << ". Does it exist?" << endl;
+		exit(1);
+	}
 }
 
 bool is_dir(const char* path){
