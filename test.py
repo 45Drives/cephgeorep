@@ -37,7 +37,7 @@ if not len(sys.argv) == 4:
 	print "Script takes three arguments: dir depth, dir width, and number of files."
 	exit()
 
-path = "/mnt/cephfs/fsgw/daemontest"
+path = "/mnt/cephfs/backuptest/samba/anonymous"
 
 depth_ = int(sys.argv[1])
 
@@ -79,7 +79,8 @@ def touch(fname):
 
 def recursefile(path, depth, filename):
 	if depth <= 0:
-		touch(os.path.join(path,str(filename) + ".img"))
+		with open(os.path.join(path,str(filename) + ".img"),'wb') as fout:
+			fout.write(os.urandom(1048576))
 		print "Made file: " + os.path.join(path,str(filename) + ".img")
 		return
 	dir_ = random.randint(1,width_)
