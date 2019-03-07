@@ -319,7 +319,7 @@ void read_directory(const string & path, vector<string> & v){
 		DIR * dirp = opendir(path.c_str());
 		struct dirent * dp;
 		while ((dp = readdir(dirp)) != NULL) {
-			if(!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") || ((conf["IGNORE_HIDDEN"] == "true") && dp->d_name[0] == '.'))		//	ignore /.. and /., ignore hidden if set
+			if(!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") || ((conf["IGNORE_HIDDEN"] == "true") && dp->d_name[0] == '.') || (dp->d_name[0] == '~' && dp->d_name[1] == '$'))		//	ignore /.. and /., ignore hidden if set, ignore windows temp backup '~$'
 				continue;
 			v.push_back(path + dp->d_name);
 		}
