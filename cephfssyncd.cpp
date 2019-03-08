@@ -128,7 +128,7 @@ map<string,string> LoadConfig(string path){
 				"LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n"
 				"SYNC_FREQ=10\n"
 				"IGNORE_HIDDEN=false\n"
-				"RCTIME_PROP_DELAY=5000\n"
+				"RCTIME_PROP_DELAY=100\n"
 				"COMPRESSION=false\n"
 				"LOG_LEVEL=1\n"
 				"# 0 = minimum logging\n"
@@ -320,6 +320,12 @@ void read_directory(const string & path, vector<string> & v){
 		struct dirent * dp;
 		while ((dp = readdir(dirp)) != NULL) {
 			if(!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") || ((conf["IGNORE_HIDDEN"] == "true") && dp->d_name[0] == '.') || (dp->d_name[0] == '~' && dp->d_name[1] == '$'))		//	ignore /.. and /., ignore hidden if set, ignore windows temp backup '~$'
+				continue;
+			string lock;					//	check if file name begins with ".~lock."
+			for(int i = 0; i < 7; i++){
+				lock[i] = dp->d_name[i];
+			}
+			if(!strcmp(lock.c_str(),".~lock."))
 				continue;
 			v.push_back(path + dp->d_name);
 		}
