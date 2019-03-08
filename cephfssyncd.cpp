@@ -59,7 +59,6 @@ bool operator <(const timespec& lhs, const timespec& rhs);
 map<string,string> conf;	//	Configuration map: conf[key] returns value
 
 int main(int argc, char ** argv){
-	int newfiles;
 	timespec RCTIME_0;	//	previous snapshot rctime
 	timespec RCTIME_1;
 	string SNAP_DIR;
@@ -67,9 +66,7 @@ int main(int argc, char ** argv){
 	//	Load config into string-string map	
 	conf = LoadConfig(CONF_DIR);
 	
-	cout << endl;
-	Log("Started.", 0);
-	cout << endl;
+	Log("\nStarted.\n", 0);
 	
 	while(1){
 		RCTIME_0 = readlast_rctime();
@@ -92,16 +89,11 @@ int main(int argc, char ** argv){
 			traversedir(SNAP_DIR, RCTIME_0, syncq);
 			
 			if(!syncq.empty()){
-				cout << endl;
-				Log("	Files to sync: ",1);
+				Log("\n	Files to sync: ",1);
 				for(string i : syncq){
-					if(stoi(conf["LOG_LEVEL"]) >= 1)
-						cout << i << endl;
+					Log(i,1);
 				}
-				if(stoi(conf["LOG_LEVEL"]) >= 1)
-					cout << endl;
-				newfiles = rsync(SNAP_DIR, syncq);
-				cout << newfiles << " files synced.\n";
+				cout << endl << rsync(SNAP_DIR, syncq) << " files synced.\n";
 			}
 		}
 		
@@ -319,15 +311,10 @@ void read_directory(const string & path, vector<string> & v){
 		DIR * dirp = opendir(path.c_str());
 		struct dirent * dp;
 		while ((dp = readdir(dirp)) != NULL) {
-			if(!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") || ((conf["IGNORE_HIDDEN"] == "true") && dp->d_name[0] == '.') || (dp->d_name[0] == '~' && dp->d_name[1] == '$'))		//	ignore /.. and /., ignore hidden if set, ignore windows temp backup '~$'
-				continue;
-			string lock;					//	check if file name begins with ".~lock."
-			for(int i = 0; i < 7; i++){
-				lock[i] = dp->d_name[i];
-			}
-			if(!strcmp(lock.c_str(),".~lock."))
-				continue;
-			v.push_back(path + dp->d_name);
+			string name = dp->d_name;
+			if((name == ".") || (name == "..") || ((conf["IGNORE_HIDDEN"] == "true") && name[0] == '.') || (name.substr(0,2) == "~$") || (name.substr(0,7) == ".~lock."))
+				continue;							//	ignore /. and /.., ignore hidden if set, ignore windows temp backup '~$', ignore linux lock file '.~lock.<filename>'
+			v.push_back(path + name);
 		}
 		
 		closedir(dirp);
@@ -405,7 +392,8 @@ int exec(const char * programPath, char * const argv[], const string & SNAP_DIR)
 		exit(1);
 	case 0: // Child process
 		pid = getpid();
-		cout << programPath << " process created with pid " << pid << c_pid << "\n";
+		if(stoi(conf["LOG_LEVEL"]) >= 2)
+			cout << programPath << " process created with pid " << pid << c_pid << "\n";
 		execvp(programPath, argv); // Execute the program
 		cerr << "rsync failed. Try reinstalling and make sure rsync is in your path.";
 		exit(1);
@@ -417,7 +405,7 @@ int exec(const char * programPath, char * const argv[], const string & SNAP_DIR)
 		
 		Log("Sync process exited with " + to_string(WEXITSTATUS(status)) + "\n", 2);
 	}
-	Log("Rsync exit status: " + to_string(WEXITSTATUS(status)),1);
+	Log("Rsync exit status: " + to_string(WEXITSTATUS(status)),2);
 	return WEXITSTATUS(status);
 }
 
