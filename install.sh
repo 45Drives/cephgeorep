@@ -10,7 +10,7 @@ cp cephfssyncd.service /etc/systemd/system/
 
 echo Done. Please configure daemon in /etc/ceph/cephfssyncd.conf
 
-read -p "Open config file now? " -n 1 -r
+read -p "Open config file now? (Y/n)" -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
