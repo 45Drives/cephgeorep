@@ -4,8 +4,8 @@ After=network.service
 
 [Service]
 Type=simple
-PIDFile=/var/run/cephgeorepd.pid
-ExecStart=/usr/bin/cephgeorepd
+PIDFile=/var/run/cephfssyncd.pid
+ExecStart=/usr/bin/cephfssyncd
 
 [Install]
 WantedBy=multi-user.target
