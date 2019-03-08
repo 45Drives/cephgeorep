@@ -8,8 +8,6 @@ echo Copying service file to /etc/systemd/system/
 
 cp cephfssyncd.service /etc/systemd/system/
 
-echo Done. Please configure daemon in /etc/ceph/cephfssyncd.conf
-
 read -p "Open config file now? (Y/n) " -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
@@ -34,4 +32,8 @@ LOG_LEVEL=1\n\
 # Only use compression if your network connection to your\n\
 # backup server is slow.\n" > /etc/ceph/cephfssyncd.conf
     vi /etc/ceph/cephfssyncd.conf
+    echo Done. Start cephgeorep service with \"systemctl start cephfssyncd\".
+else
+    echo Done. Please configure daemon in /etc/ceph/cephfssyncd.conf
+    echo Start cephgeorep service with \"systemctl start cephfssyncd\".
 fi
