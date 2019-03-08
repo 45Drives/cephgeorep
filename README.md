@@ -44,8 +44,12 @@ To install this daemon, move build output to /usr/bin/ as cephfssyncd. Place cep
 daemon by running `systemctl start cephfssyncd`, or add `systemctl start cephfssyncd` to the end of your /etc/rc.local file. To monitor output of daemon, run `watch -n 1 systemctl status cephfssyncd`.
 
 ## Notes
-If your backup server is down, cephfssyncd will try to launch rsync and fail, however it will retry the sync at 30 second
-intervals. All new files in the server created while cephfssyncd is waiting for rsync to succeed will be synced on the next interval.
+* If your backup server is down, cephfssyncd will try to launch rsync and fail, however it will retry the sync at 30 second
+intervals. All new files in the server created while cephfssyncd is waiting for rsync to succeed will be synced on the next interval.  
+* Files beginning with the following prefixes are ignored by the daemon:
+   * `~$` - Files beginning with this are temporary backup files within Windows, which are created when a document or other file is open.
+   * `.~lock.` - Files beginning with this are lock files within Linux, which prevent a file from being modified while it is open by another user. 
+* If the backup directory is shared with Windows or Linux via a Samba share, files that are moved into the shared folder will not sync if their Last Modified time is earlier than the most recent sync. 
 
 ```
    ___________________  
