@@ -321,6 +321,12 @@ void read_directory(const string & path, vector<string> & v){
 		while ((dp = readdir(dirp)) != NULL) {
 			if(!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") || ((conf["IGNORE_HIDDEN"] == "true") && dp->d_name[0] == '.') || (dp->d_name[0] == '~' && dp->d_name[1] == '$'))		//	ignore /.. and /., ignore hidden if set, ignore windows temp backup '~$'
 				continue;
+			string lock;					//	check if file name begins with ".~lock."
+			for(int i = 0; i < 7; i++){
+				lock[i] = dp->d_name[i];
+			}
+			if(!strcmp(lock.c_str(),".~lock."))
+				continue;
 			v.push_back(path + dp->d_name);
 		}
 		
