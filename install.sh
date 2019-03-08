@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-g++ -std=c++11 cephfssyncd.cpp -o /usr/bin/cephfssyncd
+g++ -std=c++11 cephfssyncd.cpp -o /usr/bin/cephgeorepd
 
-cp cephfssyncd.service /etc/systemd/system/
+cp cephgeorepd.service /etc/systemd/system/
