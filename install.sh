@@ -8,7 +8,7 @@ echo Copying service file to /etc/systemd/system/
 
 cp cephfssyncd.service /etc/systemd/system/
 
-read -p "Open config file now? (Y/n) " -r
+read -p "Configure daemon now? (Y/n) " -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
