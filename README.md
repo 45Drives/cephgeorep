@@ -39,7 +39,7 @@ delay to ensure no files are missed.
 This delay was greatly reduced in the Ceph Nautilus release, so a delay of 100ms is the new default. This was able to sync 1000 files, 1MB each, randomly placed within 3905 directories without missing one. With very large directory trees this delay may need to be increased, but only up to a few seconds rather than 10.
 
 ## Usage
-Launch the daemon by running `systemctl start cephfssyncd`, or add `systemctl start cephfssyncd` to the end of your /etc/rc.local file to launch at startup. To monitor output of daemon, run `watch -n 1 systemctl status cephfssyncd`.
+Launch the daemon by running `systemctl start cephfssyncd`, or run `systemctl enable caphfssyncd` to enable launch at startup. To monitor output of daemon, run `watch -n 1 systemctl status cephfssyncd`.
 
 ## Notes
 * If your backup server is down, cephfssyncd will try to launch rsync and fail, however it will retry the sync at 30 second
