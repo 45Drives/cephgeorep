@@ -36,14 +36,14 @@ delay to ensure no files are missed.
 ~~`Large directory tree    (500-10,000 total dirs):  RCTIME_PROP_DELAY=5000`~~  
 ~~`Massive directory tree  (10,000+ total dirs):     RCTIME_PROP_DELAY=10000`~~  
 
-This delay was greatly reduced in the Ceph Nautilus release, so a delay of 100ms is the new default. This was able to sync 1000 files, 1MB each, randomly placed within 3905 directories without missing one. With very large directory trees this delay may need to be increased, but only up to a few seconds rather than 10.
+This delay was greatly reduced in the Ceph Nautilus release, so a delay of 100ms is the new default. This was able to sync 1000 files, 1MB each, randomly placed within 3905 directories without missing one. With very large directory trees this delay may need to be increased, but only up to a few seconds rather than up to 10.
 
 ## Usage
-Launch the daemon by running `systemctl start cephfssyncd`, or run `systemctl enable caphfssyncd` to enable launch at startup. To monitor output of daemon, run `watch -n 1 systemctl status cephfssyncd`.
+Launch the daemon by running `systemctl start cephfssyncd`, and run `systemctl enable cephfssyncd` to enable launch at startup. To monitor output of daemon, run `watch -n 1 systemctl status cephfssyncd`.
 
 ## Notes
 * If your backup server is down, cephfssyncd will try to launch rsync and fail, however it will retry the sync at 30 second
-intervals. All new files in the server created while cephfssyncd is waiting for rsync to succeed will be synced on the next interval.  
+intervals. All new files in the server created while cephfssyncd is waiting for rsync to succeed will be synced on the next cycle.  
 * Files beginning with the following prefixes are ignored by the daemon:
    * `~$` - Files beginning with this are temporary backup files within Windows, which are created when a document or other file is open.
    * `.~lock.` - Files beginning with this are lock files within Linux, which prevent a file from being modified while it is open by another user. 
