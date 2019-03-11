@@ -41,7 +41,7 @@ The 10,000 ms delay passed a test with 137,256 directories and 1,000 files with 
 ## Usage
 
 To install this daemon, move build output to /usr/bin/ as cephfssyncd. Place cephfssyncd.service in /etc/systemd/system/. Launch
-daemon by running `systemctl start cephfssyncd`, or add `systemctl start cephfssyncd` to the end of your /etc/rc.local file. To monitor output of daemon, run `watch -n 1 systemctl status cephfssyncd`.
+daemon by running `systemctl start cephfssyncd`, and run `systemctl enable cephfssyncd` to launch the daemon at start up. To monitor output of daemon, run `watch -n 1 systemctl status cephfssyncd`.
 
 ## Notes
 If your backup server is down, cephfssyncd will try to launch rsync and fail, however it will retry the sync at 30 second
