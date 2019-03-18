@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [[ $(id -u) != 0 ]]; then
+    echo "Script must be run as root."
+    exit 1
+fi
+
 echo Building executable and copying to /usr/bin/ as cephfssyncd
 
 g++ -std=c++11 cephfssyncd.cpp -o /usr/bin/cephfssyncd
@@ -9,7 +14,7 @@ echo Copying service file to /etc/systemd/system/
 cp cephfssyncd.service /etc/systemd/system/
 
 read -p "Configure daemon now? (Y/n) " -r
-echo    # (optional) move to a new line
+echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
     printf "SND_SYNC_DIR=\n\
