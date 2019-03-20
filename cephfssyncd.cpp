@@ -442,7 +442,7 @@ void writelast_rctime(const timespec & rctime){
 	//	saves timestamp of snapshot to file
 	ofstream f;
 	f.open(LAST_RCTIME);
-	f << rctime.tv_sec << endl << rctime.tv_nsec << endl;		//	revert back to 0 nanoseconds due to slight delay in rctime update for dirs
+	f << rctime.tv_sec << endl << rctime.tv_nsec << endl;
 	f.close();
 }
 
