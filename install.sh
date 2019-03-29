@@ -15,8 +15,7 @@ cp cephfssyncd.service /etc/systemd/system/
 
 read -p "Configure daemon now? (Y/n) " -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
+if [[ ! $REPLY =~ ^[Nn]$ ]] && [[ ! $REPLY =~ ^[Nn][Oo]$ ]]; then
     printf "SND_SYNC_DIR=\n\
 RECV_SYNC_HOST=\n\
 RECV_SYNC_DIR=\n\
