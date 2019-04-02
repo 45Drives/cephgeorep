@@ -8,7 +8,7 @@ fi
 read -p "Install cephgeorep daemon? This will overwrite /etc/ceph/cephfssyncd.conf. [Y/n] " -r
 if [[ $REPLY =~ ^[Nn]$ ]] || [[ $REPLY =~ ^[Nn][Oo]$ ]]; then
     echo Exiting
-    exit 1
+    exit 0
 fi
 
 echo Building executable and copying to /usr/bin/ as cephfssyncd
@@ -56,3 +56,4 @@ else
     echo Enable service manually with \"systemctl enable cephfssyncd\".
 fi
 echo Installation finished.
+exit 0
