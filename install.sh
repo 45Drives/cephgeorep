@@ -7,15 +7,19 @@ fi
 
 read -p "Install cephgeorep daemon? This will overwrite /etc/ceph/cephfssyncd.conf. [Y/n] " -r
 if [[ $REPLY =~ ^[Nn]$ ]] || [[ $REPLY =~ ^[Nn][Oo]$ ]]; then
-    echo Exiting
+    echo "Exiting."
     exit 0
 fi
 
-echo Building executable and copying to /usr/bin/ as cephfssyncd
+echo "Building executable and copying to /usr/bin/ as cephfssyncd"
 
 g++ -std=c++11 cephfssyncd.cpp -o /usr/bin/cephfssyncd
+if [[ $? -ne 0 ]]; then
+    echo "Build failed. Make sure package 'gcc-c++' is installed and retry."
+    exit 1
+fi
 
-echo Copying service file to /etc/systemd/system/
+echo "Copying service file to /etc/systemd/system/"
 
 cp cephfssyncd.service /etc/systemd/system/
 
@@ -43,17 +47,17 @@ LOG_LEVEL=1\n\
 read -p "Configure daemon now? [Y/n] " -r
 if [[ ! $REPLY =~ ^[Nn]$ ]] && [[ ! $REPLY =~ ^[Nn][Oo]$ ]]; then
     vi /etc/ceph/cephfssyncd.conf
-    echo Start cephgeorep service with \"systemctl start cephfssyncd\".
+    echo "Start cephgeorep service with \"systemctl start cephfssyncd\"."
 else
-    echo Please configure daemon in /etc/ceph/cephfssyncd.conf
-    echo Start cephgeorep service with \"systemctl start cephfssyncd\".
+    echo "Please configure daemon in /etc/ceph/cephfssyncd.conf"
+    echo "Start cephgeorep service with \"systemctl start cephfssyncd\"."
 fi
-read -p "Enable daemon service to start at boot now? [Y/n] " -r
+read -p "Enable daemon service now to start at boot? [Y/n] " -r
 if [[ ! $REPLY =~ ^[Nn]$ ]] && [[ ! $REPLY =~ ^[Nn][Oo]$ ]]; then
     systemctl enable cephfssyncd
-    echo Service enabled.
+    echo "Service enabled."
 else
-    echo Enable service manually with \"systemctl enable cephfssyncd\".
+    echo "Enable service manually with \"systemctl enable cephfssyncd\"."
 fi
-echo Installation finished.
+echo "Installation finished."
 exit 0
