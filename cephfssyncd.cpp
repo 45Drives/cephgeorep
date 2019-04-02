@@ -139,7 +139,7 @@ map<string,string> LoadConfig(string path){
 	
     map<string,string> ans;
     
-	string key;
+    string key;
     string value;
     
     while(input){
