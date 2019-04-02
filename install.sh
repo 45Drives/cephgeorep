@@ -5,6 +5,12 @@ if [[ $(id -u) != 0 ]]; then
     exit 1
 fi
 
+read -p "Install cephgeorep daemon? This will overwrite /etc/ceph/cephfssyncd.conf. [Y/n] " -r
+if [[ $REPLY =~ ^[Nn]$ ]] || [[ $REPLY =~ ^[Nn][Oo]$ ]]; then
+    echo Exiting
+    exit 1
+fi
+
 echo Building executable and copying to /usr/bin/ as cephfssyncd
 
 g++ -std=c++11 cephfssyncd.cpp -o /usr/bin/cephfssyncd
@@ -13,10 +19,8 @@ echo Copying service file to /etc/systemd/system/
 
 cp cephfssyncd.service /etc/systemd/system/
 
-read -p "Configure daemon now? [Y/n] " -r
-echo
-if [[ ! $REPLY =~ ^[Nn]$ ]] && [[ ! $REPLY =~ ^[Nn][Oo]$ ]]; then
-    printf "SND_SYNC_DIR=\n\
+# initializing daemon config
+printf "SND_SYNC_DIR=\n\
 RECV_SYNC_HOST=\n\
 RECV_SYNC_DIR=\n\
 LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n\
@@ -35,9 +39,20 @@ LOG_LEVEL=1\n\
 # the root of the sync directory.\n\
 # Only use compression if your network connection to your\n\
 # backup server is slow.\n" > /etc/ceph/cephfssyncd.conf
+
+read -p "Configure daemon now? [Y/n] " -r
+if [[ ! $REPLY =~ ^[Nn]$ ]] && [[ ! $REPLY =~ ^[Nn][Oo]$ ]]; then
     vi /etc/ceph/cephfssyncd.conf
-    echo Done. Start cephgeorep service with \"systemctl start cephfssyncd\".
+    echo Start cephgeorep service with \"systemctl start cephfssyncd\".
 else
-    echo Done. Please configure daemon in /etc/ceph/cephfssyncd.conf
+    echo Please configure daemon in /etc/ceph/cephfssyncd.conf
     echo Start cephgeorep service with \"systemctl start cephfssyncd\".
 fi
+read -p "Enable daemon service to start at boot now? [Y/n] " -r
+if [[ ! $REPLY =~ ^[Nn]$ ]] && [[ ! $REPLY =~ ^[Nn][Oo]$ ]]; then
+    systemctl enable cephfssyncd
+    echo Service enabled.
+else
+    echo Enable service manually with \"systemctl enable cephfssyncd\".
+fi
+echo Installation finished.
