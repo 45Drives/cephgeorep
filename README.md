@@ -47,7 +47,7 @@ intervals. All new files in the server created while cephfssyncd is waiting for 
 * Files beginning with the following prefixes are ignored by the daemon:
    * `~$` - Files beginning with this are temporary backup files within Windows, which are created when a document or other file is open.
    * `.~lock.` - Files beginning with this are lock files within Linux, which prevent a file from being modified while it is open by another user. 
-* If the backup directory is shared with Windows or Linux via a SMB share, files that are moved into the shared folder will not sync if their Last Modified time is earlier than the most recent sync. 
+* If the backup directory is shared with Windows or Linux via an SMB share, files that are moved into the shared folder will not sync if their Last Modified time is earlier than the most recent sync. 
 
 ```
    ___________________  
