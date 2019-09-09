@@ -21,7 +21,6 @@ void loadConfig(void){
   while(configFile){
     getline(configFile, key, '=');
     getline(configFile, value, '\n');
-    std::cout << "Key: " << key << " Value: " << value << std::endl;
     if(key == "SND_SYNC_DIR"){
       config.sender_dir = value;
     }else if(key == "RECV_SYNC_HOST"){
