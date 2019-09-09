@@ -1,22 +1,16 @@
 #include "config.hpp"
-#include "error.hpp"
 #include <boost/filesystem.hpp> // c++17 not available in debian 9?
 #include <iostream>
+#include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string>
-#include <sstream>
 
 Config config; // global config struct
-
-void initDaemon(){
-  loadConfig();
-}
 
 void loadConfig(void){
   bool errors = false;
   std::string line, key, value;
-  std::stringstream svalue;
   
   // open file
   boost::filesystem::path configPath(CONFIG_PATH);
@@ -27,7 +21,7 @@ void loadConfig(void){
   while(configFile){
     getline(configFile, key, '=');
     getline(configFile, value, '\n');
-    svalue.str(value);
+    std::cout << "Key: " << key << " Value: " << value << std::endl;
     if(key == "SND_SYNC_DIR"){
       config.sender_dir = value;
     }else if(key == "RECV_SYNC_HOST"){
@@ -35,17 +29,17 @@ void loadConfig(void){
     }else if(key == "RECV_SYNC_DIR"){
       config.receiver_dir = value;
     }else if(key == "LAST_RCTIME_DIR"){
-      config.last_rctime_dir = value;
+      config.last_rctime = boost::filesystem::path(value).append(LAST_RCTIME_NAME);
     }else if(key == "SYNC_FREQ"){
-      svalue >> config.sync_frequency;
+      config.sync_frequency = stoi(value);
     }else if(key == "IGNORE_HIDDEN"){
-      svalue >> config.ignore_hidden;
+      std::istringstream(value) >> std::boolalpha >> config.ignore_hidden >> std::noboolalpha;
     }else if(key == "RCTIME_PROP_DELAY"){
-      svalue >> config.prop_delay_ms;
+      config.prop_delay_ms = stoi(value);
     }else if(key == "COMPRESSION"){
-      svalue >> config.compress;
+      std::istringstream(value) >> std::boolalpha >> config.compress >> std::noboolalpha;
     }else if(key == "LOG_LEVEL"){
-      svalue >> config.log_level;
+      config.log_level = stoi(value);
     }
   }
   
@@ -62,7 +56,7 @@ void loadConfig(void){
     std::cerr << "Config does not contain a remote host directory (RECV_SYNC_DIR)\n";
     errors = true;
   }
-  if(config.last_rctime_dir.empty()){
+  if(config.last_rctime.empty()){
     std::cerr << "Config does not contain a path to store last timestamp (LAST_RCTIME_DIR)\n";
     errors = true;
   }
@@ -76,8 +70,8 @@ void loadConfig(void){
   }
 }
 
-void createConfig(boost::filesystem::path configPath, std::fstream &configFile){
-  boost::filesystem::create_directory(configPath.parent_path());
+void createConfig(const boost::filesystem::path &configPath, std::fstream &configFile){
+  boost::filesystem::create_directories(configPath.parent_path());
   std::ofstream f(configPath.c_str());
   f <<
     "SND_SYNC_DIR=\n"

@@ -1,7 +1,7 @@
 TARGET = cephfssyncd
 LIBS = -lboost_system -lboost_filesystem
 CC = g++
-CFLAGS = -std=gnu++11
+CFLAGS = -std=gnu++11 -Wall
 
 .PHONY: default all clean
 
