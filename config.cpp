@@ -1,5 +1,5 @@
 #include "config.hpp"
-#include <boost/filesystem.hpp> // c++17 not available in debian 9?
+#include <boost/filesystem.hpp>
 #include <iostream>
 #include <sstream>
 #include <sys/stat.h>
