@@ -32,14 +32,15 @@ void writeLast_rctime(const timespec &rctime){
     init_last_rctime();
     f.open(config.last_rctime.c_str());
   }
-  f << rctime.tv_sec << '.' << rctime.tv_nsec << std::endl;
+  f << rctime << std::endl;
   f.close();
 }
 
 void init_last_rctime(void){
   Log(config.last_rctime.string() + " does not exist. Creating and initializing"
   "to 0.0.",2);
-  boost::filesystem::create_directories(config.last_rctime.parent_path());
+  boost::filesystem::create_directories(config.last_rctime.parent_path(), ec);
+  if(ec) error(PATH_CREATE, ec);
   std::ofstream f(config.last_rctime.c_str());
   f << "0.0" << std::endl;
   f.close();
@@ -71,4 +72,38 @@ timespec get_rctime(const boost::filesystem::path &path){
     }
   }
   return rctime;
+}
+
+std::string &operator+(std::string lhs, timespec rhs){
+  return lhs.append(std::to_string(rhs.tv_sec) + "." + std::to_string(rhs.tv_nsec));
+}
+
+std::string &operator+(timespec lhs, std::string rhs){
+  return (std::to_string(lhs.tv_sec) + "." + std::to_string(lhs.tv_nsec)).append(rhs);
+}
+
+bool operator>(const timespec &lhs, const timespec &rhs){
+  return (lhs.tv_sec > rhs.tv_sec) ||
+  ((lhs.tv_sec == rhs.tv_sec) && (lhs.tv_nsec > rhs.tv_nsec));
+}
+
+bool operator==(const timespec &lhs, const timespec &rhs){
+  return (lhs.tv_sec == rhs.tv_sec) && (lhs.tv_nsec == rhs.tv_nsec);
+}
+
+bool operator>=(const timespec &lhs, const timespec &rhs){
+  return (lhs > rhs) || (lhs == rhs);
+}
+
+bool operator<(const timespec &lhs, const timespec &rhs){
+  return !(lhs >= rhs);
+}
+
+bool operator<=(const timespec &lhs, const timespec &rhs){
+  return !(lhs > rhs);
+}
+
+std::ostream &operator<<(std::ostream &stream, const struct timespec &rhs){
+  stream << rhs.tv_sec << "." << rhs.tv_nsec;
+  return stream;
 }

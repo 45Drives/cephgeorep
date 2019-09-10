@@ -20,3 +20,13 @@ void init_last_rctime(void);
 
 timespec get_rctime(const boost::filesystem::path &path);
 // returns ceph.dir.rctime of directory path or mtime of file
+
+// timespec operators:
+std::string &operator+(std::string lhs, timespec rhs);
+std::string &operator+(timespec lhs, std::string rhs);
+bool operator>(const timespec &lhs, const timespec &rhs);
+bool operator==(const timespec &lhs, const timespec &rhs);
+bool operator>=(const timespec &lhs, const timespec &rhs);
+bool operator<(const timespec &lhs, const timespec &rhs);
+bool operator<=(const timespec &lhs, const timespec &rhs);
+std::ostream &operator<<(std::ostream &stream, const struct timespec &rhs); 

@@ -26,3 +26,6 @@ void loadConfig(void);
 void createConfig(const boost::filesystem::path &configPath, std::fstream &configFile);
 // creates config directory and initializes config file. Returns config file
 // stream in &configFile.
+
+void dumpConfig(void);
+// dumps config contents to screen

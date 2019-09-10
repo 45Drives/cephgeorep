@@ -1,4 +1,5 @@
 #include "config.hpp"
+#include "alert.hpp"
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <sstream>
@@ -21,12 +22,14 @@ void loadConfig(void){
   while(configFile){
     getline(configFile, key, '=');
     getline(configFile, value, '\n');
+    if(key.front() == '#')
+      continue; // ignore comments
     if(key == "SND_SYNC_DIR"){
-      config.sender_dir = value;
+      config.sender_dir = boost::filesystem::path(value);
     }else if(key == "RECV_SYNC_HOST"){
       config.receiver_host = value;
     }else if(key == "RECV_SYNC_DIR"){
-      config.receiver_dir = value;
+      config.receiver_dir = boost::filesystem::path(value);
     }else if(key == "LAST_RCTIME_DIR"){
       config.last_rctime = boost::filesystem::path(value).append(LAST_RCTIME_NAME);
     }else if(key == "SYNC_FREQ"){
@@ -39,7 +42,7 @@ void loadConfig(void){
       std::istringstream(value) >> std::boolalpha >> config.compress >> std::noboolalpha;
     }else if(key == "LOG_LEVEL"){
       config.log_level = stoi(value);
-    }
+    }// else ignore entry
   }
   
   // verify contents
@@ -70,8 +73,10 @@ void loadConfig(void){
 }
 
 void createConfig(const boost::filesystem::path &configPath, std::fstream &configFile){
-  boost::filesystem::create_directories(configPath.parent_path());
+  boost::filesystem::create_directories(configPath.parent_path(), ec);
+  if(ec) error(PATH_CREATE, ec);
   std::ofstream f(configPath.c_str());
+  if(!f) error(OPEN_CONFIG);
   f <<
     "SND_SYNC_DIR=\n"
     "RECV_SYNC_HOST=\n"
@@ -94,4 +99,17 @@ void createConfig(const boost::filesystem::path &configPath, std::fstream &confi
     "# backup server is slow.\n";
   f.close();
   configFile.open(configPath.c_str()); // seek to beginning of file for input
+  if(!configFile) error(OPEN_CONFIG);
+}
+
+void dumpConfig(void){
+  std::cout << "SND_SYNC_DIR=" << config.sender_dir.string() << std::endl;
+  std::cout << "RECV_SYNC_HOST=" << config.receiver_host << std::endl;
+  std::cout << "RECV_SYNC_DIR=" << config.receiver_dir.string() << std::endl;
+  std::cout << "LAST_RCTIME_DIR=" << config.last_rctime.string() << std::endl;
+  std::cout << "SYNC_FREQ=" << config.sync_frequency << std::endl;
+  std::cout << "IGNORE_HIDDEN=" << std::boolalpha << config.ignore_hidden << std::endl;
+  std::cout << "RCTIME_PROP_DELAY=" << config.prop_delay_ms << std::endl;
+  std::cout << "COMPRESSION=" << config.compress << std::noboolalpha << std::endl;
+  std::cout << "LOG_LEVEL=" << config.log_level << std::endl;
 }
