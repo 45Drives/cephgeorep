@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <string>
 
+namespace fs = boost::filesystem;
+
 Config config; // global config struct
 
 void loadConfig(void){
@@ -14,7 +16,7 @@ void loadConfig(void){
   std::string line, key, value;
   
   // open file
-  boost::filesystem::path configPath(CONFIG_PATH);
+  fs::path configPath(CONFIG_PATH);
   std::fstream configFile(configPath.c_str());
   if(!configFile) createConfig(configPath, configFile);
   
@@ -25,13 +27,13 @@ void loadConfig(void){
     if(key.front() == '#')
       continue; // ignore comments
     if(key == "SND_SYNC_DIR"){
-      config.sender_dir = boost::filesystem::path(value);
+      config.sender_dir = fs::path(value);
     }else if(key == "RECV_SYNC_HOST"){
       config.receiver_host = value;
     }else if(key == "RECV_SYNC_DIR"){
-      config.receiver_dir = boost::filesystem::path(value);
+      config.receiver_dir = fs::path(value);
     }else if(key == "LAST_RCTIME_DIR"){
-      config.last_rctime = boost::filesystem::path(value).append(LAST_RCTIME_NAME);
+      config.last_rctime = fs::path(value).append(LAST_RCTIME_NAME);
     }else if(key == "SYNC_FREQ"){
       config.sync_frequency = stoi(value);
     }else if(key == "IGNORE_HIDDEN"){
@@ -72,8 +74,8 @@ void loadConfig(void){
   }
 }
 
-void createConfig(const boost::filesystem::path &configPath, std::fstream &configFile){
-  boost::filesystem::create_directories(configPath.parent_path(), ec);
+void createConfig(const fs::path &configPath, std::fstream &configFile){
+  fs::create_directories(configPath.parent_path(), ec);
   if(ec) error(PATH_CREATE, ec);
   std::ofstream f(configPath.c_str());
   if(!f) error(OPEN_CONFIG);

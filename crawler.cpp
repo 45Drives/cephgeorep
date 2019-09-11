@@ -2,35 +2,52 @@
 #include "alert.hpp"
 #include "rctime.hpp"
 #include "config.hpp"
+#include "rsync.hpp"
 #include <boost/filesystem.hpp>
 #include <sys/xattr.h>
 #include <algorithm>
 #include <thread>
 #include <chrono>
 #include <vector>
+#include <signal.h>
+
+namespace fs = boost::filesystem;
 
 bool running = true;
 
-void pollBase(boost::filesystem::path path){
+void sigint_hdlr(int signum)
+{
+  // cleanup from termination
+  writeLast_rctime(last_rctime);
+  exit(signum);
+}
+
+void pollBase(fs::path path){
+  signal(SIGINT, sigint_hdlr);
+  signal(SIGTERM, sigint_hdlr);
+  signal(SIGQUIT, sigint_hdlr);
   last_rctime = loadLast_rctime();
   timespec rctime;
-  std::vector<boost::filesystem::path> sync_queue;
+  std::vector<fs::path> sync_queue;
+  
+  Log("Starting Ceph Georep Daemon.",1);
+  Log("Watching: " + path.string(),1);
   
   while(running){
     if(checkForChange(path, last_rctime, rctime)){
       Log("Launching crawler",2);
       // create snapshot
-      boost::filesystem::path snapPath = takesnap(rctime);
+      fs::path snapPath = takesnap(rctime);
       // launch crawler in snapshot
-      crawler(snapPath, sync_queue); // enqueue if rctime > last_rctime
+      crawler(snapPath, sync_queue, snapPath); // enqueue if rctime > last_rctime
       // log list of new files
       Log("Files to sync:",2);
       for(auto i : sync_queue){
         Log(i.string(),2);
       }
-      Log("New files synced: "+std::to_string(sync_queue.size())+".",2);
+      Log("New files to sync: "+std::to_string(sync_queue.size())+".",2);
       // launch rsync
-      
+      launch_rsync(sync_queue);
       // clear sync queue
       sync_queue.clear();
       // delete snapshot
@@ -40,37 +57,29 @@ void pollBase(boost::filesystem::path path){
     }
     std::this_thread::sleep_for(std::chrono::seconds(config.sync_frequency));
   }
-  writeLast_rctime(last_rctime);
 }
 
-void crawler(boost::filesystem::path path, std::vector<boost::filesystem::path> &queue){
-  //std::vector<boost::filesystem::path> dir_contents;
-  
-  // copy new files into queue
-  copy_if(boost::filesystem::directory_iterator(path),
-  boost::filesystem::directory_iterator(), back_inserter(queue),
-  [](boost::filesystem::path p){ // lambda fn for conditional copy
-    if(config.ignore_hidden == true && p.filename().string().front() == '.')
-      return false; // early return for ignoring hidden files/dirs
-    if(!is_directory(p) && get_rctime(p) > last_rctime){
-      return true; // enque files with mtime > last_rctime
+void crawler(fs::path path, std::vector<fs::path> &queue, const fs::path &snapdir){
+  for(fs::directory_iterator itr{path};
+  itr != fs::directory_iterator{}; *itr++){
+    if((config.ignore_hidden == true &&
+    (*itr).path().filename().string().front() == '.') ||
+    (get_rctime(*itr) <= last_rctime))
+      continue;
+    if(is_directory(*itr)){
+      crawler(path/((*itr).path().filename()), queue, snapdir); // recurse
+    }else{
+      // cut path at sync dir for rsync /sync_dir/./rel_path/file
+      queue.push_back(fs::path(snapdir).append(".")/fs::relative((*itr).path(),snapdir));
     }
-    return false;
-  });
-  
-  // conditionally recurse into each subdirectory
-  for(boost::filesystem::directory_iterator itr{path};
-  itr != boost::filesystem::directory_iterator{}; *itr++){
-    if(is_directory(*itr) && get_rctime(*itr) > last_rctime)
-      crawler(path/((*itr).path().filename()), queue);
   }
 }
 
-bool checkForChange(const boost::filesystem::path &path, const timespec &last_rctime, timespec &rctime){
+bool checkForChange(const fs::path &path, const timespec &last_rctime, timespec &rctime){
   bool change = false;
   std::vector<timespec> rctimes;
-  for(boost::filesystem::directory_iterator itr{path};
-  itr != boost::filesystem::directory_iterator{}; *itr++){
+  for(fs::directory_iterator itr{path};
+  itr != fs::directory_iterator{}; *itr++){
     rctime = get_rctime(*itr);
     if(rctime > last_rctime){
       change = true;
@@ -85,7 +94,7 @@ bool checkForChange(const boost::filesystem::path &path, const timespec &last_rc
   return false;
 }
 
-int count(boost::filesystem::path path, FilesOrDirs choice){
+int count(fs::path path, FilesOrDirs choice){
   char buffer[XATTR_SIZE];
   int buffLen;
   int result = 0;
@@ -107,11 +116,11 @@ int count(boost::filesystem::path path, FilesOrDirs choice){
   return result;
 }
 
-void read_directory(boost::filesystem::path path,
-std::vector<boost::filesystem::path> &q, FilesOrDirs choice){
-  copy_if(boost::filesystem::directory_iterator(path),
-  boost::filesystem::directory_iterator(), back_inserter(q),
-  [choice](boost::filesystem::path p){ // lambda fn for conditional copy
+void read_directory(fs::path path,
+std::vector<fs::path> &q, FilesOrDirs choice){
+  copy_if(fs::directory_iterator(path),
+  fs::directory_iterator(), back_inserter(q),
+  [choice](fs::path p){ // lambda fn for conditional copy
     if(config.ignore_hidden == true && p.filename().string().front() == '.')
       return false; // early return for ignoring hidden files/dirs
     switch(choice){
@@ -125,17 +134,17 @@ std::vector<boost::filesystem::path> &q, FilesOrDirs choice){
   });
 }
 
-boost::filesystem::path takesnap(const timespec &rctime){
-  boost::filesystem::path snapPath = boost::filesystem::path(config.sender_dir).append(".snap/snapshot"+rctime);
+fs::path takesnap(const timespec &rctime){
+  fs::path snapPath = fs::path(config.sender_dir).append(".snap/snapshot"+rctime);
   Log("Creating snapshot: " + snapPath.string(), 2);
-  boost::filesystem::create_directories(snapPath, ec);
+  fs::create_directories(snapPath, ec);
   if(ec) error(PATH_CREATE, ec);
   return snapPath;
 }
 
-bool deletesnap(boost::filesystem::path path){
+bool deletesnap(fs::path path){
   Log("Removing snapshot: " + path.string(), 2);
-  bool result = boost::filesystem::remove(path, ec);
+  bool result = fs::remove(path, ec);
   if(ec) error(REMOVE_SNAP, ec);
   return result;
 }

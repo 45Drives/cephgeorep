@@ -8,10 +8,12 @@
 #include <sys/xattr.h>
 #include <sys/stat.h>
 
+namespace fs = boost::filesystem;
+
 timespec last_rctime;
 
 timespec loadLast_rctime(void){
-  Log("Reading last rctime from disk.",3);
+  Log("Reading last rctime from disk.",2);
   timespec rctime;
   std::ifstream f(config.last_rctime.c_str());
   std::string str;
@@ -27,6 +29,7 @@ timespec loadLast_rctime(void){
 }
 
 void writeLast_rctime(const timespec &rctime){
+  Log("Writing last rctime to disk.",2);
   std::ofstream f(config.last_rctime.c_str());
   if(!f){
     init_last_rctime();
@@ -39,14 +42,14 @@ void writeLast_rctime(const timespec &rctime){
 void init_last_rctime(void){
   Log(config.last_rctime.string() + " does not exist. Creating and initializing"
   "to 0.0.",2);
-  boost::filesystem::create_directories(config.last_rctime.parent_path(), ec);
+  fs::create_directories(config.last_rctime.parent_path(), ec);
   if(ec) error(PATH_CREATE, ec);
   std::ofstream f(config.last_rctime.c_str());
   f << "0.0" << std::endl;
   f.close();
 }
 
-timespec get_rctime(const boost::filesystem::path &path){
+timespec get_rctime(const fs::path &path){
   timespec rctime;
   switch(is_directory(path)){
   case true: // dir

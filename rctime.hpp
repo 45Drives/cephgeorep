@@ -3,6 +3,8 @@
 #include <ctime>
 #include <boost/filesystem.hpp>
 
+namespace fs = boost::filesystem;
+
 #define XATTR_SIZE 1024
 #define ERR -1
 
@@ -18,7 +20,7 @@ void writeLast_rctime(const timespec &rctime);
 void init_last_rctime(void);
 // creates last_rctime.dat file and initializes contents to "0.0\n".
 
-timespec get_rctime(const boost::filesystem::path &path);
+timespec get_rctime(const fs::path &path);
 // returns ceph.dir.rctime of directory path or mtime of file
 
 // timespec operators:

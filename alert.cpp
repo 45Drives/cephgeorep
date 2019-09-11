@@ -12,7 +12,10 @@ std::string errors[NUM_ERRS] = {
   "Error reading ceph.dir.rctime attribute of directory. Are you using CEPH?",
   "Error reading mtime attribute of file.",
   "Error reading number of files or directories in subdirectory.",
-  "Error removing snapshot directory."
+  "Error removing snapshot directory.",
+  "Error forking process.",
+  "Error launching rsync.",
+  "Error while waiting for rsync to exit."
 };
 
 void error(int err, boost::system::error_code ec_){
