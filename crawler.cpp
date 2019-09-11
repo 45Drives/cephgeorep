@@ -38,6 +38,8 @@ void pollBase(fs::path path){
       Log("Launching crawler",2);
       // create snapshot
       fs::path snapPath = takesnap(rctime);
+      // wait for rctime to trickle to root
+      std::this_thread::sleep_for(std::chrono::milliseconds(config.prop_delay_ms));
       // launch crawler in snapshot
       crawler(snapPath, sync_queue, snapPath); // enqueue if rctime > last_rctime
       // log list of new files
@@ -64,7 +66,7 @@ void crawler(fs::path path, std::vector<fs::path> &queue, const fs::path &snapdi
   itr != fs::directory_iterator{}; *itr++){
     if((config.ignore_hidden == true &&
     (*itr).path().filename().string().front() == '.') ||
-    (get_rctime(*itr) <= last_rctime))
+    (get_rctime(*itr) < last_rctime))
       continue;
     if(is_directory(*itr)){
       crawler(path/((*itr).path().filename()), queue, snapdir); // recurse
