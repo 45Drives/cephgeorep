@@ -34,13 +34,15 @@ void pollBase(fs::path path){
   Log("Watching: " + path.string(),1);
   
   while(running){
+    auto start = std::chrono::system_clock::now();
     if(checkForChange(path, last_rctime, rctime)){
-      Log("Launching crawler",2);
+      Log("Change detected in " + path.string(), 2);
       // create snapshot
       fs::path snapPath = takesnap(rctime);
       // wait for rctime to trickle to root
       std::this_thread::sleep_for(std::chrono::milliseconds(config.prop_delay_ms));
       // launch crawler in snapshot
+      Log("Launching crawler",2);
       crawler(snapPath, sync_queue, snapPath); // enqueue if rctime > last_rctime
       // log list of new files
       Log("Files to sync:",2);
@@ -49,7 +51,7 @@ void pollBase(fs::path path){
       }
       Log("New files to sync: "+std::to_string(sync_queue.size())+".",2);
       // launch rsync
-      launch_rsync(sync_queue);
+      if(!sync_queue.empty()) launch_rsync(sync_queue);
       // clear sync queue
       sync_queue.clear();
       // delete snapshot
@@ -57,7 +59,10 @@ void pollBase(fs::path path){
       // overwrite last_rctime
       last_rctime = rctime;
     }
-    std::this_thread::sleep_for(std::chrono::seconds(config.sync_frequency));
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed = end-start;
+    if((int)elapsed.count() < config.sync_frequency) // if it took longer than sync freq, don't wait
+      std::this_thread::sleep_for(std::chrono::seconds(config.sync_frequency - (int)elapsed.count()));
   }
 }
 
@@ -71,8 +76,8 @@ void crawler(fs::path path, std::vector<fs::path> &queue, const fs::path &snapdi
     if(is_directory(*itr)){
       crawler(path/((*itr).path().filename()), queue, snapdir); // recurse
     }else{
-      // cut path at sync dir for rsync /sync_dir/./rel_path/file
-      queue.push_back(fs::path(snapdir).append(".")/fs::relative((*itr).path(),snapdir));
+      // cut path at sync dir for rsync /sync_dir/.snap/snapshotX/./rel_path/file
+      queue.push_back(snapdir/fs::path(".")/fs::relative((*itr).path(),snapdir));
     }
   }
 }
@@ -80,10 +85,9 @@ void crawler(fs::path path, std::vector<fs::path> &queue, const fs::path &snapdi
 bool checkForChange(const fs::path &path, const timespec &last_rctime, timespec &rctime){
   bool change = false;
   std::vector<timespec> rctimes;
-  for(fs::directory_iterator itr{path};
-  itr != fs::directory_iterator{}; *itr++){
-    rctime = get_rctime(*itr);
-    if(rctime > last_rctime){
+  for(fs::directory_iterator itr(path);
+  itr != fs::directory_iterator(); *itr++){
+    if((rctime = get_rctime(*itr)) > last_rctime){
       change = true;
       rctimes.push_back(rctime);
     }

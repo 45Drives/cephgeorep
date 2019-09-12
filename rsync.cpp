@@ -14,11 +14,11 @@ void launch_rsync(std::vector<fs::path> queue){
   pid_t pid;
   int status;
   std::vector<char *> argv;
-  std::vector<std::string> args({"rsync","-a","--relative"});
+  std::vector<std::string> args{"rsync","-a","--relative"};
   if(config.compress) args.push_back("-z");
   
   for(fs::path i : queue){
-    args.push_back(i.c_str());
+    args.push_back(i.string());
   }
   
   args.push_back(config.receiver_host + ":" + config.receiver_dir.string());
