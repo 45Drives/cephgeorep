@@ -1,5 +1,6 @@
 #include "alert.hpp"
 #include "config.hpp"
+#include "rctime.hpp"
 #include <iostream>
 #include <string>
 #include <boost/system/error_code.hpp>
@@ -15,11 +16,14 @@ std::string errors[NUM_ERRS] = {
   "Error removing snapshot directory.",
   "Error forking process.",
   "Error launching rsync.",
-  "Error while waiting for rsync to exit."
+  "Error while waiting for rsync to exit.",
+  "rync is not installed on this system.",
+  "Encountered unkown error while launching rsync."
 };
 
 void error(int err, boost::system::error_code ec_){
   std::cerr << errors[err] << std::endl;
+  writeLast_rctime(last_rctime);
   exit(ec_.value());
 }
 

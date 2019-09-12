@@ -5,11 +5,11 @@
 
 extern boost::system::error_code ec; // error code for system fucntions
 
-#define NUM_ERRS 9
+#define NUM_ERRS 11
 
 enum {
   OPEN_CONFIG, PATH_CREATE, READ_RCTIME, READ_MTIME, READ_FILES_DIRS,
-  REMOVE_SNAP, FORK, LAUNCH_RSYNC, WAIT_RSYNC
+  REMOVE_SNAP, FORK, LAUNCH_RSYNC, WAIT_RSYNC, NO_RSYNC, UNK_RSYNC_ERR
 };
 
 void error(int err, boost::system::error_code ec_ = {1,boost::system::generic_category()});
