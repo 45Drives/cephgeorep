@@ -111,12 +111,14 @@ int count(fs::path path, FilesOrDirs choice){
     buffer, XATTR_SIZE)) == ERR)
       error(READ_FILES_DIRS);
     result = stoi(std::string(buffer).substr(0, buffLen));
-    if(choice == FILES) break;
+    if(choice == FILES) break; // else fall through
   case DIRS:
     if((buffLen = getxattr(path.c_str(), "ceph.dir.subdirs",
     buffer, XATTR_SIZE)) == ERR)
       error(READ_FILES_DIRS);
     result += stoi(std::string(buffer).substr(0, buffLen));
+    break;
+  default:
     break;
   }
   return result;
@@ -134,6 +136,7 @@ std::vector<fs::path> &q, FilesOrDirs choice){
       return !is_directory(p);
     case DIRS:
       return is_directory(p);
+    case BOTH:
     default:
       return true;
     }
