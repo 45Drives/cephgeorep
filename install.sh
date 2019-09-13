@@ -13,9 +13,9 @@ fi
 
 echo "Building executable and copying to /usr/bin/ as cephfssyncd"
 
-g++ -std=c++11 cephfssyncd.cpp -o /usr/bin/cephfssyncd
+make
 if [[ $? -ne 0 ]]; then
-    echo "Build failed. Make sure package 'gcc-c++' is installed and retry."
+    echo "Build failed. Make sure package 'gcc-c++' and boost libs are installed and retry."
     exit 1
 fi
 
