@@ -33,17 +33,19 @@ from datetime import datetime
 
 random.seed(datetime.now())
 
-if not len(sys.argv) == 4:
-	print "Script takes three arguments: dir depth, dir width, and number of files."
+if not len(sys.argv) == 5:
+	print "Script takes four arguments: dir depth, dir width, number of files, and file size in kB."
 	exit()
 
-path = "/mnt/cephfs/backuptest/samba/anonymous"
+path = "/mnt/cephfs/test"
 
 depth_ = int(sys.argv[1])
 
 width_ = int(sys.argv[2])
 
 files = int(sys.argv[3])
+
+fsize = int(sys.argv[4])
 
 temp_path = path
 
@@ -72,15 +74,16 @@ def recurse(path, depth):
 		recurse(os.path.join(path,str(i+1)),depth-1)
 
 def touch(fname):
-	f = open(fname,"a")
+	f = open(fname,"wb")
+	for i in range(fsize):
+		f.write('\0' * 1024) # single kilobyte
 	f.close()
 	return
 
 
 def recursefile(path, depth, filename):
 	if depth <= 0:
-		with open(os.path.join(path,str(filename) + ".img"),'wb') as fout:
-			fout.write(os.urandom(1048576))
+		touch(os.path.join(path,str(filename) + ".img"))
 		print "Made file: " + os.path.join(path,str(filename) + ".img")
 		return
 	dir_ = random.randint(1,width_)
