@@ -31,7 +31,7 @@ void launch_rsync(std::vector<fs::path> queue){
   
   argv.push_back(NULL);
   
-  while(WEXITSTATUS(status) == SSH_FAIL){
+  do{
     Log("Launching rsync with " + std::to_string(queue.size()) + " files.", 1);
     
     pid = fork(); // create child process
@@ -68,5 +68,5 @@ void launch_rsync(std::vector<fs::path> queue){
       error(UNK_RSYNC_ERR);
       break;
     }
-  }
+  }while(WEXITSTATUS(status) == SSH_FAIL);
 }
