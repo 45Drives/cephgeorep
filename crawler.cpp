@@ -23,8 +23,8 @@ void sigint_hdlr(int signum)
 }
 
 void initDaemon(void){
-  Log("Starting Ceph Georep Daemon.",1);
   loadConfig();
+  Log("Starting Ceph Georep Daemon.",1);
   if(config.log_level >= 2) dumpConfig();
   // enable signal handlers to save last_rctime
   signal(SIGINT, sigint_hdlr);
