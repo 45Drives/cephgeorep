@@ -10,7 +10,7 @@
 
 namespace fs = boost::filesystem;
 
-timespec last_rctime;
+timespec last_rctime = {0};
 
 timespec loadLast_rctime(void){
   Log("Reading last rctime from disk.",2);
