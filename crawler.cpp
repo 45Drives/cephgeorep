@@ -22,15 +22,23 @@ void sigint_hdlr(int signum)
   exit(signum);
 }
 
-void pollBase(fs::path path){
+void initDaemon(void){
+  Log("Starting Ceph Georep Daemon.",1);
+  loadConfig();
+  if(config.log_level >= 2) dumpConfig();
+  // enable signal handlers to save last_rctime
   signal(SIGINT, sigint_hdlr);
   signal(SIGTERM, sigint_hdlr);
   signal(SIGQUIT, sigint_hdlr);
+  
   last_rctime = loadLast_rctime();
+  
+  if(!exists(config.sender_dir)) error(SND_DIR_DNE);
+}
+
+void pollBase(fs::path path){
   timespec rctime;
   std::vector<fs::path> sync_queue;
-  
-  Log("Starting Ceph Georep Daemon.",1);
   Log("Watching: " + path.string(),1);
   
   while(running){

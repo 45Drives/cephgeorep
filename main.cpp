@@ -11,8 +11,7 @@
 #include "alert.hpp"
 
 int main(int argc, char *argv[]){
-  loadConfig();
-  if(config.log_level >= 2) dumpConfig();
+  initDaemon();
   pollBase(config.sender_dir);
   return 0;
 }

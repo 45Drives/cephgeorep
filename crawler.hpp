@@ -7,14 +7,17 @@ namespace fs = boost::filesystem;
 
 enum FilesOrDirs{FILES, DIRS, BOTH};
 
+void initDaemon(void);
+// calls loadConfig(), enables signal handlers, asserts that path to sync exists
+
 void pollBase(fs::path path);
-// main loop
+// main loop, check for change in rctime and launch crawler
 
 void crawler(fs::path path, std::vector<fs::path> &queue, const fs::path &snapdir);
-// recursive directory crawler. Returns new files.
+// recursive directory crawler. Returns new files as boost::filesystem::path in queue.
 
 bool checkForChange(const fs::path &path, const timespec &last_rctime, timespec &rctime);
-// returns true if dir rctime or file mtime > last_rctime. Updates rctime with highest new rctime.
+// returns true if subdir rctime or file mtime > last_rctime. Updates rctime with highest new rctime.
 
 int count(fs::path path, FilesOrDirs choice);
 // returns number of files or directories in a specific directory path
