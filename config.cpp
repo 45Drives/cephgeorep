@@ -35,17 +35,29 @@ void loadConfig(void){
     }else if(key == "LAST_RCTIME_DIR"){
       config.last_rctime = fs::path(value).append(LAST_RCTIME_NAME);
     }else if(key == "SYNC_FREQ"){
-      config.sync_frequency = stoi(value);
+      try{
+        config.sync_frequency = stoi(value);
+      }catch(std::invalid_argument){
+        config.sync_frequency = -1;
+      }
     }else if(key == "IGNORE_HIDDEN"){
       std::istringstream(value) >> std::boolalpha >> config.ignore_hidden >> std::noboolalpha;
     }else if(key == "IGNORE_WIN_LOCK"){
       std::istringstream(value) >> std::boolalpha >> config.ignore_win_lock >> std::noboolalpha;
     }else if(key == "RCTIME_PROP_DELAY"){
-      config.prop_delay_ms = stoi(value);
+      try{
+        config.prop_delay_ms = stoi(value);
+      }catch(std::invalid_argument){
+        config.prop_delay_ms = -1;
+      }
     }else if(key == "COMPRESSION"){
       std::istringstream(value) >> std::boolalpha >> config.compress >> std::noboolalpha;
     }else if(key == "LOG_LEVEL"){
-      config.log_level = stoi(value);
+      try{
+        config.log_level = stoi(value);
+      }catch(std::invalid_argument){
+        config.log_level = -1;
+      }
     }// else ignore entry
   }
   
@@ -68,6 +80,14 @@ void loadConfig(void){
   }
   if(config.sync_frequency < 0){
     std::cerr << "Config sync frequency must be positive integer (SYNC_FREQ)\n";
+    errors = true;
+  }
+  if(config.prop_delay_ms < 0){
+    std::cerr << "Config rctime prop delay must be positive integer (RCTIME_PROP_DELAY)\n";
+    errors = true;
+  }
+  if(config.log_level < 0){
+    std::cerr << "Config log level must be positive integer (LOG_LEVEL)\n";
     errors = true;
   }
   if(errors){
@@ -116,6 +136,7 @@ void dumpConfig(void){
   std::cout << "LAST_RCTIME_DIR=" << config.last_rctime.string() << std::endl;
   std::cout << "SYNC_FREQ=" << config.sync_frequency << std::endl;
   std::cout << "IGNORE_HIDDEN=" << std::boolalpha << config.ignore_hidden << std::endl;
+  std::cout << "IGNORE_WIN_LOCK=" << std::boolalpha << config.ignore_win_lock << std::endl;
   std::cout << "RCTIME_PROP_DELAY=" << config.prop_delay_ms << std::endl;
   std::cout << "COMPRESSION=" << config.compress << std::noboolalpha << std::endl;
   std::cout << "LOG_LEVEL=" << config.log_level << std::endl;
