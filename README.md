@@ -51,4 +51,4 @@ intervals. All new files in the server created while cephfssyncd is waiting for 
 * If the backup directory is shared with Windows or Linux via an SMB share, files that are moved into the shared folder will not sync if their Last Modified time is earlier than the most recent sync. 
 * When the daemon is killed with SIGINT, SIGTERM, or SIGQUIT, it saves the last sync timestamp to disk in the directory specified in the configuration file to pick up where it left off on the next launch. If the daemon is killed with SIGKILL or if power is lost to the system causing an abrupt shutdown, the daemon will resync all files modified since the previously saved timestamp.
 
-![45Drives Logo](https://www.45drives.com/img/45-drives-brand.png)
+[![45Drives Logo](https://www.45drives.com/img/45-drives-brand.png)](https://www.45drives.com)
