@@ -79,6 +79,8 @@ void crawler(fs::path path, std::vector<fs::path> &queue, const fs::path &snapdi
   itr != fs::directory_iterator{}; *itr++){
     if((config.ignore_hidden == true &&
     (*itr).path().filename().string().front() == '.') ||
+    (config.ignore_win_lock  == true &&
+    (*itr).path().filename().string().substr(0,2) == "~$") ||
     (get_rctime(*itr) < last_rctime))
       continue;
     if(is_directory(*itr)){

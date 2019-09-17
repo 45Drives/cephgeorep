@@ -15,6 +15,7 @@ struct Config{
   fs::path last_rctime;
   int sync_frequency;
   bool ignore_hidden;
+  bool ignore_win_lock;
   int prop_delay_ms;
   bool compress;
   int log_level;

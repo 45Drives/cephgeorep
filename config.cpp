@@ -38,6 +38,8 @@ void loadConfig(void){
       config.sync_frequency = stoi(value);
     }else if(key == "IGNORE_HIDDEN"){
       std::istringstream(value) >> std::boolalpha >> config.ignore_hidden >> std::noboolalpha;
+    }else if(key == "IGNORE_WIN_LOCK"){
+      std::istringstream(value) >> std::boolalpha >> config.ignore_win_lock >> std::noboolalpha;
     }else if(key == "RCTIME_PROP_DELAY"){
       config.prop_delay_ms = stoi(value);
     }else if(key == "COMPRESSION"){
@@ -86,6 +88,7 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
     "LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n"
     "SYNC_FREQ=10\n"
     "IGNORE_HIDDEN=false\n"
+    "IGNORE_WIN_LOCK=true\n"
     "RCTIME_PROP_DELAY=100\n"
     "COMPRESSION=false\n"
     "LOG_LEVEL=1\n"
@@ -97,6 +100,7 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
     "# Propagation delay is to account for the limit that Ceph can\n"
     "# propagate the modification time of a file all the way back to\n"
     "# the root of the sync directory.\n"
+    "# IGNORE_WIN_LOCK is used to skip files beginning with \"~$\"\n"
     "# Only use compression if your network connection to your\n"
     "# backup server is slow.\n";
   f.close();
