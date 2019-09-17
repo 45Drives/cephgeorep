@@ -21,10 +21,17 @@ timespec loadLast_rctime(void){
     init_last_rctime();
     f.open(config.last_rctime.c_str());
   }
-  getline(f, str, '.');
-  rctime.tv_sec = (time_t)stoul(str);
-  getline(f, str);
-  rctime.tv_nsec = stol(str);
+  try{
+    getline(f, str, '.');
+    rctime.tv_sec = (time_t)stoul(str);
+    getline(f, str);
+    rctime.tv_nsec = stol(str);
+  }catch(std::invalid_argument){
+    // last_rctime.dat corrupted
+    Log(config.last_rctime.string()+" is corrupt. Reinitializing.",0);
+    init_last_rctime();
+    rctime.tv_sec = rctime.tv_nsec = 0;
+  }
   return rctime;
 }
 
