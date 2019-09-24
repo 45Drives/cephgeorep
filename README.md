@@ -1,10 +1,10 @@
 # cephgeorep
-Ceph File System Remote Sync Daemon
-For use with a Ceph file server to trickle files to a remote backup server - i.e. georeplicate your Ceph fs.
+Ceph File System Remote Sync Daemon  
+For use with a distributed Ceph File System cluster to georeplicate files to a remote backup server.  
+This daemon takes advantage of Ceph's `rctime` directory attribute, which is the value of the highest `mtime` of all the files below a given directory tree. Using this attribute, it selectively recurses only into directory tree branches with modified files - instead of wasting time accessing every branch.
 
 ## Prerequisites
-You must have a Ceph file system. `rsync` must be installed on both the local system and the remote backup. You must also set up passwordless SSH from your sender (local) to your
-receiver (remote backup) with a public/private key pair to allow rsync to send your files without prompting for a password. For compilation, boost dev libraries are needed. The binary provided is statically linked, so the server does not need boost to run the daemon. 
+You must have a Ceph file system. `rsync` must be installed on both the local system and the remote backup. You must also set up passwordless SSH from your sender (local) to your receiver (remote backup) with a public/private key pair to allow rsync to send your files without prompting for a password. For compilation, boost development libraries are needed. The binary provided is statically linked, so the server does not need boost to run the daemon. 
 
 ## Installation Instructions
 Download the provided binary and move it to /usr/bin/ as cephfssyncd. Place cephfssyncd.service in /etc/systemd/system/. Run `systemctl enable cephfssyncd` to enable daemon startup at boot. A default configuration file will be created by the daemon at /etc/ceph/cephfssyncd.conf, which must be edited to add the sender sync directory, receiver host, and receiver directory.
@@ -23,7 +23,7 @@ LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/   (path to where the last modification
 SYNC_FREQ=25                                (frequency to check directory for changes, in seconds)
 IGNORE_HIDDEN=false                         (change to true to ignore files and folders starting with '.')
 IGNORE_WIN_LOCK=true                        (ignore files beginning with "~$")
-RCTIME_PROP_DELAY=100                       (delay between detecting change and taking snapshot*)
+RCTIME_PROP_DELAY=100                       (delay between taking snapshot and searching for new files*)
 COPMRESSION=false                           (compresses files before sending for slow network)
 LOG_LEVEL=1                                 (log output verbosity)
 # 0 = minimum logging
