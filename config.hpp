@@ -15,6 +15,7 @@ struct Config{
   bool ignore_hidden;
   bool ignore_win_lock;
   bool compress;
+  std::string remote_user;
   fs::path sender_dir;
   std::string receiver_host;
   fs::path receiver_dir;

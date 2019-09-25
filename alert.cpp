@@ -18,7 +18,8 @@ std::string errors[NUM_ERRS] = {
   "Error while waiting for rsync to exit.",
   "rync is not installed on this system.",
   "Encountered unkown error while launching rsync.",
-  "SND_SYNC_DIR does not exist: no such directory."
+  "SND_SYNC_DIR does not exist: no such directory.",
+  "Remote user does not have permission to write to backup directory."
 };
 
 void error(int err, boost::system::error_code ec_){

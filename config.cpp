@@ -21,12 +21,17 @@ void loadConfig(void){
   
   // read file
   while(configFile){
-    getline(configFile, key, '=');
-    getline(configFile, value, '\n');
-    if(key.front() == '#')
+    getline(configFile, line);
+    if(line.front() == '#')
       continue; // ignore comments
+    std::stringstream linestream(line);
+    getline(linestream, key, '=');
+    getline(linestream, value);
+    
     if(key == "SND_SYNC_DIR"){
       config.sender_dir = fs::path(value);
+    }else if(key == "REMOTE_USER"){
+      config.remote_user = value;
     }else if(key == "RECV_SYNC_HOST"){
       config.receiver_host = value;
     }else if(key == "RECV_SYNC_DIR"){
@@ -96,6 +101,9 @@ void loadConfig(void){
   
   // construct rsync_remote_dest
   std::string str = config.receiver_host + ":" + config.receiver_dir.string();
+  if(!config.remote_user.empty()){
+    str = config.remote_user + "@" + str;
+  }
   config.rsync_remote_dest = new char[str.length()+1];
   std::strcpy(config.rsync_remote_dest, str.c_str());
 }
@@ -107,6 +115,7 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
   if(!f) error(OPEN_CONFIG);
   f <<
     "SND_SYNC_DIR=\n"
+    "REMOTE_USER=\n"
     "RECV_SYNC_HOST=\n"
     "RECV_SYNC_DIR=\n"
     "LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n"
@@ -135,6 +144,7 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
 void dumpConfig(void){
   std::cout << "configuration:" << std::endl;
   std::cout << "SND_SYNC_DIR=" << config.sender_dir.string() << std::endl;
+  std::cout << "REMOTE_HOST=" << config.receiver_host << std::endl;
   std::cout << "RECV_SYNC_HOST=" << config.receiver_host << std::endl;
   std::cout << "RECV_SYNC_DIR=" << config.receiver_dir.string() << std::endl;
   std::cout << "LAST_RCTIME_DIR=" << config.last_rctime.string() << std::endl;
@@ -144,4 +154,5 @@ void dumpConfig(void){
   std::cout << "RCTIME_PROP_DELAY=" << config.prop_delay_ms << std::endl;
   std::cout << "COMPRESSION=" << config.compress << std::noboolalpha << std::endl;
   std::cout << "LOG_LEVEL=" << config.log_level << std::endl;
+  std::cout << "rsync will sync to: " << config.rsync_remote_dest << std::endl;
 }

@@ -6,6 +6,7 @@
 #define SSH_FAIL 255
 #define NOT_INSTALLED 127
 #define SUCCESS 0
+#define PERM_DENY 23
 
 namespace fs = boost::filesystem;
 

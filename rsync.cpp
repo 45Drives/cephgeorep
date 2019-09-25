@@ -60,6 +60,9 @@ void launch_rsync(std::vector<fs::path> queue){
     case NOT_INSTALLED:
       error(NO_RSYNC);
       break;
+    case PERM_DENY:
+      error(NO_PERM);
+      break;
     default:
       error(UNK_RSYNC_ERR);
       break;
