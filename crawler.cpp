@@ -15,8 +15,7 @@ namespace fs = boost::filesystem;
 
 bool running = true;
 
-void sigint_hdlr(int signum)
-{
+void sigint_hdlr(int signum){
   // cleanup from termination
   writeLast_rctime(last_rctime);
   exit(signum);
