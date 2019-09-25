@@ -1,6 +1,5 @@
 #pragma once
 
-#include <ctime>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;

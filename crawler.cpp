@@ -5,10 +5,8 @@
 #include "rsync.hpp"
 #include <boost/filesystem.hpp>
 #include <sys/xattr.h>
-#include <algorithm>
 #include <thread>
 #include <chrono>
-#include <vector>
 #include <signal.h>
 
 namespace fs = boost::filesystem;

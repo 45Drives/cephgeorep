@@ -2,7 +2,6 @@
 #include "config.hpp"
 #include "rctime.hpp"
 #include <iostream>
-#include <string>
 #include <boost/system/error_code.hpp>
 
 boost::system::error_code ec;

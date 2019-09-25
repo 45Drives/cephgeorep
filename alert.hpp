@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <boost/system/error_code.hpp>
 
 extern boost::system::error_code ec; // error code for system fucntions

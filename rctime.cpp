@@ -1,9 +1,6 @@
 #include "rctime.hpp"
 #include "alert.hpp"
 #include "config.hpp"
-#include <ctime>
-#include <string>
-#include <fstream>
 #include <boost/filesystem.hpp>
 #include <sys/xattr.h>
 #include <sys/stat.h>

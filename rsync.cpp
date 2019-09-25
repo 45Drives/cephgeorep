@@ -7,8 +7,6 @@
 #include <sys/wait.h>
 #include <thread>
 #include <chrono>
-#include <string>
-#include <cstring>
 
 namespace fs = boost::filesystem;
 
