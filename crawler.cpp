@@ -93,20 +93,15 @@ void crawler(fs::path path, std::vector<fs::path> &queue, const fs::path &snapdi
 
 bool checkForChange(const fs::path &path, const timespec &last_rctime, timespec &rctime){
   bool change = false;
-  std::vector<timespec> rctimes;
+  timespec temp_rctime;
   for(fs::directory_iterator itr(path);
   itr != fs::directory_iterator(); *itr++){
-    if((rctime = get_rctime(*itr)) > last_rctime){
+    if((temp_rctime = get_rctime(*itr)) > last_rctime){
       change = true;
-      rctimes.push_back(rctime);
+      if(temp_rctime > rctime) rctime = temp_rctime; // get highest
     }
   }
-  if(change){
-    for(timespec i : rctimes)
-      if(i > rctime) rctime = i;
-    return true;
-  }
-  return false;
+  return change;
 }
 
 int count(fs::path path, FilesOrDirs choice){
