@@ -25,6 +25,7 @@ cp cephfssyncd.service /etc/systemd/system/
 
 # initializing daemon config
 printf "SND_SYNC_DIR=\n\
+REMOTE_USER=\n\
 RECV_SYNC_HOST=\n\
 RECV_SYNC_DIR=\n\
 LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n\
