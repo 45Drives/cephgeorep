@@ -8,21 +8,21 @@
 # Example: python test.py 3 2 10
 #
 # Directory tree created:
-#             1
-#          1<
-#         /   2
-#       .1   
-#      /  \   1
-#     /    2<
-#    /        2
+#                   1
+#               1 <
+#             /     2
+#           1   
+#        /    \     1
+#      /        2 <
+#    /              2
 # '.'
-#    \        1
-#     \    1<
-#      \  /   2
-#       '2   
-#         \   1
-#          2<
-#             2
+#    \              1
+#      \        1 <
+#        \    /     2
+#           2   
+#             \     1
+#               2 <
+#                   2
 # Number of directories created = SUM ( width )^n, n = {1..depth}
 # Files are placed randomly within the tree at a random interval between 0.1 and maxwait_ seconds.
 
