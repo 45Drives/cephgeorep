@@ -9,16 +9,16 @@ namespace fs = boost::filesystem;
 #define LAST_RCTIME_NAME "last_rctime.dat"
 
 struct Config{
+  int log_level;
+  int sync_frequency;
+  int prop_delay_ms;
+  bool ignore_hidden;
+  bool ignore_win_lock;
+  bool compress;
   fs::path sender_dir;
   std::string receiver_host;
   fs::path receiver_dir;
   fs::path last_rctime;
-  int sync_frequency;
-  bool ignore_hidden;
-  bool ignore_win_lock;
-  int prop_delay_ms;
-  bool compress;
-  int log_level;
 };
 
 extern Config config;
