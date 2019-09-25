@@ -94,6 +94,11 @@ void loadConfig(void){
     std::cerr << "Please fix these mistakes in " << configPath << "." << std::endl;
     exit(1);
   }
+  
+  // construct rsync_remote_dest
+  std::string str = config.receiver_host + ":" + config.receiver_dir.string();
+  config.rsync_remote_dest = new char[str.length()+1];
+  std::strcpy(config.rsync_remote_dest, str.c_str());
 }
 
 void createConfig(const fs::path &configPath, std::fstream &configFile){

@@ -12,6 +12,7 @@ struct Config{
   int log_level;
   int sync_frequency;
   int prop_delay_ms;
+  char *rsync_remote_dest;
   bool ignore_hidden;
   bool ignore_win_lock;
   bool compress;

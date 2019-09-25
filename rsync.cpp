@@ -7,27 +7,25 @@
 #include <sys/wait.h>
 #include <thread>
 #include <chrono>
-
-#include <iostream>
+#include <string>
+#include <cstring>
 
 namespace fs = boost::filesystem;
 
 void launch_rsync(std::vector<fs::path> queue){
   pid_t pid;
   int status;
-  std::vector<char *> argv;
-  std::vector<std::string> args{"rsync","-a","--relative"};
-  if(config.compress) args.push_back("-z");
+  std::vector<char *> argv{(char *)"rsync",(char *)"-a",(char *)"--relative"};
+  if(config.compress) argv.push_back((char *)"-z");
   
   for(fs::path i : queue){
-    args.push_back(i.string());
+    char *str = new char[i.string().length()+1];
+    std::strcpy(str,i.c_str());
+    argv.push_back(str);
   }
   
-  args.push_back(config.receiver_host + ":" + config.receiver_dir.string());
-  
-  for(std::vector<std::string>::iterator itr = args.begin(); itr != args.end(); ++itr){
-    argv.push_back(&(*itr)[0]);
-  }
+  // push back host:/path/to/backup
+  argv.push_back(config.rsync_remote_dest);
   
   argv.push_back(NULL);
   
