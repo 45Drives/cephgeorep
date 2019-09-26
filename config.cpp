@@ -144,6 +144,7 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
 void dumpConfig(void){
   std::cout << "configuration:" << std::endl;
   std::cout << "SND_SYNC_DIR=" << config.sender_dir.string() << std::endl;
+  std::cout << "REMOTE_USER=" << config.remote_user << std::endl;
   std::cout << "REMOTE_HOST=" << config.receiver_host << std::endl;
   std::cout << "RECV_SYNC_HOST=" << config.receiver_host << std::endl;
   std::cout << "RECV_SYNC_DIR=" << config.receiver_dir.string() << std::endl;
