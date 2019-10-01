@@ -50,9 +50,11 @@ void pollBase(fs::path path){
       Log("Launching crawler",2);
       crawler(snapPath, sync_queue, snapPath); // enqueue if rctime > last_rctime
       // log list of new files
-      Log("Files to sync:",2);
-      for(auto i : sync_queue){
-        Log(i.string(),2);
+      if(config.log_level >= 2){ // skip loop if not logging
+        Log("Files to sync:",2);
+        for(auto i : sync_queue){
+          Log(i.string(),2);
+        }
       }
       Log("New files to sync: "+std::to_string(sync_queue.size())+".",2);
       // launch rsync
@@ -100,49 +102,6 @@ bool checkForChange(const fs::path &path, const timespec &last_rctime, timespec 
     }
   }
   return change;
-}
-
-int count(fs::path path, FilesOrDirs choice){
-  char buffer[XATTR_SIZE];
-  int buffLen;
-  int result = 0;
-  switch(choice){
-  case BOTH:
-  case FILES:
-    if((buffLen = getxattr(path.c_str(), "ceph.dir.files",
-    buffer, XATTR_SIZE)) == ERR)
-      error(READ_FILES_DIRS);
-    result = stoi(std::string(buffer).substr(0, buffLen));
-    if(choice == FILES) break; // else fall through
-  case DIRS:
-    if((buffLen = getxattr(path.c_str(), "ceph.dir.subdirs",
-    buffer, XATTR_SIZE)) == ERR)
-      error(READ_FILES_DIRS);
-    result += stoi(std::string(buffer).substr(0, buffLen));
-    break;
-  default:
-    break;
-  }
-  return result;
-}
-
-void read_directory(fs::path path,
-std::vector<fs::path> &q, FilesOrDirs choice){
-  copy_if(fs::directory_iterator(path),
-  fs::directory_iterator(), back_inserter(q),
-  [choice](fs::path p){ // lambda fn for conditional copy
-    if(config.ignore_hidden == true && p.filename().string().front() == '.')
-      return false; // early return for ignoring hidden files/dirs
-    switch(choice){
-    case FILES:
-      return !is_directory(p);
-    case DIRS:
-      return is_directory(p);
-    case BOTH:
-    default:
-      return true;
-    }
-  });
 }
 
 fs::path takesnap(const timespec &rctime){
