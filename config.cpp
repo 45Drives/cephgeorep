@@ -13,6 +13,7 @@ Config config; // global config struct
 void loadConfig(void){
   bool errors = false;
   std::string line, key, value;
+  std::size_t strItr;
   
   // open file
   fs::path configPath(CONFIG_PATH);
@@ -22,8 +23,17 @@ void loadConfig(void){
   // read file
   while(configFile){
     getline(configFile, line);
+    // full line comments:
     if(line.front() == '#')
       continue; // ignore comments
+    // end of line comments:
+    if((strItr = line.find('#')) != std::string::npos){ // strItr point to '#'
+      strItr--; // move back one place
+      while(line.at(strItr) == ' ' || line.at(strItr) == '\t'){ // remove whitespace
+        strItr--;
+      } // strItr points to last character of value
+      line = line.substr(0,strItr + 1);
+    }
     std::stringstream linestream(line);
     getline(linestream, key, '=');
     getline(linestream, value);
