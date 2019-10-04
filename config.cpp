@@ -24,7 +24,7 @@ void loadConfig(void){
   while(configFile){
     getline(configFile, line);
     // full line comments:
-    if(line.front() == '#')
+    if(line.empty() || line.front() == '#')
       continue; // ignore comments
     // end of line comments:
     if((strItr = line.find('#')) != std::string::npos){ // strItr point to '#'
@@ -124,26 +124,29 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
   std::ofstream f(configPath.c_str());
   if(!f) error(OPEN_CONFIG);
   f <<
-    "SND_SYNC_DIR=\n"
-    "REMOTE_USER=\n"
-    "RECV_SYNC_HOST=\n"
-    "RECV_SYNC_DIR=\n"
+    "# local backup settings\n"
+    "SND_SYNC_DIR=               # full path to directory to backup\n"
+    "IGNORE_HIDDEN=false         # ignore files beginning with \".\"\n"
+    "IGNORE_WIN_LOCK=true        # ignore files beginning with \"~$\"\n"
+    "\n"
+    "# remote settings\n"
+    "REMOTE_USER=                # user on remote backup machine (optional)\n"
+    "RECV_SYNC_HOST=             # remote backup machine address/host\n"
+    "RECV_SYNC_DIR=              # directory in remote backup\n"
+    "\n"
+    "# daemon settings\n"
     "LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n"
-    "SYNC_FREQ=10\n"
-    "IGNORE_HIDDEN=false\n"
-    "IGNORE_WIN_LOCK=true\n"
-    "RCTIME_PROP_DELAY=100\n"
-    "COMPRESSION=false\n"
+    "SYNC_FREQ=10                # time in seconds between checks for changes\n"
+    "RCTIME_PROP_DELAY=100       # time in milliseconds between snapshot and sync\n"
+    "COMPRESSION=false           # rsync compression\n"
     "LOG_LEVEL=1\n"
     "# 0 = minimum logging\n"
     "# 1 = basic logging\n"
     "# 2 = debug logging\n"
-    "# sync frequency in seconds\n"
-    "# propagation delay in milliseconds\n"
+    "# If not remote user is specified, the daemon will sync remotely as root user.\n"
     "# Propagation delay is to account for the limit that Ceph can\n"
     "# propagate the modification time of a file all the way back to\n"
     "# the root of the sync directory.\n"
-    "# IGNORE_WIN_LOCK is used to skip files beginning with \"~$\"\n"
     "# Only use compression if your network connection to your\n"
     "# backup server is slow.\n";
   f.close();
