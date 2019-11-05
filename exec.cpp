@@ -1,8 +1,9 @@
-#include "rsync.hpp"
+#include "exec.hpp"
 #include "config.hpp"
 #include "alert.hpp"
 #include <vector>
 #include <boost/filesystem.hpp>
+#include <boost/tokenizer.hpp>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <thread>
@@ -13,13 +14,23 @@ namespace fs = boost::filesystem;
 void launch_rsync(std::vector<fs::path> queue){
   pid_t pid;
   int status;
-  std::vector<char *> argv{(char *)"rsync",(char *)"-a",(char *)"--relative"};
-  if(config.compress) argv.push_back((char *)"-z");
+  std::vector<char *> argv;
+  std::vector<char *> garbage;
+  argv.push_back((char *)config.execBin.c_str());
+  
+  boost::tokenizer<boost::char_separator<char>> tokens(config.execFlags, boost::char_separator<char>(" "));
+  for(boost::tokenizer<boost::char_separator<char>>::iterator itr = tokens.begin(); itr != tokens.end(); ++itr){
+    char *flag = new char[(*itr).length()+1];
+    strcpy(flag,(*itr).c_str());
+    argv.push_back(flag);
+    garbage.push_back(flag);
+  }
   
   for(fs::path i : queue){
-    char *str = new char[i.string().length()+1];
-    std::strcpy(str,i.c_str());
-    argv.push_back(str);
+    char *path = new char[i.string().length()+1];
+    std::strcpy(path,i.c_str());
+    argv.push_back(path);
+    garbage.push_back(path);
   }
   
   // push back host:/path/to/backup
@@ -68,4 +79,9 @@ void launch_rsync(std::vector<fs::path> queue){
       break;
     }
   }while(WEXITSTATUS(status) == SSH_FAIL);
+  
+  // garbage cleanup
+  for(auto i : garbage){
+    delete i;
+  }
 }

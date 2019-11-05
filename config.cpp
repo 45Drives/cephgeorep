@@ -64,15 +64,16 @@ void loadConfig(void){
       }catch(std::invalid_argument){
         config.prop_delay_ms = -1;
       }
-    }else if(key == "COMPRESSION"){
-      std::istringstream(value) >> std::boolalpha >> config.compress >> std::noboolalpha;
     }else if(key == "LOG_LEVEL"){
       try{
         config.log_level = stoi(value);
       }catch(std::invalid_argument){
         config.log_level = -1;
       }
-    }// else ignore entry
+    }else if(key == "EXEC"){
+      config.execBin = value;
+    }else if(key == "FLAGS"){
+      config.execFlags = value;    }// else ignore entry
   }
   
   // verify contents
@@ -103,6 +104,14 @@ void loadConfig(void){
   if(config.log_level < 0){
     std::cerr << "Config log level must be positive integer (LOG_LEVEL)\n";
     errors = true;
+  }
+  if(config.execBin.empty()){
+    std::cerr << "Config must contain program to execute! (EXEC)\n";
+    errors = true;
+  }
+  if(config.execBin.empty()){
+    std::cerr << "Warning: no execution flags present in config. (FLAGS)\n";
+    // just warning, no error here
   }
   if(errors){
     std::cerr << "Please fix these mistakes in " << configPath << "." << std::endl;
@@ -135,10 +144,11 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
     "RECV_SYNC_DIR=              # directory in remote backup\n"
     "\n"
     "# daemon settings\n"
+    "EXEC=rsync                  # program to use for syncing - rsync or rclone\n"
+    "FLAGS=-a --relative         # execution flags for above program\n"
     "LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n"
     "SYNC_FREQ=10                # time in seconds between checks for changes\n"
     "RCTIME_PROP_DELAY=100       # time in milliseconds between snapshot and sync\n"
-    "COMPRESSION=false           # rsync compression\n"
     "LOG_LEVEL=1\n"
     "# 0 = minimum logging\n"
     "# 1 = basic logging\n"
@@ -166,7 +176,6 @@ void dumpConfig(void){
   std::cout << "IGNORE_HIDDEN=" << std::boolalpha << config.ignore_hidden << std::endl;
   std::cout << "IGNORE_WIN_LOCK=" << std::boolalpha << config.ignore_win_lock << std::endl;
   std::cout << "RCTIME_PROP_DELAY=" << config.prop_delay_ms << std::endl;
-  std::cout << "COMPRESSION=" << config.compress << std::noboolalpha << std::endl;
   std::cout << "LOG_LEVEL=" << config.log_level << std::endl;
   std::cout << "rsync will sync to: " << config.rsync_remote_dest << std::endl;
 }
