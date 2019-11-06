@@ -10,5 +10,5 @@
 
 namespace fs = boost::filesystem;
 
-void launch_rsync(std::vector<fs::path> queue);
-// fork and exec rsync with flags and pass queue
+void launch_syncBin(std::vector<fs::path> queue);
+// fork and exec binary specified in config.execBin with config.execFlags and pass queue

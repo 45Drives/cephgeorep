@@ -11,7 +11,7 @@ struct Config{
   int log_level;
   int sync_frequency;
   int prop_delay_ms;
-  char *rsync_remote_dest;
+  char *sync_remote_dest;
   bool ignore_hidden;
   bool ignore_win_lock;
   std::string remote_user;

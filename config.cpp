@@ -123,8 +123,8 @@ void loadConfig(void){
   if(!config.remote_user.empty()){
     str = config.remote_user + "@" + str;
   }
-  config.rsync_remote_dest = new char[str.length()+1];
-  std::strcpy(config.rsync_remote_dest, str.c_str());
+  config.sync_remote_dest = new char[str.length()+1];
+  std::strcpy(config.sync_remote_dest, str.c_str());
 }
 
 void createConfig(const fs::path &configPath, std::fstream &configFile){
@@ -144,8 +144,8 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
     "RECV_SYNC_DIR=              # directory in remote backup\n"
     "\n"
     "# daemon settings\n"
-    "EXEC=rsync                  # program to use for syncing - rsync or rclone\n"
-    "FLAGS=-a --relative         # execution flags for above program\n"
+    "EXEC=rsync                  # program to use for syncing - rsync or scp\n"
+    "FLAGS=-a --relative         # execution flags for above program (space delim)\n"
     "LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n"
     "SYNC_FREQ=10                # time in seconds between checks for changes\n"
     "RCTIME_PROP_DELAY=100       # time in milliseconds between snapshot and sync\n"
@@ -153,11 +153,11 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
     "# 0 = minimum logging\n"
     "# 1 = basic logging\n"
     "# 2 = debug logging\n"
-    "# If not remote user is specified, the daemon will sync remotely as root user.\n"
+    "# If no remote user is specified, the daemon will sync remotely as root user.\n"
     "# Propagation delay is to account for the limit that Ceph can\n"
     "# propagate the modification time of a file all the way back to\n"
     "# the root of the sync directory.\n"
-    "# Only use compression if your network connection to your\n"
+    "# Only use compression (-z) if your network connection to your\n"
     "# backup server is slow.\n";
   f.close();
   configFile.open(configPath.c_str()); // seek to beginning of file for input
@@ -171,11 +171,13 @@ void dumpConfig(void){
   std::cout << "REMOTE_HOST=" << config.receiver_host << std::endl;
   std::cout << "RECV_SYNC_HOST=" << config.receiver_host << std::endl;
   std::cout << "RECV_SYNC_DIR=" << config.receiver_dir.string() << std::endl;
+  std::cout << "EXEC=" << config.execBin << std::endl;
+  std::cout << "FLAGS=" << config.execFlags << std::endl;
   std::cout << "LAST_RCTIME_DIR=" << config.last_rctime.string() << std::endl;
   std::cout << "SYNC_FREQ=" << config.sync_frequency << std::endl;
   std::cout << "IGNORE_HIDDEN=" << std::boolalpha << config.ignore_hidden << std::endl;
   std::cout << "IGNORE_WIN_LOCK=" << std::boolalpha << config.ignore_win_lock << std::endl;
   std::cout << "RCTIME_PROP_DELAY=" << config.prop_delay_ms << std::endl;
   std::cout << "LOG_LEVEL=" << config.log_level << std::endl;
-  std::cout << "rsync will sync to: " << config.rsync_remote_dest << std::endl;
+  std::cout << "rsync will sync to: " << config.sync_remote_dest << std::endl;
 }
