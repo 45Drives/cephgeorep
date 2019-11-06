@@ -47,7 +47,7 @@ LOG_LEVEL=1
 # Propagation delay is to account for the limit that Ceph can
 # propagate the modification time of a file all the way back to
 # the root of the sync directory.
-# Only use compression if your network connection to your
+# Only use compression (-z) if your network connection to your
 # backup server is slow.
 ```
 
