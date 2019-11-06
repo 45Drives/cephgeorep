@@ -4,10 +4,10 @@ For use with a distributed Ceph File System cluster to georeplicate files to a r
 This daemon takes advantage of Ceph's `rctime` directory attribute, which is the value of the highest `mtime` of all the files below a given directory tree. Using this attribute, it selectively recurses only into directory tree branches with modified files - instead of wasting time accessing every branch.
 
 ## Prerequisites
-You must have a Ceph file system. `rsync` must be installed on both the local system and the remote backup. You must also set up passwordless SSH from your sender (local) to your receiver (remote backup) with a public/private key pair to allow rsync to send your files without prompting for a password. For compilation, boost development libraries are needed. The binary provided is statically linked, so the server does not need boost to run the daemon.
+You must have a Ceph file system. `rsync`, `scp`, or similar must be installed on both the local system and the remote backup. You must also set up passwordless SSH from your sender (local) to your receiver (remote backup) with a public/private key pair to allow rsync to send your files without prompting for a password. For compilation, boost development libraries are needed. The binary provided is statically linked, so the server does not need boost to run the daemon.
 
 ## Runtime Dependencies
-Since the binary is statically linked, no boost runtime libraries are needed on the system. It only requires that `rsync` is installed.
+Since the binary is statically linked, no boost runtime libraries are needed on the system. It only requires that `rsync`, etc. is installed.
 
 ## Installation Instructions
 Download the provided binary and move it to /usr/bin/ as cephfssyncd. Place cephfssyncd.service in /etc/systemd/system/. Run `systemctl enable cephfssyncd` to enable daemon startup at boot. A default configuration file will be created by the daemon at /etc/ceph/cephfssyncd.conf, which must be edited to add the sender sync directory, receiver host, and receiver directory.
@@ -34,10 +34,11 @@ RECV_SYNC_HOST=             # remote backup machine address/host
 RECV_SYNC_DIR=              # directory in remote backup
 
 # daemon settings
+EXEC=rsync                  # program to use for syncing - rsync or scp
+FLAGS=-a --relative         # execution flags for above program (space delim)
 LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/
 SYNC_FREQ=10                # time in seconds between checks for changes
 RCTIME_PROP_DELAY=100       # time in milliseconds between snapshot and sync
-COMPRESSION=false           # rsync compression
 LOG_LEVEL=1
 # 0 = minimum logging
 # 1 = basic logging
@@ -65,10 +66,9 @@ This delay was greatly reduced in the Ceph Nautilus release, so a delay of 100ms
 Launch the daemon by running `systemctl start cephfssyncd`, and run `systemctl enable cephfssyncd` to enable launch at startup. To monitor output of daemon, run `watch -n 1 systemctl status cephfssyncd`.
 
 ## Notes
-* If your backup server is down, cephfssyncd will try to launch rsync and fail, however it will retry the sync at 25 second
-intervals. All new files in the server created while cephfssyncd is waiting for rsync to succeed will be synced on the next cycle.  
+* If your backup server is down, cephfssyncd will try to launch rsync or scp and fail, however it will retry the sync at 25 second intervals. All new files in the server created while cephfssyncd is waiting for rsync or scp to succeed will be synced on the next cycle.  
 * Windows does not update the `mtime` attribute when drag/dropping or copying a file, so files that are moved into a shared folder will not sync if their Last Modified time is earlier than the most recent sync. 
 * When the daemon is killed with SIGINT, SIGTERM, or SIGQUIT, it saves the last sync timestamp to disk in the directory specified in the configuration file to pick up where it left off on the next launch. If the daemon is killed with SIGKILL or if power is lost to the system causing an abrupt shutdown, the daemon will resync all files modified since the previously saved timestamp.
-* If the REMOTE_USER is specified as a user that does not exist on the remote backup server, `rsync` will prompt for the user's password. Since it doesn't exist, when SSH fails the daemon will act as if the remote server is down and retry `rsync` every 25 seconds.
+* If the REMOTE_USER is specified as a user that does not exist on the remote backup server, `rsync` or `scp` will prompt for the user's password. Since it doesn't exist, when SSH fails the daemon will act as if the remote server is down and retry `rsync` or `scp` every 25 seconds.
 
 [![45Drives Logo](https://www.45drives.com/img/45-drives-brand.png)](https://www.45drives.com)
