@@ -36,7 +36,7 @@ void launch_syncBin(std::vector<fs::path> queue){
   }
   
   // push back host:/path/to/backup
-  argv.push_back(config.sync_remote_dest);
+  if(config.sync_remote_dest[0] != '\0') argv.push_back(config.sync_remote_dest);
   
   argv.push_back(NULL);
   

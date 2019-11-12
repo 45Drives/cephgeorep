@@ -82,12 +82,12 @@ void loadConfig(void){
     errors = true;
   }
   if(config.receiver_host.empty()){
-    std::cerr << "Config does not contain a remote host address (RECV_SYNC_HOST)\n";
-    errors = true;
+    std::cerr << "Warning: config does not contain a remote host address (RECV_SYNC_HOST)\n";
+    // just warning
   }
   if(config.receiver_dir.empty()){
-    std::cerr << "Config does not contain a remote host directory (RECV_SYNC_DIR)\n";
-    errors = true;
+    std::cerr << "Warning: config does not contain a remote host directory (RECV_SYNC_DIR)\n";
+    // just warning
   }
   if(config.last_rctime.empty()){
     std::cerr << "Config does not contain a path to store last timestamp (LAST_RCTIME_DIR)\n";
@@ -111,7 +111,7 @@ void loadConfig(void){
   }
   if(config.execBin.empty()){
     std::cerr << "Warning: no execution flags present in config. (FLAGS)\n";
-    // just warning, no error here
+    // just warning
   }
   if(errors){
     std::cerr << "Please fix these mistakes in " << configPath << "." << std::endl;
@@ -119,7 +119,10 @@ void loadConfig(void){
   }
   
   // construct rsync_remote_dest
-  std::string str = config.receiver_host + ":" + config.receiver_dir.string();
+  std::string str = config.receiver_dir.string();
+  if(!config.receiver_host.empty()){
+    str = config.receiver_host + ":" + str;
+  }
   if(!config.remote_user.empty()){
     str = config.remote_user + "@" + str;
   }
