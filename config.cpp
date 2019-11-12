@@ -10,12 +10,19 @@ namespace fs = boost::filesystem;
 
 Config config; // global config struct
 
+std::string config_path;
+
 void loadConfig(void){
   std::string line, key, value;
   std::size_t strItr;
   
+  if(config_path.empty()){
+    config_path = DEFAULT_CONFIG_PATH;
+    std::cout << "Using default config path: " << config_path << std::endl;
+  }
+  
   // open file
-  fs::path configPath(CONFIG_PATH);
+  fs::path configPath(config_path);
   std::fstream configFile(configPath.c_str());
   if(!configFile) createConfig(configPath, configFile);
   
@@ -118,7 +125,7 @@ void verifyConfig(){
     // just warning
   }
   if(errors){
-    std::cerr << "Please fix these mistakes in " << CONFIG_PATH << "." << std::endl;
+    std::cerr << "Please fix these mistakes in " << config_path << "." << std::endl;
     exit(1);
   }
 }

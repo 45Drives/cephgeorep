@@ -4,7 +4,7 @@
 
 namespace fs = boost::filesystem;
 
-#define CONFIG_PATH "/etc/ceph/cephfssyncd.conf"
+#define DEFAULT_CONFIG_PATH "/etc/ceph/cephfssyncd.conf"
 #define LAST_RCTIME_NAME "last_rctime.dat"
 
 struct Config{
@@ -22,6 +22,8 @@ struct Config{
   std::string execBin;
   std::string execFlags;
 };
+
+extern std::string config_path;
 
 extern Config config;
 
