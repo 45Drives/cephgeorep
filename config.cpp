@@ -11,7 +11,6 @@ namespace fs = boost::filesystem;
 Config config; // global config struct
 
 void loadConfig(void){
-  bool errors = false;
   std::string line, key, value;
   std::size_t strItr;
   
@@ -64,29 +63,35 @@ void loadConfig(void){
       }catch(std::invalid_argument){
         config.prop_delay_ms = -1;
       }
-    }else if(key == "COMPRESSION"){
-      std::istringstream(value) >> std::boolalpha >> config.compress >> std::noboolalpha;
     }else if(key == "LOG_LEVEL"){
       try{
         config.log_level = stoi(value);
       }catch(std::invalid_argument){
         config.log_level = -1;
       }
+    }else if(key == "EXEC"){
+      config.execBin = value;
+    }else if(key == "FLAGS"){
+      config.execFlags = value;
     }// else ignore entry
   }
+  verifyConfig();
+  construct_rsync_remote_dest();
+}
   
-  // verify contents
+void verifyConfig(){
+  bool errors = false;
   if(config.sender_dir.empty()){
     std::cerr << "Config does not contain a directory to search (SND_SYNC_DIR)\n";
     errors = true;
   }
   if(config.receiver_host.empty()){
-    std::cerr << "Config does not contain a remote host address (RECV_SYNC_HOST)\n";
-    errors = true;
+    std::cerr << "Warning: config does not contain a remote host address (RECV_SYNC_HOST)\n";
+    // just warning
   }
   if(config.receiver_dir.empty()){
-    std::cerr << "Config does not contain a remote host directory (RECV_SYNC_DIR)\n";
-    errors = true;
+    std::cerr << "Warning: config does not contain a remote host directory (RECV_SYNC_DIR)\n";
+    // just warning
   }
   if(config.last_rctime.empty()){
     std::cerr << "Config does not contain a path to store last timestamp (LAST_RCTIME_DIR)\n";
@@ -104,18 +109,30 @@ void loadConfig(void){
     std::cerr << "Config log level must be positive integer (LOG_LEVEL)\n";
     errors = true;
   }
+  if(config.execBin.empty()){
+    std::cerr << "Config must contain program to execute! (EXEC)\n";
+    errors = true;
+  }
+  if(config.execBin.empty()){
+    std::cerr << "Warning: no execution flags present in config. (FLAGS)\n";
+    // just warning
+  }
   if(errors){
-    std::cerr << "Please fix these mistakes in " << configPath << "." << std::endl;
+    std::cerr << "Please fix these mistakes in " << CONFIG_PATH << "." << std::endl;
     exit(1);
   }
-  
-  // construct rsync_remote_dest
-  std::string str = config.receiver_host + ":" + config.receiver_dir.string();
+}
+
+void construct_rsync_remote_dest(){
+  std::string str = config.receiver_dir.string();
+  if(!config.receiver_host.empty()){
+    str = config.receiver_host + ":" + str;
+  }
   if(!config.remote_user.empty()){
     str = config.remote_user + "@" + str;
   }
-  config.rsync_remote_dest = new char[str.length()+1];
-  std::strcpy(config.rsync_remote_dest, str.c_str());
+  config.sync_remote_dest = new char[str.length()+1];
+  std::strcpy(config.sync_remote_dest, str.c_str());
 }
 
 void createConfig(const fs::path &configPath, std::fstream &configFile){
@@ -135,19 +152,20 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
     "RECV_SYNC_DIR=              # directory in remote backup\n"
     "\n"
     "# daemon settings\n"
+    "EXEC=rsync                  # program to use for syncing - rsync or scp\n"
+    "FLAGS=-a --relative         # execution flags for above program (space delim)\n"
     "LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n"
     "SYNC_FREQ=10                # time in seconds between checks for changes\n"
     "RCTIME_PROP_DELAY=100       # time in milliseconds between snapshot and sync\n"
-    "COMPRESSION=false           # rsync compression\n"
     "LOG_LEVEL=1\n"
     "# 0 = minimum logging\n"
     "# 1 = basic logging\n"
     "# 2 = debug logging\n"
-    "# If not remote user is specified, the daemon will sync remotely as root user.\n"
+    "# If no remote user is specified, the daemon will sync remotely as root user.\n"
     "# Propagation delay is to account for the limit that Ceph can\n"
     "# propagate the modification time of a file all the way back to\n"
     "# the root of the sync directory.\n"
-    "# Only use compression if your network connection to your\n"
+    "# Only use compression (-z) if your network connection to your\n"
     "# backup server is slow.\n";
   f.close();
   configFile.open(configPath.c_str()); // seek to beginning of file for input
@@ -161,12 +179,13 @@ void dumpConfig(void){
   std::cout << "REMOTE_HOST=" << config.receiver_host << std::endl;
   std::cout << "RECV_SYNC_HOST=" << config.receiver_host << std::endl;
   std::cout << "RECV_SYNC_DIR=" << config.receiver_dir.string() << std::endl;
+  std::cout << "EXEC=" << config.execBin << std::endl;
+  std::cout << "FLAGS=" << config.execFlags << std::endl;
   std::cout << "LAST_RCTIME_DIR=" << config.last_rctime.string() << std::endl;
   std::cout << "SYNC_FREQ=" << config.sync_frequency << std::endl;
   std::cout << "IGNORE_HIDDEN=" << std::boolalpha << config.ignore_hidden << std::endl;
   std::cout << "IGNORE_WIN_LOCK=" << std::boolalpha << config.ignore_win_lock << std::endl;
   std::cout << "RCTIME_PROP_DELAY=" << config.prop_delay_ms << std::endl;
-  std::cout << "COMPRESSION=" << config.compress << std::noboolalpha << std::endl;
   std::cout << "LOG_LEVEL=" << config.log_level << std::endl;
-  std::cout << "rsync will sync to: " << config.rsync_remote_dest << std::endl;
+  std::cout << "rsync will sync to: " << config.sync_remote_dest << std::endl;
 }

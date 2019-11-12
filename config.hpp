@@ -11,21 +11,26 @@ struct Config{
   int log_level;
   int sync_frequency;
   int prop_delay_ms;
-  char *rsync_remote_dest;
+  char *sync_remote_dest;
   bool ignore_hidden;
   bool ignore_win_lock;
-  bool compress;
   std::string remote_user;
   fs::path sender_dir;
   std::string receiver_host;
   fs::path receiver_dir;
   fs::path last_rctime;
+  std::string execBin;
+  std::string execFlags;
 };
 
 extern Config config;
 
 void loadConfig(void);
 // Load configuration parameters from file, create default config if none exists
+
+void verifyConfig(void);
+
+void construct_rsync_remote_dest(void);
 
 void createConfig(const fs::path &configPath, std::fstream &configFile);
 // creates config directory and initializes config file. Returns config file

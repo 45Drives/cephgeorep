@@ -2,7 +2,7 @@
 #include "alert.hpp"
 #include "rctime.hpp"
 #include "config.hpp"
-#include "rsync.hpp"
+#include "exec.hpp"
 #include <boost/filesystem.hpp>
 #include <sys/xattr.h>
 #include <thread>
@@ -58,7 +58,7 @@ void pollBase(fs::path path){
       }
       Log("New files to sync: "+std::to_string(sync_queue.size())+".",2);
       // launch rsync
-      if(!sync_queue.empty()) launch_rsync(sync_queue);
+      if(!sync_queue.empty()) launch_syncBin(sync_queue);
       // clear sync queue
       sync_queue.clear();
       // delete snapshot
