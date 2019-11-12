@@ -6,7 +6,7 @@ shift
 for ARG in "$@"; do
 	if [ ! -z "$ARG" ]; then
 		REL=$(echo $ARG | awk -F '/./' '{print $2}')
-		echo "s3cmd put $ARG s3://"$BUCKET"/"$REL""
+		# echo "s3cmd put $ARG s3://"$BUCKET"/"$REL""
 		s3cmd put $ARG s3://"$BUCKET"/"$REL"
 	fi
 done
