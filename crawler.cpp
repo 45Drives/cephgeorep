@@ -105,7 +105,8 @@ bool checkForChange(const fs::path &path, const timespec &last_rctime, timespec 
 }
 
 fs::path takesnap(const timespec &rctime){
-  fs::path snapPath = fs::path(config.sender_dir).append(".snap/snapshot"+rctime);
+  std::string pid = std::to_string(getpid());
+  fs::path snapPath = fs::path(config.sender_dir).append(".snap/"+pid+"snapshot"+rctime);
   Log("Creating snapshot: " + snapPath.string(), 2);
   fs::create_directories(snapPath, ec);
   if(ec) error(PATH_CREATE, ec);
