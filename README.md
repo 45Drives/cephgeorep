@@ -65,6 +65,32 @@ This delay was greatly reduced in the Ceph Nautilus release, so a delay of 100ms
 ## Usage
 Launch the daemon by running `systemctl start cephfssyncd`, and run `systemctl enable cephfssyncd` to enable launch at startup. To monitor output of daemon, run `watch -n 1 systemctl status cephfssyncd`.
 
+## Usage with s3 Buckets
+
+For use with backing up to aws s3 buckets, there is some special configuration to be done. The wrapper script `s3wrap.sh` included with the binary release allows the daemon to work with `s3cmd` seamlessly. Ensure `s3cmd` is installed and configured on your system, and use the following example configuration file as a starting point:
+```
+# local backup settings
+SND_SYNC_DIR=/mnt/cephfs    # full path to directory to backup
+IGNORE_HIDDEN=true          # ignore files beginning with "."
+IGNORE_WIN_LOCK=true        # ignore files beginning with "~$"
+
+# remote settings
+# the following settings *must* be left blank for use with s3wrap.sh
+REMOTE_USER=                # user on remote backup machine (optional)
+RECV_SYNC_HOST=             # remote backup machine address/host
+RECV_SYNC_DIR=              # directory in remote backup
+
+# daemon settings
+EXEC=/root/cephgeorep/s3wrap.sh       # full path to s3wrap.sh
+FLAGS=sync_1                          # place only the name of the s3 bucket here
+# the rest can be left default
+LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/
+SYNC_FREQ=10                # time in seconds between checks for changes
+RCTIME_PROP_DELAY=100       # time in milliseconds between snapshot and sync
+LOG_LEVEL=1
+```
+With this setup, `cephfssynd` will call the s3cmd wrapper script, which in turn calls `s3cmd put ...` for each new file passed to it by `cephfssyncd`, maintaining the directory tree hierarchy.
+
 ## Notes
 * If your backup server is down, cephfssyncd will try to launch rsync or scp and fail, however it will retry the sync at 25 second intervals. All new files in the server created while cephfssyncd is waiting for rsync or scp to succeed will be synced on the next cycle.  
 * Windows does not update the `mtime` attribute when drag/dropping or copying a file, so files that are moved into a shared folder will not sync if their Last Modified time is earlier than the most recent sync. 
