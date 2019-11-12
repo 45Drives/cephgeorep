@@ -50,6 +50,7 @@ LOG_LEVEL=1
 # Only use compression (-z) if your network connection to your
 # backup server is slow.
 ```
+You can also specify a different config file with the command line argument `-c` or `--config`, i.e. `cephfssynd -c /alternate/path/to/config.conf`.  
 
 \* The Ceph file system has a propagation delay for recursive ctime to make its way from the changed file to the
 top level directory it's contained in. To account for this delay in deep directory trees, there is a user-defined
