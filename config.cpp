@@ -11,7 +11,6 @@ namespace fs = boost::filesystem;
 Config config; // global config struct
 
 void loadConfig(void){
-  bool errors = false;
   std::string line, key, value;
   std::size_t strItr;
   
@@ -73,10 +72,15 @@ void loadConfig(void){
     }else if(key == "EXEC"){
       config.execBin = value;
     }else if(key == "FLAGS"){
-      config.execFlags = value;    }// else ignore entry
+      config.execFlags = value;
+    }// else ignore entry
   }
+  verifyConfig();
+  construct_rsync_remote_dest();
+}
   
-  // verify contents
+void verifyConfig(){
+  bool errors = false;
   if(config.sender_dir.empty()){
     std::cerr << "Config does not contain a directory to search (SND_SYNC_DIR)\n";
     errors = true;
@@ -114,11 +118,12 @@ void loadConfig(void){
     // just warning
   }
   if(errors){
-    std::cerr << "Please fix these mistakes in " << configPath << "." << std::endl;
+    std::cerr << "Please fix these mistakes in " << CONFIG_PATH << "." << std::endl;
     exit(1);
   }
-  
-  // construct rsync_remote_dest
+}
+
+void construct_rsync_remote_dest(){
   std::string str = config.receiver_dir.string();
   if(!config.receiver_host.empty()){
     str = config.receiver_host + ":" + str;

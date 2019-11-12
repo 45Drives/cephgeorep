@@ -28,6 +28,10 @@ extern Config config;
 void loadConfig(void);
 // Load configuration parameters from file, create default config if none exists
 
+void verifyConfig(void);
+
+void construct_rsync_remote_dest(void);
+
 void createConfig(const fs::path &configPath, std::fstream &configFile);
 // creates config directory and initializes config file. Returns config file
 // stream in &configFile.
