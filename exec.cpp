@@ -63,6 +63,7 @@ void launch_syncBin(std::vector<fs::path> queue){
     }
     switch(WEXITSTATUS(status)){
     case SUCCESS:
+      Log("Done.",1);
       break;
     case SSH_FAIL:
       Log(binStr + " failed to connect to remote backup server.\n"
