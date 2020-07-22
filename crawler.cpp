@@ -54,7 +54,7 @@ void initDaemon(void){
 
 void pollBase(fs::path path){
   timespec rctime;
-  std::vector<fs::path> sync_queue;
+  std::list<fs::path> sync_queue;
   Log("Watching: " + path.string(),1);
   
   while(running){
@@ -77,7 +77,7 @@ void pollBase(fs::path path){
       }
       Log("New files to sync: "+std::to_string(sync_queue.size())+".",2);
       // launch rsync
-      if(!sync_queue.empty()) launch_syncBin(sync_queue);
+      if(!sync_queue.empty()) split_batches(sync_queue);
       // clear sync queue
       sync_queue.clear();
       // delete snapshot
@@ -92,7 +92,7 @@ void pollBase(fs::path path){
   }
 }
 
-void crawler(fs::path path, std::vector<fs::path> &queue, const fs::path &snapdir){
+void crawler(fs::path path, std::list<fs::path> &queue, const fs::path &snapdir){
   for(fs::directory_iterator itr{path};
   itr != fs::directory_iterator{}; *itr++){
     if((config.ignore_hidden == true &&
@@ -105,7 +105,7 @@ void crawler(fs::path path, std::vector<fs::path> &queue, const fs::path &snapdi
       crawler(path/((*itr).path().filename()), queue, snapdir); // recurse
     }else{
       // cut path at sync dir for rsync /sync_dir/.snap/snapshotX/./rel_path/file
-      queue.push_back(snapdir/fs::path(".")/fs::relative((*itr).path(),snapdir));
+      queue.emplace_back(snapdir/fs::path(".")/fs::relative((*itr).path(),snapdir));
     }
   }
 }

@@ -215,3 +215,12 @@ void dumpConfig(void){
   std::cout << "LOG_LEVEL=" << config.log_level << std::endl;
   std::cout << "rsync will sync to: " << config.sync_remote_dest << std::endl;
 }
+
+size_t find_env_size(char *envp[]){
+  size_t size = 0;
+  while(*envp){
+    size += strlen(*envp++) + 1;
+    size += sizeof(char *);
+  }
+  return size;
+}

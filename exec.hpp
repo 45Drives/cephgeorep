@@ -29,5 +29,8 @@
 
 namespace fs = boost::filesystem;
 
-void launch_syncBin(std::vector<fs::path> queue);
+void split_batches(std::list<fs::path> &queue);
+// split arg list into batches
+
+void launch_syncBin(std::list<fs::path> &queue);
 // fork and exec binary specified in config.execBin with config.execFlags and pass queue

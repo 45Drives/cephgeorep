@@ -29,7 +29,7 @@
 #include "crawler.hpp"
 #include "alert.hpp"
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[], char *envp[]){
   if(argc > 1){
     if(argc > 2 && (strcmp(argv[1],"-c") == 0 || strcmp(argv[1],"--config") == 0)){
       config_path = std::string(argv[2]);
@@ -38,6 +38,7 @@ int main(int argc, char *argv[]){
     }
   }
   initDaemon();
+  config.env_sz = find_env_size(envp);
   pollBase(config.sender_dir);
   return 0;
 }
