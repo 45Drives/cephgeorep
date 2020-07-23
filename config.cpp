@@ -54,11 +54,11 @@ void loadConfig(void){
     // end of line comments:
     if((strItr = line.find('#')) != std::string::npos){ // strItr point to '#'
       strItr--; // move back one place
-      while(line.at(strItr) == ' ' || line.at(strItr) == '\t'){ // remove whitespace
-        strItr--;
-      } // strItr points to last character of value
-      line = line.substr(0,strItr + 1);
     }
+    while(line.at(strItr) == ' ' || line.at(strItr) == '\t'){ // remove whitespace
+      strItr--;
+    } // strItr points to last character of value
+    line = line.substr(0,strItr + 1);
     std::stringstream linestream(line);
     getline(linestream, key, '=');
     getline(linestream, value);
