@@ -60,7 +60,7 @@ void pollBase(fs::path path){
   while(running){
     auto start = std::chrono::system_clock::now();
     if(checkForChange(path, last_rctime, rctime)){
-      Log("Change detected in " + path.string(), 2);
+      Log("Change detected in " + path.string(), 1);
       // create snapshot
       fs::path snapPath = takesnap(rctime);
       // wait for rctime to trickle to root

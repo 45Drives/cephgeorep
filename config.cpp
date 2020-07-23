@@ -17,6 +17,8 @@
     along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+//#define DEBUG_WS
+
 #include "config.hpp"
 #include "alert.hpp"
 #include <boost/filesystem.hpp>
@@ -101,21 +103,28 @@ void loadConfig(void){
 }
 
 void strip_whitespace(std::string &str){
+#ifdef DEBUG_WS
+  std::cout << "Input: \"" << str << "\"" << std::endl;
+#endif
   std::size_t strItr;
   // back ws
-  if((strItr = str.find('#')) != std::string::npos){ // strItr point to '#'
-    strItr--; // move back one place
+  if((strItr = str.find('#')) == std::string::npos){ // strItr point to '#' or end
+    strItr = str.length();
   }
-  while(str.at(strItr) == ' ' || str.at(strItr) == '\t'){ // remove whitespace
+  strItr--; // point to last character
+  while(strItr && (str.at(strItr) == ' ' || str.at(strItr) == '\t')){ // remove whitespace
     strItr--;
   } // strItr points to last character
   str = str.substr(0,strItr + 1);
   // front ws
   strItr = 0;
-  while(str.at(strItr) == ' ' || str.at(strItr) == '\t'){ // remove whitespace
+  while(strItr < str.length() && (str.at(strItr) == ' ' || str.at(strItr) == '\t')){ // remove whitespace
     strItr++;
   } // strItr points to first character
   str = str.substr(strItr, str.length() - strItr);
+#ifdef DEBUG_WS
+  std::cout << "Output: \"" << str << "\"" << std::endl;
+#endif
 }
   
 void verifyConfig(){
