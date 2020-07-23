@@ -50,6 +50,8 @@ extern Config config;
 void loadConfig(void);
 // Load configuration parameters from file, create default config if none exists
 
+void strip_whitespace(std::string &str);
+
 void verifyConfig(void);
 
 void construct_rsync_remote_dest(void);

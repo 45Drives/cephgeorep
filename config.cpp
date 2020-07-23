@@ -33,7 +33,6 @@ std::string config_path;
 
 void loadConfig(void){
   std::string line, key, value;
-  std::size_t strItr;
   
   if(config_path.empty()){
     config_path = DEFAULT_CONFIG_PATH;
@@ -51,17 +50,13 @@ void loadConfig(void){
     // full line comments:
     if(line.empty() || line.front() == '#')
       continue; // ignore comments
-    // end of line comments:
-    if((strItr = line.find('#')) != std::string::npos){ // strItr point to '#'
-      strItr--; // move back one place
-    }
-    while(line.at(strItr) == ' ' || line.at(strItr) == '\t'){ // remove whitespace
-      strItr--;
-    } // strItr points to last character of value
-    line = line.substr(0,strItr + 1);
+    
     std::stringstream linestream(line);
     getline(linestream, key, '=');
     getline(linestream, value);
+    
+    strip_whitespace(key);
+    strip_whitespace(value);
     
     if(key == "SND_SYNC_DIR"){
       config.sender_dir = fs::path(value);
@@ -103,6 +98,24 @@ void loadConfig(void){
   }
   verifyConfig();
   construct_rsync_remote_dest();
+}
+
+void strip_whitespace(std::string &str){
+  std::size_t strItr;
+  // back ws
+  if((strItr = str.find('#')) != std::string::npos){ // strItr point to '#'
+    strItr--; // move back one place
+  }
+  while(str.at(strItr) == ' ' || str.at(strItr) == '\t'){ // remove whitespace
+    strItr--;
+  } // strItr points to last character
+  str = str.substr(0,strItr + 1);
+  // front ws
+  strItr = 0;
+  while(str.at(strItr) == ' ' || str.at(strItr) == '\t'){ // remove whitespace
+    strItr++;
+  } // strItr points to first character
+  str = str.substr(strItr, str.length() - strItr);
 }
   
 void verifyConfig(){
