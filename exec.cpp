@@ -17,6 +17,8 @@
     along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+//#define DEBUG_BATCHES
+
 #include "exec.hpp"
 #include "config.hpp"
 #include "alert.hpp"
@@ -27,10 +29,61 @@
 #include <sys/wait.h>
 #include <thread>
 #include <chrono>
+#include <sys/resource.h>
+
+#ifdef DEBUG_BATCHES
+#include <iostream>
+#endif
+
+#define MAX_SZ_LIM 3*(8*1024*1024)/4
 
 namespace fs = boost::filesystem;
 
-void launch_syncBin(std::vector<fs::path> queue){
+void split_batches(std::list<fs::path> &queue){
+#ifdef DEBUG_BATCHES
+  int num_batches = 0;
+  std::vector<int> batch_size;
+#endif
+  struct rlimit lims;
+  getrlimit(RLIMIT_STACK, &lims);
+  size_t arg_max_sz = lims.rlim_cur / 4;
+  if(arg_max_sz > MAX_SZ_LIM) arg_max_sz = MAX_SZ_LIM;
+  arg_max_sz -= 4*2048; // allow 2048 bytes of headroom
+  while(!queue.empty()){
+    std::list<fs::path> batch;
+    size_t curr_sz = config.env_sz + config.execBin.length() + config.execFlags.length();
+    curr_sz += sizeof(char *) * 2;
+    if(config.sync_remote_dest[0] != '\0'){
+      curr_sz += strlen(config.sync_remote_dest) + 1 + sizeof(char *);
+    }
+    curr_sz += sizeof(NULL);
+    while(!queue.empty() && (curr_sz + strlen(queue.front().c_str()) + 1 + sizeof(char *)) < arg_max_sz){
+      batch.emplace_back(queue.front());
+      curr_sz += strlen(queue.front().c_str()) + 1 + sizeof(char *);
+      queue.pop_front();
+    }
+#ifdef DEBUG_BATCHES
+    batch_size.push_back(curr_sz);
+    num_batches++;
+    std::cout << "Batch: " << num_batches << std::endl;
+    for(fs::path i : batch){
+      std::cout << i << std::endl;
+    }
+  std::cout << "Max arg size: " << arg_max_sz << std::endl;
+#else
+    launch_syncBin(batch);
+#endif
+  }
+#ifdef DEBUG_BATCHES
+  std::cout << "Env size: " << config.env_sz << std::endl;
+  std::cout << "Batches: " << num_batches << std::endl;
+  for(int i : batch_size){
+    std::cout << "size: " << i << std::endl;
+  }
+#endif
+}
+
+void launch_syncBin(std::list<fs::path> &queue){
   pid_t pid;
   int status;
   std::vector<char *> argv;
@@ -39,8 +92,17 @@ void launch_syncBin(std::vector<fs::path> queue){
   
   std::string binStr(config.execBin);
   
-  boost::tokenizer<boost::char_separator<char>> tokens(config.execFlags, boost::char_separator<char>(" "));
-  for(boost::tokenizer<boost::char_separator<char>>::iterator itr = tokens.begin(); itr != tokens.end(); ++itr){
+  boost::tokenizer<boost::escaped_list_separator<char>> tokens(
+    config.execFlags,
+    boost::escaped_list_separator<char>(
+      std::string(""), std::string(" "), std::string("\"\'")
+    )
+  );
+  for(
+    boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
+    itr != tokens.end();
+    ++itr
+  ){
     char *flag = new char[(*itr).length()+1];
     strcpy(flag,(*itr).c_str());
     argv.push_back(flag);

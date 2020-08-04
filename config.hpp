@@ -30,6 +30,7 @@ struct Config{
   int log_level;
   int sync_frequency;
   int prop_delay_ms;
+  size_t env_sz = 0;
   char *sync_remote_dest;
   bool ignore_hidden;
   bool ignore_win_lock;
@@ -49,6 +50,8 @@ extern Config config;
 void loadConfig(void);
 // Load configuration parameters from file, create default config if none exists
 
+void strip_whitespace(std::string &str);
+
 void verifyConfig(void);
 
 void construct_rsync_remote_dest(void);
@@ -59,3 +62,6 @@ void createConfig(const fs::path &configPath, std::fstream &configFile);
 
 void dumpConfig(void);
 // dumps config contents to screen
+
+size_t find_env_size(char *envp[]);
+// get environment size

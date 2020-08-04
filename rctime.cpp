@@ -63,8 +63,7 @@ void writeLast_rctime(const timespec &rctime){
 }
 
 void init_last_rctime(void){
-  Log(config.last_rctime.string() + " does not exist. Creating and initializing"
-  "to 0.0.",2);
+  Log(config.last_rctime.string() + " does not exist. Creating and initializing to 0.0.",2);
   fs::create_directories(config.last_rctime.parent_path(), ec);
   if(ec) error(PATH_CREATE, ec);
   std::ofstream f(config.last_rctime.c_str());

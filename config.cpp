@@ -17,6 +17,8 @@
     along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+//#define DEBUG_WS
+
 #include "config.hpp"
 #include "alert.hpp"
 #include <boost/filesystem.hpp>
@@ -33,7 +35,6 @@ std::string config_path;
 
 void loadConfig(void){
   std::string line, key, value;
-  std::size_t strItr;
   
   if(config_path.empty()){
     config_path = DEFAULT_CONFIG_PATH;
@@ -51,17 +52,13 @@ void loadConfig(void){
     // full line comments:
     if(line.empty() || line.front() == '#')
       continue; // ignore comments
-    // end of line comments:
-    if((strItr = line.find('#')) != std::string::npos){ // strItr point to '#'
-      strItr--; // move back one place
-      while(line.at(strItr) == ' ' || line.at(strItr) == '\t'){ // remove whitespace
-        strItr--;
-      } // strItr points to last character of value
-      line = line.substr(0,strItr + 1);
-    }
+    
     std::stringstream linestream(line);
     getline(linestream, key, '=');
     getline(linestream, value);
+    
+    strip_whitespace(key);
+    strip_whitespace(value);
     
     if(key == "SND_SYNC_DIR"){
       config.sender_dir = fs::path(value);
@@ -103,6 +100,31 @@ void loadConfig(void){
   }
   verifyConfig();
   construct_rsync_remote_dest();
+}
+
+void strip_whitespace(std::string &str){
+#ifdef DEBUG_WS
+  std::cout << "Input: \"" << str << "\"" << std::endl;
+#endif
+  std::size_t strItr;
+  // back ws
+  if((strItr = str.find('#')) == std::string::npos){ // strItr point to '#' or end
+    strItr = str.length();
+  }
+  strItr--; // point to last character
+  while(strItr && (str.at(strItr) == ' ' || str.at(strItr) == '\t')){ // remove whitespace
+    strItr--;
+  } // strItr points to last character
+  str = str.substr(0,strItr + 1);
+  // front ws
+  strItr = 0;
+  while(strItr < str.length() && (str.at(strItr) == ' ' || str.at(strItr) == '\t')){ // remove whitespace
+    strItr++;
+  } // strItr points to first character
+  str = str.substr(strItr, str.length() - strItr);
+#ifdef DEBUG_WS
+  std::cout << "Output: \"" << str << "\"" << std::endl;
+#endif
 }
   
 void verifyConfig(){
@@ -214,4 +236,13 @@ void dumpConfig(void){
   std::cout << "RCTIME_PROP_DELAY=" << config.prop_delay_ms << std::endl;
   std::cout << "LOG_LEVEL=" << config.log_level << std::endl;
   std::cout << "rsync will sync to: " << config.sync_remote_dest << std::endl;
+}
+
+size_t find_env_size(char *envp[]){
+  size_t size = 0;
+  while(*envp){
+    size += strlen(*envp++) + 1;
+    size += sizeof(char *);
+  }
+  return size;
 }
