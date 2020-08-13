@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2019 Joshua Boudreau
+    Copyright (C) 2019-2020 Joshua Boudreau
     
     This file is part of cephgeorep.
 
@@ -36,3 +36,6 @@ void error(int err, boost::system::error_code ec_ = {1,boost::system::generic_ca
 
 void Log(std::string msg, int lvl);
 // print msg to std::cout given config.log_level >= lvl
+
+void usage(void);
+// print CLI flag descriptions

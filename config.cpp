@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2019 Joshua Boudreau
+    Copyright (C) 2019-2020 Joshua Boudreau
     
     This file is part of cephgeorep.
 
@@ -38,7 +38,8 @@ void loadConfig(void){
   
   if(config_path.empty()){
     config_path = DEFAULT_CONFIG_PATH;
-    std::cout << "Using default config path: " << config_path << std::endl;
+    if(config.log_level != 0)
+      std::cout << "Using default config path: " << config_path << std::endl;
   }
   
   // open file
@@ -87,10 +88,12 @@ void loadConfig(void){
         config.prop_delay_ms = -1;
       }
     }else if(key == "LOG_LEVEL"){
-      try{
-        config.log_level = stoi(value);
-      }catch(std::invalid_argument){
-        config.log_level = -1;
+      if(config.log_level == -1){ // not already set
+        try{
+          config.log_level = stoi(value);
+        }catch(std::invalid_argument){
+          config.log_level = -1;
+        }
       }
     }else if(key == "EXEC"){
       config.execBin = value;
