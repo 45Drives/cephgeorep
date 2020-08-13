@@ -27,7 +27,7 @@ namespace fs = boost::filesystem;
 #define LAST_RCTIME_NAME "last_rctime.dat"
 
 struct Config{
-  int log_level;
+  int log_level = -1;
   int sync_frequency;
   int prop_delay_ms;
   size_t env_sz = 0;

@@ -50,3 +50,20 @@ void error(int err, boost::system::error_code ec_){
 void Log(std::string msg, int lvl){
   if(config.log_level >= lvl) std::cout << msg << std::endl;
 }
+
+void usage(){
+  std::cout <<
+  "cephfssyncd Copyright (C) 2019-2020 Josh Boudreau <jboudreau@45drives.com>\n"
+  "This program is released under the GNU General Public License v2.1.\n"
+  "See <https://www.gnu.org/licenses/> for more details.\n"
+  "\n"
+	"Usage:\n"
+	"  cephfssyncd [ flags ]\n"
+  "Flags:\n"
+  "  -c --config </path/to/config> - pass alternate config path\n"
+  "                                - default config: /etc/ceph/cephfssyncd.conf\n"
+  "  -h --help                     - print this message\n"
+  "  -v --verbose                  - set log level to 2\n"
+  "  -q --quiet                    - set log level to 0\n"
+  << std::endl;
+}

@@ -28,15 +28,42 @@
 #include "rctime.hpp"
 #include "crawler.hpp"
 #include "alert.hpp"
+#include <getopt.h>
 
 int main(int argc, char *argv[], char *envp[]){
-  if(argc > 1){
-    if(argc > 2 && (strcmp(argv[1],"-c") == 0 || strcmp(argv[1],"--config") == 0)){
-      config_path = std::string(argv[2]);
-    }else{
-      std::cerr << "Unknown argument: " << argv[1] << std::endl;
-    }
-  }
+  int opt;
+  int option_ind = 0;
+  
+  static struct option long_options[] = {
+		{"config",		   required_argument, 0, 'c'},
+		{"help",         no_argument,       0, 'h'},
+		{"verbose",      no_argument,       0, 'v'},
+		{"quiet",        no_argument,       0, 'q'},
+		{0, 0, 0, 0}
+	};
+  
+  while((opt = getopt_long(argc, argv, "c:hvq", long_options, &option_ind)) != -1){
+		switch(opt){
+		case 'c':
+			config_path = optarg;
+			break;
+		case 'h':
+			usage();
+			exit(EXIT_SUCCESS);
+			break;
+		case 'v':
+			config.log_level = 2;
+			break;
+		case 'q':
+			config.log_level = 0;
+			break;
+		case '?':
+			break; // getopt_long prints errors
+		default:
+			abort();
+		}
+	}
+  
   initDaemon();
   config.env_sz = find_env_size(envp);
   pollBase(config.sender_dir);
