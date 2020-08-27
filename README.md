@@ -16,13 +16,20 @@ Since the binary is statically linked, no boost runtime libraries are needed on 
 * `systemctl enable --now cephfssyncd`
 
 ### Installing from Source
-* Install dependencies: boost-devel
+* `dnf install make gcc gcc-c++ boost boost-devel rsync`
 * `git clone https://github.com/45drives/cephgeorep`
 * `cd cephgeorep`
 * `make`
 * `sudo make install`
 * Create configuration file
-* `systemctl enable --now cephfssyncd`
+* `systemctl enable --now cephfssyncd`  
+  
+If you get the following error after running make:
+```
+/usr/bin/ld: cannot find -l:libboost_system.a
+/usr/bin/ld: cannot find -l:libboost_filesystem.a
+```
+then run `sed -i "s/\\.a\\b/.so/g" makefile` to switch from static linking to dynamic linking.
 
 ### Uninstallation
 From RPM: `dnf remove cephgeorep`  
