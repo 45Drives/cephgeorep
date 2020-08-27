@@ -1,5 +1,5 @@
 TARGET = cephfssyncd
-LIBS =  -static -lboost_system -lboost_filesystem
+LIBS =  -l:libboost_system.a -l:libboost_filesystem.a
 CC = g++
 CFLAGS = -std=gnu++11 -Wall
 
@@ -35,9 +35,11 @@ install: all
 	install -m 755 cephfssyncd $(DESTDIR)$(PREFIX)/bin
 	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)/bin
 	cp cephfssyncd.service /usr/lib/systemd/system/cephfssyncd.service
+	systemctl daemon-reload
 
 uninstall:
-	-rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
-	-rm -f $(DESTDIR)$(PREFIX)/bin/s3wrap.sh
-	-systemctl dsiable cephfssyncd
-	-rm -f /usr/lib/systemd/system/cephfssyncd.service
+	systemctl dsiable --now cephfssyncd
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+	rm -f $(DESTDIR)$(PREFIX)/bin/s3wrap.sh
+	rm -f /usr/lib/systemd/system/cephfssyncd.service
+	systemctl daemon-reload
