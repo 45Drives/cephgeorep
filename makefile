@@ -38,8 +38,8 @@ install: all
 	systemctl daemon-reload
 
 uninstall:
-	systemctl disable --now cephfssyncd
-	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
-	rm -f $(DESTDIR)$(PREFIX)/bin/s3wrap.sh
-	rm -f /usr/lib/systemd/system/cephfssyncd.service
+	-systemctl disable --now cephfssyncd
+	-rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+	-rm -f $(DESTDIR)$(PREFIX)/bin/s3wrap.sh
+	-rm -f /usr/lib/systemd/system/cephfssyncd.service
 	systemctl daemon-reload
