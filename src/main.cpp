@@ -35,7 +35,7 @@ int main(int argc, char *argv[], char *envp[]){
   int option_ind = 0;
   
   static struct option long_options[] = {
-		{"config",		   required_argument, 0, 'c'},
+		{"config",       required_argument, 0, 'c'},
 		{"help",         no_argument,       0, 'h'},
 		{"verbose",      no_argument,       0, 'v'},
 		{"quiet",        no_argument,       0, 'q'},
