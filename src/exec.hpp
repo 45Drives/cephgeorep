@@ -20,6 +20,7 @@
 #pragma once
 
 #include <vector>
+#include <thread>
 #include <boost/filesystem.hpp>
 
 #define SSH_FAIL 255
@@ -28,6 +29,14 @@
 #define PERM_DENY 23
 
 namespace fs = boost::filesystem;
+
+struct proc_t{
+  std::thread tid;
+  std::list<fs::path> queue;
+};
+
+void launch_procs(std::list<fs::path> &queue);
+// split file list amongst threads more or less evenly
 
 void split_batches(std::list<fs::path> &queue);
 // split arg list into batches

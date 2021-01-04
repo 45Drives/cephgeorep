@@ -39,6 +39,27 @@
 
 namespace fs = boost::filesystem;
 
+void launch_procs(std::list<fs::path> &queue){
+  int nproc = config.rsync_nproc;
+  int files_per_proc = queue.size() / nproc + (queue.size() % nproc != 0);
+  std::vector<proc_t> procs(nproc);
+  std::list<fs::path>::iterator itr = queue.begin();
+  for(int proc = 0; proc < nproc && itr != queue.end(); proc++){
+    int count = 0;
+    while(itr != queue.end() && count < files_per_proc){
+      procs[proc].queue.emplace_back(*itr);
+      count++;
+      itr++;
+    }
+  }
+  for(int proc = 0; proc < nproc; proc++){
+    procs[proc].tid = std::thread(split_batches, std::ref(procs[proc].queue));
+  }
+   for(int proc = 0; proc < nproc; proc++){
+    procs[proc].tid.join();
+  }
+}
+
 void split_batches(std::list<fs::path> &queue){
 #ifdef DEBUG_BATCHES
   int num_batches = 0;
