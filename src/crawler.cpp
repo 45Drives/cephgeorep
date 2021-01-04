@@ -30,8 +30,6 @@
 
 namespace fs = boost::filesystem;
 
-bool running = true;
-
 void sigint_hdlr(int signum){
   // cleanup from termination
   writeLast_rctime(last_rctime);
@@ -52,12 +50,12 @@ void initDaemon(void){
   if(!exists(config.sender_dir)) error(SND_DIR_DNE);
 }
 
-void pollBase(fs::path path){
+void pollBase(fs::path path, bool loop){
   timespec rctime;
   std::list<fs::path> sync_queue;
   Log("Watching: " + path.string(),1);
   
-  while(running){
+  do{
     auto start = std::chrono::system_clock::now();
     if(checkForChange(path, last_rctime, rctime)){
       Log("Change detected in " + path.string(), 1);
@@ -89,7 +87,7 @@ void pollBase(fs::path path){
     std::chrono::duration<double> elapsed = end-start;
     if((int)elapsed.count() < config.sync_frequency) // if it took longer than sync freq, don't wait
       std::this_thread::sleep_for(std::chrono::seconds(config.sync_frequency - (int)elapsed.count()));
-  }
+  }while(loop);
 }
 
 void crawler(fs::path path, std::list<fs::path> &queue, const fs::path &snapdir){

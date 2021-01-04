@@ -28,7 +28,7 @@ enum FilesOrDirs{FILES, DIRS, BOTH};
 void initDaemon(void);
 // calls loadConfig(), enables signal handlers, asserts that path to sync exists
 
-void pollBase(fs::path path);
+void pollBase(fs::path path, bool loop);
 // main loop, check for change in rctime and launch crawler
 
 void crawler(fs::path path, std::list<fs::path> &queue, const fs::path &snapdir);
