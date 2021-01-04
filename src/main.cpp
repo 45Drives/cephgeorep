@@ -29,6 +29,7 @@
 #include "crawler.hpp"
 #include "alert.hpp"
 #include <getopt.h>
+#include <string>
 
 int main(int argc, char *argv[], char *envp[]){
   int opt;
@@ -65,7 +66,12 @@ int main(int argc, char *argv[], char *envp[]){
       loop = false; // run daemon once then exit
       break;
     case 'n':
-      rsync_nproc_override = optarg;
+      try{
+        rsync_nproc_override = std::stoi(optarg);
+      }catch(std::invalid_argument){
+        std::cout << "Invalid number of processes." << std::endl;
+        exit(EXIT_FAILURE);
+      }
     case '?':
       break; // getopt_long prints errors
     default:
