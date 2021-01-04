@@ -21,6 +21,7 @@
 #include "config.hpp"
 #include "rctime.hpp"
 #include <iostream>
+#include <sstream>
 #include <boost/system/error_code.hpp>
 
 boost::system::error_code ec;
@@ -48,8 +49,9 @@ void error(int err, boost::system::error_code ec_){
 }
 
 void Log(std::string msg, int lvl){
-  msg += std::endl;
-  if(config.log_level >= lvl) std::cout << msg;
+  std::stringstream ss;
+  ss << msg << std::endl;
+  if(config.log_level >= lvl) std::cout << ss.str();
 }
 
 void usage(){
