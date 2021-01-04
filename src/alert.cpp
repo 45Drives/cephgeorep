@@ -48,7 +48,8 @@ void error(int err, boost::system::error_code ec_){
 }
 
 void Log(std::string msg, int lvl){
-  if(config.log_level >= lvl) std::cout << msg << std::endl;
+  msg += std::endl;
+  if(config.log_level >= lvl) std::cout << msg;
 }
 
 void usage(){
