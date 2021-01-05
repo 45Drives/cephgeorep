@@ -11,7 +11,7 @@ Since the binary is statically linked, no boost runtime libraries are needed on 
 
 ## Installation
 ### Current Release
-* `dnf install https://github.com/45Drives/autotier/releases/download/v0.7.1-beta/autotier-0.7.1-1.el8.x86_64.rpm`
+* `dnf install https://github.com/45Drives/cephgeorep/releases/download/v0.3.4-beta/cephgeorep-0.3.4-1.el8.x86_64.rpm`
 * Create configuration file
 * `systemctl enable --now cephfssyncd`
 
