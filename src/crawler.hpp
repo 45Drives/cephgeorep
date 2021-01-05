@@ -23,8 +23,6 @@
 
 namespace fs = boost::filesystem;
 
-enum FilesOrDirs{FILES, DIRS, BOTH};
-
 void initDaemon(void);
 // calls loadConfig(), enables signal handlers, asserts that path to sync exists
 
