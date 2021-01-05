@@ -47,7 +47,7 @@ int main(int argc, char *argv[], char *envp[]){
     {0, 0, 0, 0}
   };
   
-  while((opt = getopt_long(argc, argv, "c:hvqs", long_options, &option_ind)) != -1){
+  while((opt = getopt_long(argc, argv, "c:hvqsn:", long_options, &option_ind)) != -1){
     switch(opt){
     case 'c':
       config_path = optarg;
