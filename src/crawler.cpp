@@ -90,9 +90,10 @@ void pollBase(fs::path path, bool loop){
     }
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed = end-start;
-    if((int)elapsed.count() < config.sync_frequency) // if it took longer than sync freq, don't wait
+    if((int)elapsed.count() < config.sync_frequency && loop) // if it took longer than sync freq, don't wait
       std::this_thread::sleep_for(std::chrono::seconds(config.sync_frequency - (int)elapsed.count()));
   }while(loop);
+  writeLast_rctime(last_rctime);
 }
 
 void crawler(fs::path path, std::list<fs::path> &queue, const fs::path &snapdir){
