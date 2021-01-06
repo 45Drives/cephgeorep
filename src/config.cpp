@@ -259,5 +259,6 @@ size_t find_env_size(char *envp[]){
     size += strlen(*envp++) + 1;
     size += sizeof(char *);
   }
+  size += 1; // null terminator
   return size;
 }
