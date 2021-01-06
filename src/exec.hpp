@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "alert.hpp"
 #include <vector>
 #include <list>
 #include <thread>
@@ -56,6 +57,7 @@ public:
 
 class SyncProcess{
 private:
+  int id_ = -1;
   pid_t pid_;
   size_t max_sz;
   size_t start_sz;
@@ -68,9 +70,13 @@ public:
     start_sz = start_sz_;
   }
   ~SyncProcess(){
+    if(id_ != -1) Log("Proc " + std::to_string(id_) + ": done.",1);
     for(char *i : garbage){
       delete [] i;
     } 
+  }
+  void set_id(int id){
+    id_ = id;
   }
   void add(const fs::path &file){
     if(batches.back().full_test(file)){

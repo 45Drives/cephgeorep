@@ -112,7 +112,9 @@ void split_batches(std::list<fs::path> &queue, int nproc){
     if(++proc_itr == procs.end()) proc_itr = procs.begin();
   }
   // start each process
+  int proc_id = 0; // incremental ID for each process
   for(proc_itr = procs.begin(); proc_itr != procs.end(); ++proc_itr){
+    proc_itr->set_id(proc_id++);
     proc_itr->sync_batch();
   }
   while(!procs_done(procs)){ // while files are remaining in batch queues
@@ -128,7 +130,7 @@ void split_batches(std::list<fs::path> &queue, int nproc){
     // check exit code
     switch(WEXITSTATUS(wstatus)){
     case SUCCESS:
-      Log(std::to_string(exited_pid) + " done.",1);
+      Log(std::to_string(exited_pid) + " exited successfully.",2);
       exited_proc->pop_batch(); // remove synced batch
       break;
     case SSH_FAIL:
@@ -189,8 +191,6 @@ void SyncProcess::sync_batch(){
   if(config.sync_remote_dest[0] != '\0') argv.push_back(config.sync_remote_dest);
   argv.push_back(NULL);
   
-  Log("Launching " + config.execBin + " " + config.execFlags + " with " + std::to_string(batches.front().size()) + " files.", 1);
-  
   pid_ = fork(); // create child process
   switch(pid_){
   case -1:
@@ -201,7 +201,8 @@ void SyncProcess::sync_batch(){
     error(LAUNCH_RSYNC);
     break;
   default: // parent process
-    Log(config.execBin + " process created with PID " + std::to_string(pid_), 2);
+    Log("Proc " + std::to_string(id_) + ": Launching " + config.execBin + " " + config.execFlags + " with " + std::to_string(batches.front().size()) + " files.", 1);
+    Log(std::to_string(pid_) + " started.", 2);
     break;
   }
 }
