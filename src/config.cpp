@@ -219,7 +219,7 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
     "LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n"
     "SYNC_FREQ=10                # time in seconds between checks for changes\n"
     "RCTIME_PROP_DELAY=100       # time in milliseconds between snapshot and sync\n"
-    "NPROC=1                     # number of parallel rsync processes to launch\n"
+    "NPROC=1                     # number of parallel sync processes to launch\n"
     "LOG_LEVEL=1\n"
     "# 0 = minimum logging\n"
     "# 1 = basic logging\n"
