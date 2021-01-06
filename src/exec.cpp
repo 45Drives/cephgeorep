@@ -62,36 +62,6 @@ inline size_t get_start_arg_sz(){
   return size;
 }
 
-// void launch_procs(std::list<fs::path> &queue){
-//   size_t arg_max_sz = get_max_arg_sz();
-//   int nproc = config.rsync_nproc;
-//   
-//   if(nproc > 1){
-//     int files_per_proc = queue.size() / nproc + (queue.size() % nproc != 0);
-//     std::vector<proc_t *> procs;
-//     std::list<fs::path>::iterator itr = queue.begin();
-//     for(int i = 0; i < nproc && itr != queue.end(); i++){
-//       int count = 0;
-//       proc_t *ptr = new proc_t;
-//       while(itr != queue.end() && count < files_per_proc){
-//         ptr->queue.emplace_back(*itr);
-//         count++;
-//         itr++;
-//       }
-//       procs.push_back(ptr);
-//     }
-//     for(proc_t *proc : procs){
-//       proc->tid = std::thread(split_batches, std::ref(proc->queue), arg_max_sz);
-//     }
-//     for(proc_t *proc : procs){
-//       proc->tid.join();
-//       delete proc;
-//     }
-//   }else{
-//     split_batches(queue, arg_max_sz);
-//   }
-// }
-
 inline bool procs_done(std::list<SyncProcess> &procs){
   for(std::list<SyncProcess>::iterator itr = procs.begin(); itr != procs.end(); ++itr){
     if(!itr->batches_done()) return false;
@@ -99,7 +69,7 @@ inline bool procs_done(std::list<SyncProcess> &procs){
   return true;
 }
 
-void split_batches(std::list<fs::path> &queue, int nproc){
+void launch_procs(std::list<fs::path> &queue, int nproc){
   int wstatus;
   size_t max_sz = get_max_arg_sz();
   size_t start_sz = get_start_arg_sz();
@@ -135,7 +105,7 @@ void split_batches(std::list<fs::path> &queue, int nproc){
       break;
     case SSH_FAIL:
       Log(config.execBin + " failed to connect to remote backup server.\n"
-      "Is the server running and connected to your network?\n",0);
+      "Is the server running and connected to your network?",0);
       break;
     case NOT_INSTALLED:
       error(NO_RSYNC);
@@ -186,8 +156,6 @@ void SyncProcess::sync_batch(){
     garbage.push_back(path); // for cleanup
   }
   
-//     batches.pop_front(); // remove after ensuring rsync successful
-  
   if(config.sync_remote_dest[0] != '\0') argv.push_back(config.sync_remote_dest);
   argv.push_back(NULL);
   
@@ -206,90 +174,3 @@ void SyncProcess::sync_batch(){
     break;
   }
 }
-
-// void launch_syncBin(std::list<fs::path> &queue){
-//   pid_t pid;
-//   int status;
-//   std::vector<char *> argv;
-//   std::vector<char *> garbage;
-//   argv.push_back((char *)config.execBin.c_str());
-//   
-//   std::string binStr(config.execBin);
-//   
-//   boost::tokenizer<boost::escaped_list_separator<char>> tokens(
-//     config.execFlags,
-//     boost::escaped_list_separator<char>(
-//       std::string(""), std::string(" "), std::string("\"\'")
-//     )
-//   );
-//   for(
-//     boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
-//     itr != tokens.end();
-//     ++itr
-//   ){
-//     char *flag = new char[(*itr).length()+1];
-//     strcpy(flag,(*itr).c_str());
-//     argv.push_back(flag);
-//     garbage.push_back(flag);
-//   }
-//   
-//   for(fs::path i : queue){
-//     char *path = new char[i.string().length()+1];
-//     std::strcpy(path,i.c_str());
-//     argv.push_back(path);
-//     garbage.push_back(path);
-//   }
-//   
-//   // push back host:/path/to/backup
-//   if(config.sync_remote_dest[0] != '\0') argv.push_back(config.sync_remote_dest);
-//   
-//   argv.push_back(NULL);
-//   
-//   do{
-//     Log("Launching " + binStr + " " + config.execFlags + " with " + std::to_string(queue.size()) + " files.", 1);
-//     
-//     pid = fork(); // create child process
-//     switch(pid){
-//     case -1:
-//       error(FORK);
-//       break;
-//     case 0: // child process
-//       pid = getpid();
-//       Log(binStr + " process created with PID " + std::to_string(pid), 2);
-//       execvp(argv[0],&argv[0]);
-//       error(LAUNCH_RSYNC);
-//       break;
-//     default: // parent process
-//       // wait for rsync to finish before removing snapshot
-//       if((pid = wait(&status)) < 0)
-//         error(WAIT_RSYNC);
-//       Log(binStr + " process exited with status " + std::to_string(WEXITSTATUS(status)),2);
-//       break;
-//     }
-//     switch(WEXITSTATUS(status)){
-//     case SUCCESS:
-//       Log("Done.",1);
-//       break;
-//     case SSH_FAIL:
-//       Log(binStr + " failed to connect to remote backup server.\n"
-//       "Is the server running and connected to your network?\n"
-//       "Trying again in 25 seconds.",0);
-//       std::this_thread::sleep_for(std::chrono::seconds(25));
-//       break;
-//     case NOT_INSTALLED:
-//       error(NO_RSYNC);
-//       break;
-//     case PERM_DENY:
-//       error(NO_PERM);
-//       break;
-//     default:
-//       error(UNK_RSYNC_ERR);
-//       break;
-//     }
-//   }while(WEXITSTATUS(status) == SSH_FAIL);
-//   
-//   // garbage cleanup
-//   for(auto i : garbage){
-//     delete i;
-//   }
-// }

@@ -91,13 +91,8 @@ public:
     return batches.empty();
   }
   void sync_batch(void);
+  // fork and execute sync program with file batch
 };
 
-// void launch_procs(std::list<fs::path> &queue);
-// split file list amongst threads more or less evenly
-
-void split_batches(std::list<fs::path> &queue, int nproc);
+void launch_procs(std::list<fs::path> &queue, int nproc);
 // distribute queue amongst processes and launch processes
-
-// void launch_syncBin(std::list<fs::path> &queue);
-// fork and exec binary specified in config.execBin with config.execFlags and pass queue
