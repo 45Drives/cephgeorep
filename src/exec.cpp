@@ -73,14 +73,21 @@ void launch_procs(std::list<fs::path> &queue, int nproc){
   int wstatus;
   size_t max_sz = get_max_arg_sz();
   size_t start_sz = get_start_arg_sz();
+  
+  // cap nproc to between 1 and number of files
+  nproc = std::min(nproc, (int)queue.size());
+  nproc = std::max(nproc, 1);
+  
   std::list<SyncProcess> procs(nproc, {max_sz, start_sz});
   std::list<SyncProcess>::iterator proc_itr = procs.begin();
+  
   // distribute files amongst processes
   while(!queue.empty()){
     proc_itr->add(queue.front());
     queue.pop_front();
     if(++proc_itr == procs.end()) proc_itr = procs.begin();
   }
+  
   // start each process
   int proc_id = 0; // incremental ID for each process
   for(proc_itr = procs.begin(); proc_itr != procs.end(); ++proc_itr){
