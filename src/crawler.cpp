@@ -73,7 +73,7 @@ void pollBase(fs::path path, bool loop){
           Log(i.string(),2);
         }
       }
-      Log("New files to sync: "+std::to_string(sync_queue.size())+".",2);
+      Log("New files to sync: "+std::to_string(sync_queue.size())+".",1);
       // launch rsync
       if(!sync_queue.empty()){
         split_batches(sync_queue, config.rsync_nproc);
