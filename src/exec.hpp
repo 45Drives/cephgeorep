@@ -20,6 +20,7 @@
 #pragma once
 
 #include <vector>
+#include <list>
 #include <thread>
 #include <boost/filesystem.hpp>
 
@@ -30,16 +31,67 @@
 
 namespace fs = boost::filesystem;
 
-struct proc_t{
-  std::thread tid;
-  std::list<fs::path> queue;
+class Batch{
+  friend class SyncProcess;
+private:
+  size_t max_sz;
+  size_t curr_sz;
+  std::vector<fs::path> files;
+public:
+  Batch(const size_t &max_sz_, const size_t &start_sz_) : files(){
+    max_sz = max_sz_;
+    curr_sz = start_sz_;
+  }
+  void add(const fs::path &file){
+    files.emplace_back(file);
+    curr_sz += strlen(file.c_str()) + 1 + sizeof(char *);
+  }
+  bool full_test(const fs::path &file){
+    return (curr_sz + strlen(file.c_str()) + 1 + sizeof(char *) >= max_sz);
+  }
+  int size(void) const{
+    return files.size();
+  }
 };
 
-void launch_procs(std::list<fs::path> &queue);
+class SyncProcess{
+private:
+  pid_t pid_;
+  size_t max_sz;
+  size_t start_sz;
+  std::list<Batch> batches;
+  std::vector<char *> garbage;
+public:
+  pid_t pid(){ return pid_; }
+  SyncProcess(const size_t &max_sz_, const size_t &start_sz_) : batches(1, {max_sz_, start_sz_}){
+    max_sz = max_sz_;
+    start_sz = start_sz_;
+  }
+  ~SyncProcess(){
+    for(char *i : garbage){
+      delete [] i;
+    } 
+  }
+  void add(const fs::path &file){
+    if(batches.back().full_test(file)){
+      batches.emplace_back(max_sz, start_sz);
+    }
+    batches.back().add(file);
+  }
+  void pop_batch(void){
+    batches.pop_front();
+  }
+  bool batches_done(void){
+    return batches.empty();
+  }
+  void sync_batch(void);
+};
+
+// void launch_procs(std::list<fs::path> &queue);
 // split file list amongst threads more or less evenly
 
-void split_batches(std::list<fs::path> &queue);
-// split arg list into batches
+void split_batches(std::list<fs::path> &queue, int nproc);
+// distribute queue amongst processes and launch processes
 
-void launch_syncBin(std::list<fs::path> &queue);
+// void launch_syncBin(std::list<fs::path> &queue);
 // fork and exec binary specified in config.execBin with config.execFlags and pass queue
