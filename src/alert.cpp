@@ -42,6 +42,10 @@ std::string errors[NUM_ERRS] = {
   "Remote user does not have permission to write to backup directory."
 };
 
+void warning(int err){
+  std::cerr << "WARNING: " << errors[err] << std::endl;
+}
+
 void error(int err, boost::system::error_code ec_){
   std::cerr << "ERROR: " << errors[err] << std::endl;
   writeLast_rctime(last_rctime);

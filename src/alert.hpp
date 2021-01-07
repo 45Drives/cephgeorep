@@ -31,6 +31,9 @@ enum {
   SND_DIR_DNE, NO_PERM
 };
 
+void warning(int err);
+// print error to std::cerr but don't exit
+
 void error(int err, boost::system::error_code ec_ = {1,boost::system::generic_category()});
 // print error to std::cerr and exit with error code 1
 

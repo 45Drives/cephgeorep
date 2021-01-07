@@ -82,7 +82,7 @@ int main(int argc, char *argv[], char *envp[]){
   initDaemon();
   config.env_sz = find_env_size(envp);
   if(rsync_nproc_override) config.rsync_nproc = rsync_nproc_override;
-  if(loop == false) last_rctime = {0}; // seed all files
+  if(loop == false) last_rctime = {1}; // seed all files
   pollBase(config.sender_dir, loop);
   return 0;
 }
