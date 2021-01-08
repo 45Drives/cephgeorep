@@ -62,39 +62,57 @@ inline size_t get_start_arg_sz(){
   return size;
 }
 
-inline bool procs_done(std::list<SyncProcess> &procs){
+inline void distribute_files(std::list<fs::path> &queue, std::list<SyncProcess> &procs){
+  // create roster for round robin distribution
+  std::list<SyncProcess *> distribute_pool;
   for(std::list<SyncProcess>::iterator itr = procs.begin(); itr != procs.end(); ++itr){
-    if(!itr->batches_done()) return false;
+    distribute_pool.emplace_back(&(*itr));
   }
-  return true;
+  // deal out files until either all procs are full to total_bytes/nproc or queue is empty
+  std::list<SyncProcess *>::iterator proc_itr = distribute_pool.begin();
+  while(!queue.empty() && !distribute_pool.empty()){
+    if((*proc_itr)->full_test(queue.front()) && !(*proc_itr)->large_file(queue.front())){
+      // number of bytes > total_bytes/nproc so remove proc from roster
+      proc_itr = distribute_pool.erase(proc_itr);
+    }else{
+      (*proc_itr)->consume_one(queue);
+      proc_itr++;
+    }
+    // circularly iterate
+    if(proc_itr == distribute_pool.end()) proc_itr = distribute_pool.begin();
+  }
 }
 
-void launch_procs(std::list<fs::path> &queue, int nproc){
+void launch_procs(std::list<fs::path> &queue, int nproc, uintmax_t total_bytes){
+  Log(std::to_string(total_bytes) + " bytes", 2);
   int wstatus;
-  size_t max_sz = get_max_arg_sz();
-  size_t start_sz = get_start_arg_sz();
+  size_t max_arg_sz = get_max_arg_sz();
+  size_t start_arg_sz = get_start_arg_sz();
   
   // cap nproc to between 1 and number of files
   nproc = std::min(nproc, (int)queue.size());
   nproc = std::max(nproc, 1);
   
-  std::list<SyncProcess> procs(nproc, {max_sz, start_sz});
-  std::list<SyncProcess>::iterator proc_itr = procs.begin();
+  uintmax_t bytes_per_proc = total_bytes / nproc + (total_bytes % nproc != 0);
+  Log(std::to_string(bytes_per_proc) + " bytes per proc", 2);
   
-  // distribute files amongst processes
-  while(!queue.empty()){
-    proc_itr->add(queue.front());
-    queue.pop_front();
-    if(++proc_itr == procs.end()) proc_itr = procs.begin();
-  }
+  std::list<SyncProcess> procs(nproc, {max_arg_sz, start_arg_sz, bytes_per_proc});
+  
+  // sort files from largest to smallest to get largest files out of the way first
+  queue.sort([](const fs::path &first, const fs::path &second){
+    return fs::file_size(first) > fs::file_size(second);
+  });
+  
+  // round-robin distribute until procs are full to total_bytes/nproc
+  distribute_files(queue, procs);
   
   // start each process
   int proc_id = 0; // incremental ID for each process
-  for(proc_itr = procs.begin(); proc_itr != procs.end(); ++proc_itr){
+  for(std::list<SyncProcess>::iterator proc_itr = procs.begin(); proc_itr != procs.end(); ++proc_itr){
     proc_itr->set_id(proc_id++);
     proc_itr->sync_batch();
   }
-  while(!procs_done(procs)){ // while files are remaining in batch queues
+  while(!procs.empty()){ // while files are remaining in batch queues
     // wait for a child to change state then relaunch remaining batches
     pid_t exited_pid = wait(&wstatus);
     // find which object PID belongs to
@@ -108,7 +126,7 @@ void launch_procs(std::list<fs::path> &queue, int nproc){
     switch(WEXITSTATUS(wstatus)){
     case SUCCESS:
       Log(std::to_string(exited_pid) + " exited successfully.",2);
-      exited_proc->pop_batch(); // remove synced batch
+      exited_proc->clear_file_list(); // remove synced batch
       break;
     case SSH_FAIL:
       Log(config.execBin + " failed to connect to remote backup server.\n"
@@ -124,9 +142,10 @@ void launch_procs(std::list<fs::path> &queue, int nproc){
       error(UNK_RSYNC_ERR);
       break;
     }
-    if(exited_proc->batches_done()){
+    if(queue.empty() && exited_proc->payload_sz() == 0){
       procs.erase(exited_proc);
     }else{
+      if(!queue.empty()) exited_proc->consume(queue);
       exited_proc->sync_batch();
     }
   }
@@ -156,7 +175,7 @@ void SyncProcess::sync_batch(){
   }
   
   // for each file of batch
-  for(std::vector<fs::path>::iterator fitr = batches.front().files.begin(); fitr != batches.front().files.end(); ++fitr){
+  for(std::vector<fs::path>::iterator fitr = files.begin(); fitr != files.end(); ++fitr){
     char *path = new char[fitr->string().length()+1];
     std::strcpy(path,fitr->c_str());
     argv.push_back(path);
@@ -176,7 +195,8 @@ void SyncProcess::sync_batch(){
     error(LAUNCH_RSYNC);
     break;
   default: // parent process
-    Log("Proc " + std::to_string(id_) + ": Launching " + config.execBin + " " + config.execFlags + " with " + std::to_string(batches.front().size()) + " files.", 1);
+    Log("Proc " + std::to_string(id_) + ": Launching " + config.execBin + " " + config.execFlags + " with " + std::to_string(files.size()) + " files.", 1);
+    Log(std::to_string(curr_bytes_sz) + " bytes", 2);
     Log(std::to_string(pid_) + " started.", 2);
     break;
   }
