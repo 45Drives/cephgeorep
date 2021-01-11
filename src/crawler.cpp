@@ -31,9 +31,15 @@
 namespace fs = boost::filesystem;
 
 void sigint_hdlr(int signum){
-  // cleanup from termination
-  writeLast_rctime(last_rctime);
-  exit(signum);
+  switch(signum){
+    case SIGTERM:
+    case SIGINT:
+      // cleanup from termination
+      writeLast_rctime(last_rctime);
+      exit(EXIT_SUCCESS);
+    default:
+      exit(signum);
+  }
 }
 
 void initDaemon(void){
