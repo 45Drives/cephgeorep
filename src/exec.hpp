@@ -32,29 +32,6 @@
 
 namespace fs = boost::filesystem;
 
-// class Batch{
-//   friend class SyncProcess;
-// private:
-//   size_t max_sz;
-//   size_t curr_sz;
-//   std::vector<fs::path> files;
-// public:
-//   Batch(const size_t &max_sz_, const size_t &start_sz_) : files(){
-//     max_sz = max_sz_;
-//     curr_sz = start_sz_;
-//   }
-//   void add(const fs::path &file){
-//     files.emplace_back(file);
-//     curr_sz += strlen(file.c_str()) + 1 + sizeof(char *);
-//   }
-//   bool full_test(const fs::path &file){
-//     return (curr_sz + strlen(file.c_str()) + 1 + sizeof(char *) >= max_sz);
-//   }
-//   int size(void) const{
-//     return files.size();
-//   }
-// };
-
 class SyncProcess{
 private:
   int id_;
