@@ -7,7 +7,7 @@ OBJECTS = $(patsubst %.cpp, %.o, $(wildcard src/*.cpp))
 HEADERS = $(wildcard src/*.hpp)
 
 ifeq ($(PREFIX),)
-	PREFIX := /usr/local
+	PREFIX := /opt/45drives/cephgeorep
 endif
 
 .PHONY: default all clean clean-build clean-target install uninstall
@@ -32,14 +32,16 @@ clean-build:
 	-rm -f src/*.o
 
 install: all
-	install -m 755 cephfssyncd $(DESTDIR)$(PREFIX)/bin
-	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)/bin
-	cp cephfssyncd.service /usr/lib/systemd/system/cephfssyncd.service
+	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)
+	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)
+	cp cephfssyncd.service $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
 	systemctl daemon-reload
+	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/local/bin
+	ln -sf $(PREFIX)/s3wrap.sh $(DESTDIR)/usr/local/bin
 
 uninstall:
 	-systemctl disable --now cephfssyncd
-	-rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
-	-rm -f $(DESTDIR)$(PREFIX)/bin/s3wrap.sh
-	-rm -f /usr/lib/systemd/system/cephfssyncd.service
+	-rm -f $(DESTDIR)$(PREFIX)/$(TARGET)
+	-rm -f $(DESTDIR)$(PREFIX)/s3wrap.sh
+	-rm -f $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
 	systemctl daemon-reload
