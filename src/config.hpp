@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2019-2020 Joshua Boudreau
+    Copyright (C) 2019-2021 Joshua Boudreau
     
     This file is part of cephgeorep.
 
@@ -30,6 +30,7 @@ struct Config{
   int log_level = -1;
   int sync_frequency;
   int prop_delay_ms;
+  int rsync_nproc = 1;
   size_t env_sz = 0;
   char *sync_remote_dest;
   bool ignore_hidden;

@@ -1,5 +1,5 @@
 TARGET = cephfssyncd
-LIBS =  -l:libboost_system.a -l:libboost_filesystem.a
+LIBS =  -static -l:libboost_system.a -l:libboost_filesystem.a -lpthread
 CC = g++
 CFLAGS = -std=gnu++11 -Wall
 
@@ -7,7 +7,7 @@ OBJECTS = $(patsubst %.cpp, %.o, $(wildcard src/*.cpp))
 HEADERS = $(wildcard src/*.hpp)
 
 ifeq ($(PREFIX),)
-	PREFIX := /usr/local
+	PREFIX := /opt/45drives/cephgeorep
 endif
 
 .PHONY: default all clean clean-build clean-target install uninstall
@@ -32,14 +32,19 @@ clean-build:
 	-rm -f src/*.o
 
 install: all
-	install -m 755 cephfssyncd $(DESTDIR)$(PREFIX)/bin
-	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)/bin
-	cp cephfssyncd.service /usr/lib/systemd/system/cephfssyncd.service
-	systemctl daemon-reload
+	mkdir -p $(DESTDIR)$(PREFIX)
+	mkdir -p $(DESTDIR)/usr/lib/systemd/system
+	mkdir -p $(DESTDIR)/usr/bin
+	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)
+	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)
+	cp cephfssyncd.service $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
+	-systemctl daemon-reload
+	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
+	ln -sf $(PREFIX)/s3wrap.sh $(DESTDIR)/usr/bin/s3wrap.sh
 
 uninstall:
 	-systemctl disable --now cephfssyncd
-	-rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
-	-rm -f $(DESTDIR)$(PREFIX)/bin/s3wrap.sh
-	-rm -f /usr/lib/systemd/system/cephfssyncd.service
+	-rm -f $(DESTDIR)$(PREFIX)/$(TARGET)
+	-rm -f $(DESTDIR)$(PREFIX)/s3wrap.sh
+	-rm -f $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
 	systemctl daemon-reload

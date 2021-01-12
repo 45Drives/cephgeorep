@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2019-2020 Joshua Boudreau
+    Copyright (C) 2019-2021 Joshua Boudreau
     
     This file is part of cephgeorep.
 
@@ -21,6 +21,7 @@
 #include "config.hpp"
 #include "rctime.hpp"
 #include <iostream>
+#include <sstream>
 #include <boost/system/error_code.hpp>
 
 boost::system::error_code ec;
@@ -41,6 +42,10 @@ std::string errors[NUM_ERRS] = {
   "Remote user does not have permission to write to backup directory."
 };
 
+void warning(int err){
+  std::cerr << "WARNING: " << errors[err] << std::endl;
+}
+
 void error(int err, boost::system::error_code ec_){
   std::cerr << "ERROR: " << errors[err] << std::endl;
   writeLast_rctime(last_rctime);
@@ -53,7 +58,7 @@ void Log(std::string msg, int lvl){
 
 void usage(){
   std::cout <<
-  "cephfssyncd Copyright (C) 2019-2020 Josh Boudreau <jboudreau@45drives.com>\n"
+  "cephfssyncd Copyright (C) 2019-2021 Josh Boudreau <jboudreau@45drives.com>\n"
   "This program is released under the GNU General Public License v2.1.\n"
   "See <https://www.gnu.org/licenses/> for more details.\n"
   "\n"
@@ -62,6 +67,8 @@ void usage(){
   "Flags:\n"
   "  -c --config </path/to/config> - pass alternate config path\n"
   "                                - default config: /etc/ceph/cephfssyncd.conf\n"
+  "  -s --seed                     - send all files to seed destination\n"
+  "  -n --nproc <# of processes>   - number of sync processes to run in parallel\n"
   "  -h --help                     - print this message\n"
   "  -v --verbose                  - set log level to 2\n"
   "  -q --quiet                    - set log level to 0\n"

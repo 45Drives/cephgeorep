@@ -31,3 +31,6 @@
 *.out
 *.app
 cephfssyncd
+
+# Kate swap file
+*.kate-swp

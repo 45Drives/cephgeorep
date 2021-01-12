@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2019-2020 Joshua Boudreau
+    Copyright (C) 2019-2021 Joshua Boudreau
     
     This file is part of cephgeorep.
 
@@ -77,22 +77,32 @@ timespec get_rctime(const fs::path &path){
   case true: // dir
     {
     char value[XATTR_SIZE];
-    if(getxattr(path.c_str(), "ceph.dir.rctime", value, XATTR_SIZE) == ERR)
-      error(READ_RCTIME);
-    std::string str(value);
-    rctime.tv_sec = (time_t)stoul(str.substr(0,str.find('.')));
-    // value = <seconds> + '.09' + <nanoseconds>
-    // +3 is to remove the '.09'
-    rctime.tv_nsec = stol(str.substr(str.find('.')+3, std::string::npos));
+    if(getxattr(path.c_str(), "ceph.dir.rctime", value, XATTR_SIZE) == ERR){
+      warning(READ_RCTIME);
+      Log("Ignoring " + path.string(),0);
+      rctime.tv_sec = 0;
+      rctime.tv_nsec = 0;
+    }else{
+      std::string str(value);
+      rctime.tv_sec = (time_t)stoul(str.substr(0,str.find('.')));
+      // value = <seconds> + '.09' + <nanoseconds>
+      // +3 is to remove the '.09'
+      rctime.tv_nsec = stol(str.substr(str.find('.')+3, std::string::npos));
+    }
     break;
     }
   case false: // file
     {
     struct stat t_stat;
-    if(stat(path.c_str(), &t_stat) == ERR)
-      error(READ_MTIME);
-    rctime.tv_sec = t_stat.st_mtim.tv_sec;
-    rctime.tv_nsec = t_stat.st_mtim.tv_nsec;
+    if(lstat(path.c_str(), &t_stat) == ERR){
+      warning(READ_MTIME);
+      Log("Ignoring " + path.string(),0);
+      rctime.tv_sec = 0;
+      rctime.tv_nsec = 0;
+    }else{
+      rctime.tv_sec = t_stat.st_mtim.tv_sec;
+      rctime.tv_nsec = t_stat.st_mtim.tv_nsec;
+    }
     break;
     }
   }

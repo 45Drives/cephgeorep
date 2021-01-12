@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2019-2020 Joshua Boudreau
+    Copyright (C) 2019-2021 Joshua Boudreau
     
     This file is part of cephgeorep.
 
@@ -30,6 +30,9 @@ enum {
   REMOVE_SNAP, FORK, LAUNCH_RSYNC, WAIT_RSYNC, NO_RSYNC, UNK_RSYNC_ERR,
   SND_DIR_DNE, NO_PERM
 };
+
+void warning(int err);
+// print error to std::cerr but don't exit
 
 void error(int err, boost::system::error_code ec_ = {1,boost::system::generic_category()});
 // print error to std::cerr and exit with error code 1

@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2019-2020 Joshua Boudreau
+    Copyright (C) 2019-2021 Joshua Boudreau
     
     This file is part of cephgeorep.
 
@@ -99,7 +99,14 @@ void loadConfig(void){
       config.execBin = value;
     }else if(key == "FLAGS"){
       config.execFlags = value;
-    }// else ignore entry
+    }else if(key == "NPROC"){
+      try{
+        config.rsync_nproc = stoi(value);
+      }catch(std::invalid_argument){
+        config.rsync_nproc = -1;
+      }
+    }
+    // else ignore entry
   }
   verifyConfig();
   construct_rsync_remote_dest();
@@ -168,6 +175,10 @@ void verifyConfig(){
     std::cerr << "Warning: no execution flags present in config. (FLAGS)\n";
     // just warning
   }
+  if(config.rsync_nproc < 0){
+    std::cerr << "Config number of rsync processses must be positive integer (NPROC)\n";
+    errors = true;
+  }
   if(errors){
     std::cerr << "Please fix these mistakes in " << config_path << "." << std::endl;
     exit(1);
@@ -208,6 +219,7 @@ void createConfig(const fs::path &configPath, std::fstream &configFile){
     "LAST_RCTIME_DIR=/var/lib/ceph/cephfssync/\n"
     "SYNC_FREQ=10                # time in seconds between checks for changes\n"
     "RCTIME_PROP_DELAY=100       # time in milliseconds between snapshot and sync\n"
+    "NPROC=1                     # number of parallel sync processes to launch\n"
     "LOG_LEVEL=1\n"
     "# 0 = minimum logging\n"
     "# 1 = basic logging\n"
@@ -247,5 +259,6 @@ size_t find_env_size(char *envp[]){
     size += strlen(*envp++) + 1;
     size += sizeof(char *);
   }
+  size += 1; // null terminator
   return size;
 }
