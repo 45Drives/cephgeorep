@@ -32,6 +32,7 @@ clean-build:
 	-rm -f src/*.o
 
 install: all
+	mkdir -p $(DESTDIR)$(PREFIX)
 	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)
 	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)
 	cp cephfssyncd.service $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
