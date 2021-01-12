@@ -1,21 +1,21 @@
 /*
-    Copyright (C) 2019-2021 Joshua Boudreau
-    
-    This file is part of cephgeorep.
-
-    cephgeorep is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
-
-    cephgeorep is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ *    Copyright (C) 2019-2021 Joshua Boudreau
+ *    
+ *    This file is part of cephgeorep.
+ * 
+ *    cephgeorep is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 2 of the License, or
+ *    (at your option) any later version.
+ * 
+ *    cephgeorep is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ * 
+ *    You should have received a copy of the GNU General Public License
+ *    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 #pragma once
 
@@ -27,21 +27,21 @@ namespace fs = boost::filesystem;
 #define LAST_RCTIME_NAME "last_rctime.dat"
 
 struct Config{
-  int log_level = -1;
-  int sync_frequency;
-  int prop_delay_ms;
-  int rsync_nproc = 1;
-  size_t env_sz = 0;
-  char *sync_remote_dest;
-  bool ignore_hidden;
-  bool ignore_win_lock;
-  std::string remote_user;
-  fs::path sender_dir;
-  std::string receiver_host;
-  fs::path receiver_dir;
-  fs::path last_rctime;
-  std::string execBin;
-  std::string execFlags;
+	int log_level = -1;
+	int sync_frequency;
+	int prop_delay_ms;
+	int rsync_nproc = 1;
+	size_t env_sz = 0;
+	char *sync_remote_dest;
+	bool ignore_hidden;
+	bool ignore_win_lock;
+	std::string remote_user;
+	fs::path sender_dir;
+	std::string receiver_host;
+	fs::path receiver_dir;
+	fs::path last_rctime;
+	std::string execBin;
+	std::string execFlags;
 };
 
 extern std::string config_path;
