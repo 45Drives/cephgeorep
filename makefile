@@ -33,12 +33,14 @@ clean-build:
 
 install: all
 	mkdir -p $(DESTDIR)$(PREFIX)
+	mkdir -p $(DESTDIR)/usr/lib/systemd/system
+	mkdir -p $(DESTDIR)/usr/bin
 	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)
 	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)
 	cp cephfssyncd.service $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
-	systemctl daemon-reload
-	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/local/bin
-	ln -sf $(PREFIX)/s3wrap.sh $(DESTDIR)/usr/local/bin
+	-systemctl daemon-reload
+	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
+	ln -sf $(PREFIX)/s3wrap.sh $(DESTDIR)/usr/bin/s3wrap.sh
 
 uninstall:
 	-systemctl disable --now cephfssyncd
