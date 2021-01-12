@@ -29,7 +29,7 @@ void initDaemon(void);
 void pollBase(fs::path path, bool loop);
 // main loop, check for change in rctime and launch crawler
 
-void crawler(fs::path path, std::list<fs::path> &queue, const fs::path &snapdir);
+void crawler(fs::path path, std::list<fs::path> &queue, const fs::path &snapdir, uintmax_t &total_bytes);
 // recursive directory crawler. Returns new files as boost::filesystem::path in queue.
 
 bool checkForChange(const fs::path &path, const timespec &last_rctime, timespec &rctime);

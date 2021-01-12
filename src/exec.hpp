@@ -32,42 +32,25 @@
 
 namespace fs = boost::filesystem;
 
-class Batch{
-  friend class SyncProcess;
-private:
-  size_t max_sz;
-  size_t curr_sz;
-  std::vector<fs::path> files;
-public:
-  Batch(const size_t &max_sz_, const size_t &start_sz_) : files(){
-    max_sz = max_sz_;
-    curr_sz = start_sz_;
-  }
-  void add(const fs::path &file){
-    files.emplace_back(file);
-    curr_sz += strlen(file.c_str()) + 1 + sizeof(char *);
-  }
-  bool full_test(const fs::path &file){
-    return (curr_sz + strlen(file.c_str()) + 1 + sizeof(char *) >= max_sz);
-  }
-  int size(void) const{
-    return files.size();
-  }
-};
-
 class SyncProcess{
 private:
-  int id_ = -1;
+  int id_;
   pid_t pid_;
-  size_t max_sz;
-  size_t start_sz;
-  std::list<Batch> batches;
+  size_t start_arg_sz;
+  size_t max_arg_sz;
+  size_t curr_arg_sz;
+  uintmax_t max_bytes_sz;
+  uintmax_t curr_bytes_sz;
+  std::vector<fs::path> files;
   std::vector<char *> garbage;
 public:
   pid_t pid(){ return pid_; }
-  SyncProcess(const size_t &max_sz_, const size_t &start_sz_) : batches(1, {max_sz_, start_sz_}){
-    max_sz = max_sz_;
-    start_sz = start_sz_;
+  SyncProcess(const size_t &max_arg_sz_, const size_t &start_arg_sz_, const uintmax_t &max_bytes_sz_){
+    id_ = -1;
+    curr_bytes_sz = 0;
+    max_arg_sz = max_arg_sz_;
+    start_arg_sz = curr_arg_sz = start_arg_sz_;
+    max_bytes_sz = max_bytes_sz_;
   }
   ~SyncProcess(){
     if(id_ != -1) Log("Proc " + std::to_string(id_) + ": done.",1);
@@ -78,21 +61,39 @@ public:
   void set_id(int id){
     id_ = id;
   }
+  uintmax_t payload_sz(void){
+    return curr_bytes_sz;
+  }
   void add(const fs::path &file){
-    if(batches.back().full_test(file)){
-      batches.emplace_back(max_sz, start_sz);
+    files.emplace_back(file);
+    curr_arg_sz += strlen(file.c_str()) + 1 + sizeof(char *);
+    curr_bytes_sz += fs::file_size(file);
+  }
+  bool full_test(const fs::path &file){
+    return (curr_arg_sz + strlen(file.c_str()) + 1 + sizeof(char *) >= max_arg_sz)
+        || (curr_bytes_sz + fs::file_size(file) > max_bytes_sz);
+  }
+  bool large_file(const fs::path &file){
+    return curr_bytes_sz < max_bytes_sz && fs::file_size(file) >= max_bytes_sz;
+  }
+  void consume(std::list<fs::path> &queue){
+    while(!queue.empty() && (!full_test(queue.front()) || large_file(queue.front()))){
+      add(fs::path(queue.front()));
+      queue.pop_front();
     }
-    batches.back().add(file);
   }
-  void pop_batch(void){
-    batches.pop_front();
-  }
-  bool batches_done(void){
-    return batches.empty();
+  void consume_one(std::list<fs::path> &queue){
+    add(fs::path(queue.front()));
+    queue.pop_front();
   }
   void sync_batch(void);
   // fork and execute sync program with file batch
+  void clear_file_list(void){
+    files.clear();
+    curr_bytes_sz = 0;
+    curr_arg_sz = start_arg_sz;
+  }
 };
 
-void launch_procs(std::list<fs::path> &queue, int nproc);
+void launch_procs(std::list<fs::path> &queue, int nproc, uintmax_t total_bytes);
 // distribute queue amongst processes and launch processes

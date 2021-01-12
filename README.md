@@ -11,12 +11,12 @@ Since the binary is statically linked, no boost runtime libraries are needed on 
 
 ## Installation
 ### Current Release
-* `dnf install https://github.com/45Drives/autotier/releases/download/v0.7.1-beta/autotier-0.7.1-1.el8.x86_64.rpm`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/v0.4.0-beta/cephgeorep-0.4.0-1.el7.x86_64.rpm`
 * Create configuration file
 * `systemctl enable --now cephfssyncd`
 
 ### Installing from Source
-* `dnf install make gcc gcc-c++ boost boost-devel rsync`
+* `yum install make gcc gcc-c++ boost boost-devel rsync`
 * `git clone https://github.com/45drives/cephgeorep`
 * `cd cephgeorep`
 * `make`
@@ -32,7 +32,7 @@ If you get the following error after running make:
 then run `sed -i "s/\\.a\\b/.so/g" makefile` to switch from static linking to dynamic linking.
 
 ### Uninstallation
-From RPM: `dnf remove cephgeorep`  
+From RPM: `yum remove cephgeorep`  
 From source: `make uninstall`
 
 ## Configuration
