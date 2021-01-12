@@ -71,7 +71,7 @@ public:
   }
   bool full_test(const fs::path &file){
     return (curr_arg_sz + strlen(file.c_str()) + 1 + sizeof(char *) >= max_arg_sz)
-        || (curr_bytes_sz + fs::file_size(file) >= max_bytes_sz);
+        || (curr_bytes_sz + fs::file_size(file) > max_bytes_sz);
   }
   bool large_file(const fs::path &file){
     return curr_bytes_sz < max_bytes_sz && fs::file_size(file) >= max_bytes_sz;
