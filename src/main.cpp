@@ -22,20 +22,34 @@
  * 
  */
 
-#include <iostream>
-
 #include "config.hpp"
 #include "rctime.hpp"
 #include "crawler.hpp"
 #include "alert.hpp"
 #include <getopt.h>
 #include <string>
+#include <iostream>
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
+inline size_t get_env_size(char *envp[]){
+	size_t size = 0;
+	while(*envp){
+		size += strlen(*envp++) + 1;
+		size += sizeof(char *);
+	}
+	size += 1; // null terminator
+	return size;
+}
 
 int main(int argc, char *argv[], char *envp[]){
 	int opt;
 	int option_ind = 0;
-	int rsync_nproc_override = 0;
-	bool loop = true; // keep daemon running
+	bool seed = false; // sync everything but don't loop
+	fs::path config_path = DEFAULT_CONFIG_PATH;
+	
+	ConfigOverrides config_overrides;
 	
 	static struct option long_options[] = {
 		{"config",       required_argument, 0, 'c'},
@@ -50,24 +64,24 @@ int main(int argc, char *argv[], char *envp[]){
 	while((opt = getopt_long(argc, argv, "c:hvqsn:", long_options, &option_ind)) != -1){
 		switch(opt){
 			case 'c':
-				config_path = optarg;
+				config_path = fs::path(optarg);
 				break;
 			case 'h':
 				usage();
 				exit(EXIT_SUCCESS);
 				break;
 			case 'v':
-				config.log_level = 2;
+				config_overrides.log_level_override = ConfigOverride<int>(2);
 				break;
 			case 'q':
-				config.log_level = 0;
+				config_overrides.log_level_override = ConfigOverride<int>(0);
 				break;
 			case 's':
-				loop = false; // run daemon once then exit
+				seed = true; // run daemon once then exit, syncing everything
 				break;
 			case 'n':
 				try{
-					rsync_nproc_override = std::stoi(optarg);
+					config_overrides.nproc_override = ConfigOverride<int>(std::stoi(optarg));
 				}catch(std::invalid_argument){
 					std::cout << "Invalid number of processes." << std::endl;
 					exit(EXIT_FAILURE);
@@ -79,10 +93,8 @@ int main(int argc, char *argv[], char *envp[]){
 		}
 	}
 	
-	initDaemon();
-	config.env_sz = find_env_size(envp);
-	if(rsync_nproc_override) config.rsync_nproc = rsync_nproc_override;
-	if(loop == false) last_rctime = {1}; // seed all files
-	pollBase(config.sender_dir, loop);
+	Crawler crawler(config_path, get_env_size(enpv), config_overrides);
+	crawler.poll_base(seed);
+	
 	return 0;
 }
