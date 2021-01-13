@@ -24,29 +24,88 @@
 namespace fs = boost::filesystem;
 
 #define XATTR_SIZE 1024
-#define ERR -1
 
-extern timespec last_rctime;
+class LastRctime{
+	/* holds timestamp of previous file sync
+	 * to determine whether files are newly
+	 * changed since last sync
+	 */
+private:
+	timespec last_rctime_;
+	/* timestamp of last sync
+	 */
+	fs::path last_rctime_path_;
+	/* location to store last_rctime_
+	 * on disk
+	 */
+public:
+	LastRctime(const fs::path &last_rctime_path);
+	/* tries to read last_rctime_ from disk
+	 * if not on disk, initializes to 0.0
+	 */
+	~LastRctime(void);
+	/* writes last_rctime_ to disk
+	 */
+	void init_last_rctime(void);
+	/* creates file to store last_rctime_
+	 * and initializes to 0.0
+	 */
+	bool is_newer(const fs::path &path);
+	/* calls get_rctime on path, returns true
+	 * if rctime of path is > last_rctime_
+	 */
+	timespec get_rctime(const fs::path &path);
+	/* returns timespec of mtime if path is a file
+	 * or ceph.dir.rctime if path is a directory
+	 */
+	bool check_for_change(const fs::path &path, timespec &new_rctime);
+	/* checks rctimes and mtimes of each entry in the root directory
+	 * against last_rctime_ and returns true if there are new changes,
+	 * returns lowest rctime or mtime above last_rctime_ by reference
+	 * in new_rctime.
+	 */
+	void LastRctime::update(const timespec &new_rctime);
+	/* copies new_rctime into last_rctime_
+	 */
+	bool operator>(const timespec &lhs, const timespec &rhs);
+	/* returns true if lhs > rhs
+	 */
+	std::ostream &operator<<(std::ostream &stream, const LastRctime &rhs);
+	/* inserts rhs into stream formated as:
+	 * seconds.nanoseconds
+	 */
+	std::string &operator+(std::string lhs, const LastRctime &rhs);
+	/* returns rhs concatenated onto end of string
+	 */
+	std::string &operator+(const LastRctime &lhs, std::string rhs);
+	/* returns lhs concatenated onto beginning of string
+	 */
+}
 
-timespec loadLast_rctime(void);
-// reads previously saved rctime from disk
-// file format = rctime.tv_sec + '.' + rctime.tv_nsec + '\n'
 
-void writeLast_rctime(const timespec &rctime);
-// writes rctime to last_rctime.dat
+//---------------------------------------------------------
 
-void init_last_rctime(void);
-// creates last_rctime.dat file and initializes contents to "0.0\n".
-
-timespec get_rctime(const fs::path &path);
-// returns ceph.dir.rctime of directory path or mtime of file
-
-// timespec operators:
-std::string &operator+(std::string lhs, timespec rhs);
-std::string &operator+(timespec lhs, std::string rhs);
-bool operator>(const timespec &lhs, const timespec &rhs);
-bool operator==(const timespec &lhs, const timespec &rhs);
-bool operator>=(const timespec &lhs, const timespec &rhs);
-bool operator<(const timespec &lhs, const timespec &rhs);
-bool operator<=(const timespec &lhs, const timespec &rhs);
-std::ostream &operator<<(std::ostream &stream, const struct timespec &rhs); 
+// extern timespec last_rctime;
+// 
+// timespec loadLast_rctime(void);
+// // reads previously saved rctime from disk
+// // file format = rctime.tv_sec + '.' + rctime.tv_nsec + '\n'
+// 
+// void writeLast_rctime(const timespec &rctime);
+// // writes rctime to last_rctime.dat
+// 
+// void init_last_rctime(void);
+// // creates last_rctime.dat file and initializes contents to "0.0\n".
+// 
+// timespec get_rctime(const fs::path &path);
+// // returns ceph.dir.rctime of directory path or mtime of file
+// 
+// // timespec operators:
+// std::string &operator+(std::string lhs, timespec rhs);
+// std::string &operator+(timespec lhs, std::string rhs);
+// bool operator>(const timespec &lhs, const timespec &rhs);
+// bool operator==(const timespec &lhs, const timespec &rhs);
+// bool operator>=(const timespec &lhs, const timespec &rhs);
+// bool operator<(const timespec &lhs, const timespec &rhs);
+// bool operator<=(const timespec &lhs, const timespec &rhs);
+// std::ostream &operator<<(std::ostream &stream, const struct timespec &rhs); 
