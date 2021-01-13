@@ -67,8 +67,8 @@ void Crawler::pollBase(bool seed){
 		}
 		auto end = std::chrono::system_clock::now();
 		std::chrono::seconds elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-		if(elapsed.count() < config.sync_frequency && !seed) // if it took longer than sync freq, don't wait
-			std::this_thread::sleep_for(std::chrono::seconds(config.sync_frequency) - elapsed.count());
+		if(elapsed.count() < config.sync_period_ && !seed) // if it took longer than sync freq, don't wait
+			std::this_thread::sleep_for(std::chrono::seconds(config.sync_period_) - elapsed);
 	}while(!seed);
 	writeLast_rctime(last_rctime);
 }
