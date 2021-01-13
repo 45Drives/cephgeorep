@@ -50,15 +50,15 @@ public:
 	/* creates file to store last_rctime_
 	 * and initializes to 0.0
 	 */
-	bool is_newer(const fs::path &path);
+	bool is_newer(const fs::path &path) const;
 	/* calls get_rctime on path, returns true
 	 * if rctime of path is > last_rctime_
 	 */
-	timespec get_rctime(const fs::path &path);
+	timespec get_rctime(const fs::path &path) const;
 	/* returns timespec of mtime if path is a file
 	 * or ceph.dir.rctime if path is a directory
 	 */
-	bool check_for_change(const fs::path &path, timespec &new_rctime);
+	bool check_for_change(const fs::path &path, timespec &new_rctime) const;
 	/* checks rctimes and mtimes of each entry in the root directory
 	 * against last_rctime_ and returns true if there are new changes,
 	 * returns lowest rctime or mtime above last_rctime_ by reference
@@ -67,17 +67,17 @@ public:
 	void LastRctime::update(const timespec &new_rctime);
 	/* copies new_rctime into last_rctime_
 	 */
-	bool operator>(const timespec &lhs, const timespec &rhs);
+	bool operator>(const timespec &lhs, const timespec &rhs) const;
 	/* returns true if lhs > rhs
 	 */
-	std::ostream &operator<<(std::ostream &stream, const LastRctime &rhs);
+	std::ostream &operator<<(std::ostream &stream, const LastRctime &rhs) const;
 	/* inserts rhs into stream formated as:
 	 * seconds.nanoseconds
 	 */
-	std::string &operator+(std::string lhs, const LastRctime &rhs);
+	std::string &operator+(std::string lhs, const LastRctime &rhs) const;
 	/* returns rhs concatenated onto end of string
 	 */
-	std::string &operator+(const LastRctime &lhs, std::string rhs);
+	std::string &operator+(const LastRctime &lhs, std::string rhs) const;
 	/* returns lhs concatenated onto beginning of string
 	 */
 }
