@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
@@ -26,43 +27,86 @@ namespace fs = boost::filesystem;
 #define DEFAULT_CONFIG_PATH "/etc/ceph/cephfssyncd.conf"
 #define LAST_RCTIME_NAME "last_rctime.dat"
 
-struct Config{
-	int log_level = -1;
-	int sync_frequency;
-	int prop_delay_ms;
-	int rsync_nproc = 1;
-	size_t env_sz = 0;
-	char *sync_remote_dest;
-	bool ignore_hidden;
-	bool ignore_win_lock;
-	std::string remote_user;
-	fs::path sender_dir;
-	std::string receiver_host;
-	fs::path receiver_dir;
-	fs::path last_rctime;
-	std::string execBin;
-	std::string execFlags;
+template<class T>
+class ConfigOverride{
+private:
+	T value;
+	bool overridden;
+public:
+	ConfigOverride(void){
+		overridden = false;
+	}
+	ConfigOverride(const T &value_) : value(value_){
+		overridden = true;
+	}
+	~ConfigOverride(void) = default;
+	const T &value(void) const{
+		return value;
+	}
+	bool overridden(void) const{
+		return overridden;
+	}
 };
 
-extern std::string config_path;
+struct ConfigOverrides{
+	ConfigOverride<int> log_level_override;
+	ConfigOverride<int> nproc_override;
+};
 
-extern Config config;
+class Crawler;
 
-void loadConfig(void);
-// Load configuration parameters from file, create default config if none exists
+class Config{
+	friend class Crawler;
+private:
+	// daemon settings
+	int log_level_;
+	int nproc_;
+	bool ignore_hidden_;
+	bool ignore_win_lock_;
+	std::chrono::seconds sync_period_s_;
+	std::chrono::milliseconds prop_delay_ms_;
+	fs::path last_rctime_path_;
+	std::string exec_bin_;
+	std::string exec_flags_;
+	
+	// source
+	fs::path base_path_;
+	
+	// target
+	std::string remote_user_;
+	std::string remote_host_;
+	fs::path remote_directory_;
+	std::string destination_;
+public:
+	Config(const fs::path &config_path, const ConfigOverrides &config_overrides);
+	~Config() = default;
+	void init_config_file(const fs::path &config_path) const;
+	void override_fields(void);
+	void verify(void) const;
+	void construct_destination(void);
+};
 
-void strip_whitespace(std::string &str);
+// -----------------------------------------------------------------
 
-void verifyConfig(void);
-
-void construct_rsync_remote_dest(void);
-
-void createConfig(const fs::path &configPath, std::fstream &configFile);
-// creates config directory and initializes config file. Returns config file
-// stream in &configFile.
-
-void dumpConfig(void);
-// dumps config contents to screen
-
-size_t find_env_size(char *envp[]);
-// get environment size
+// extern std::string config_path;
+// 
+// extern Config config;
+// 
+// void loadConfig(void);
+// // Load configuration parameters from file, create default config if none exists
+// 
+// void strip_whitespace(std::string &str);
+// 
+// void verifyConfig(void);
+// 
+// void construct_rsync_remote_dest(void);
+// 
+// void createConfig(const fs::path &configPath, std::fstream &configFile);
+// // creates config directory and initializes config file. Returns config file
+// // stream in &configFile.
+// 
+// void dumpConfig(void);
+// // dumps config contents to screen
+// 
+// size_t find_env_size(char *envp[]);
+// // get environment size

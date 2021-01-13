@@ -31,7 +31,7 @@
 namespace fs = boost::filesystem;
 
 Crawler::Crawler(const fs::path &config_path, size_t env_size, const ConfigOverrides &config_overrides)
-		: config_(config_path, config_overrides), last_rctime_(config_.last_rctime_path){
+		: config_(config_path, config_overrides), last_rctime_(config_.last_rctime_path_){
 	payload_bytes_ = 0;
 	base_path_ = config_.base_path_;
 }
@@ -50,7 +50,11 @@ void Crawler::pollBase(bool seed){
 		if(last_rctime_.checkForChange(base_path_, new_rctime)){
 			Log("Change detected in " + base_path.string(), 1);
 			uintmax_t total_bytes = 0;
+			// take snapshot
 			fs::path snap_path = takesnap(new_rctime);
+			// wait for rctime to trickle to root
+			std::this_thread::sleep_for(std::chrono::milliseconds(config_.prop_delay_ms_));
+			// queue files
 			trigger_search(snap_path, total_bytes);
 			Log("New files to sync: "+std::to_string(file_list_.size()),1);
 			// launch rsync
@@ -61,14 +65,14 @@ void Crawler::pollBase(bool seed){
 			// clear sync queue
 			reset();
 			// delete snapshot
-			deletesnap(snap_path);
+			delete_snap(snap_path);
 			// overwrite last_rctime
 			last_rctime_.update(rctime);
 		}
 		auto end = std::chrono::system_clock::now();
 		std::chrono::seconds elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-		if(elapsed.count() < config.sync_period_ && !seed) // if it took longer than sync freq, don't wait
-			std::this_thread::sleep_for(std::chrono::seconds(config.sync_period_) - elapsed);
+		if(elapsed < config_.sync_period_ && !seed) // if it took longer than sync freq, don't wait
+			std::this_thread::sleep_for(std::chrono::seconds(config_.sync_period_) - elapsed);
 	}while(!seed);
 	writeLast_rctime(last_rctime);
 }
@@ -83,8 +87,6 @@ fs::path Crawler::create_snap(const timespec &rctime){
 }
 
 void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
-	// wait for rctime to trickle to root
-	std::this_thread::sleep_for(std::chrono::milliseconds(config_.prop_delay_ms));
 	// launch crawler in snapshot
 	Log("Launching crawler",2);
 	// seed recursive function with snap_path
@@ -99,8 +101,8 @@ void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 }
 
 bool Crawler::ignore_entry(const fs::directory_entry &entry){
-	return (config.ignore_hidden == true && entry.path().filename().string().front() == '.')
-		|| (config.ignore_win_lock  == true && entry.path().filename().string().substr(0,2) == "~$")
+	return (config_.ignore_hidden_ == true && entry.path().filename().string().front() == '.')
+		|| (config_.ignore_win_lock_  == true && entry.path().filename().string().substr(0,2) == "~$")
 		|| !last_rctime_.is_newer(entry);
 }
 
