@@ -39,7 +39,7 @@ private:
 	 */
 	fs::path base_path_;
 public:
-	Crawler(fs::path config_path, ConfigOverrides overrides);
+	Crawler(const fs::path &config_path, size_t env_size, const ConfigOverrides &config_overrides);
 	/* calls config constructor with
 	 * config_path and overrides,
 	 * initialises last_rctime_ and payload_bytes_
@@ -51,7 +51,7 @@ public:
 	/* clear file_list_ and set
 	 * payload_bytes_ to 0
 	 */
-	void poll_base(bool loop);
+	void poll_base(bool seed);
 	/* main loop of program
 	 * polls for change in root sync path,
 	 * if change detected, a snapshot is

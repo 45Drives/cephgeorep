@@ -30,8 +30,8 @@
 
 namespace fs = boost::filesystem;
 
-Crawler::Crawler(fs::path config_path) : config_(config_path, overrides){
-	last_rctime_ = LastRctime(config_.last_rctime_path);
+Crawler::Crawler(const fs::path &config_path, size_t env_size, const ConfigOverrides &config_overrides)
+		: config_(config_path, config_overrides), last_rctime_(config_.last_rctime_path){
 	payload_bytes_ = 0;
 	base_path_ = config_.base_path_;
 }
@@ -41,9 +41,10 @@ void Crawler::reset(void){
 	payload_bytes_ = 0;
 }
 
-void Crawler::pollBase(bool loop){
+void Crawler::pollBase(bool seed){
 	timespec new_rctime;
 	Log("Watching: " + base_path_.string(),1);
+	if(seed) last_rctime_.update({1}); // sync everything
 	do{
 		auto start = std::chrono::system_clock::now();
 		if(last_rctime_.checkForChange(base_path_, new_rctime)){
@@ -66,9 +67,9 @@ void Crawler::pollBase(bool loop){
 		}
 		auto end = std::chrono::system_clock::now();
 		std::chrono::seconds elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-		if(elapsed.count() < config.sync_frequency && loop) // if it took longer than sync freq, don't wait
+		if(elapsed.count() < config.sync_frequency && !seed) // if it took longer than sync freq, don't wait
 			std::this_thread::sleep_for(std::chrono::seconds(config.sync_frequency) - elapsed.count());
-	}while(loop);
+	}while(!seed);
 	writeLast_rctime(last_rctime);
 }
 
