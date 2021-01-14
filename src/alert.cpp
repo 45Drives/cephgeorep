@@ -18,9 +18,21 @@
  */
 
 #include "alert.hpp"
+#include <iostream>
 
 namespace Logging{
 	Logger log(1);
+}
+
+void Logger::message(const std::string &msg, int lvl) const{
+	if(log_level_ >= lvl) std::cout << msg << std::endl;
+}
+void Logger::warning(const std::string &msg) const{
+	std::cerr << "Warning: " << msg << std::endl;
+}
+void Logger::error(const std::string &msg, bool exit_) const{
+	std::cerr << "Error: " << msg << std::endl;
+	if(exit_) exit(EXIT_FAILURE);
 }
 
 // #include "alert.hpp"

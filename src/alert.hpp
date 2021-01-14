@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <iostream>
+#include <string>
 
 class Logger{
 private:
@@ -28,16 +28,9 @@ public:
 	Logger(int log_level){
 		log_level_ = log_level;
 	}
-	void message(const std::string &msg, int lvl){
-		if(log_level_ >= lvl) std::cout << msg << std::endl;
-	}
-	void warning(const std::string &msg){
-		std::cerr << "Warning: " << msg << std::endl;
-	}
-	void error(const std::string &msg, bool exit_ = true){
-		std::cerr << "Error: " << msg << std::endl;
-		if(exit_) exit(EXIT_FAILURE);
-	}
+	void message(const std::string &msg, int lvl) const;
+	void warning(const std::string &msg) const;
+	void error(const std::string &msg, bool exit_ = true) const;
 };
 
 namespace Logging{
