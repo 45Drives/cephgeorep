@@ -21,9 +21,6 @@
 
 namespace Logging{
 	Logger log(1);
-	inline const char *const boolalpha(bool x){
-		return x ? "true" : "false";
-	}
 }
 
 // #include "alert.hpp"

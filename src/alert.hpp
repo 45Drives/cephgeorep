@@ -42,7 +42,6 @@ public:
 
 namespace Logging{
 	extern Logger log;
-	inline const char *const boolalpha(bool x);
 }
 
 // ----------------------------------------------
