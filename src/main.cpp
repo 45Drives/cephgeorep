@@ -23,12 +23,10 @@
  */
 
 #include "config.hpp"
-#include "rctime.hpp"
 #include "crawler.hpp"
 #include "alert.hpp"
 #include <getopt.h>
 #include <string>
-#include <iostream>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
@@ -44,22 +42,22 @@ inline size_t get_env_size(char *envp[]){
 }
 
 inline void usage(){
-	std::cout <<
-	"cephfssyncd Copyright (C) 2019-2021 Josh Boudreau <jboudreau@45drives.com>\n"
-	"This program is released under the GNU General Public License v2.1.\n"
-	"See <https://www.gnu.org/licenses/> for more details.\n"
-	"\n"
-	"Usage:\n"
-	"  cephfssyncd [ flags ]\n"
-	"Flags:\n"
-	"  -c --config </path/to/config> - pass alternate config path\n"
-	"                                - default config: /etc/ceph/cephfssyncd.conf\n"
-	"  -s --seed                     - send all files to seed destination\n"
-	"  -n --nproc <# of processes>   - number of sync processes to run in parallel\n"
-	"  -h --help                     - print this message\n"
-	"  -v --verbose                  - set log level to 2\n"
-	"  -q --quiet - set log level to 0\n"
-	<< std::endl;
+	Logging::log.message(
+		"cephfssyncd Copyright (C) 2019-2021 Josh Boudreau <jboudreau@45drives.com>\n"
+		"This program is released under the GNU General Public License v2.1.\n"
+		"See <https://www.gnu.org/licenses/> for more details.\n"
+		"\n"
+		"Usage:\n"
+		"  cephfssyncd [ flags ]\n"
+		"Flags:\n"
+		"  -c --config </path/to/config> - pass alternate config path\n"
+		"                                - default config: /etc/ceph/cephfssyncd.conf\n"
+		"  -s --seed                     - send all files to seed destination\n"
+		"  -n --nproc <# of processes>   - number of sync processes to run in parallel\n"
+		"  -h --help                     - print this message\n"
+		"  -v --verbose                  - set log level to 2\n"
+		"  -q --quiet - set log level to 0\n", 1
+	);
 }
 
 int main(int argc, char *argv[], char *envp[]){
@@ -102,8 +100,7 @@ int main(int argc, char *argv[], char *envp[]){
 				try{
 					config_overrides.nproc_override = ConfigOverride<int>(std::stoi(optarg));
 				}catch(std::invalid_argument){
-					std::cout << "Invalid number of processes." << std::endl;
-					exit(EXIT_FAILURE);
+					Logging::log.error("Invalid number of processes.");
 				}
 			case '?':
 				break; // getopt_long prints errors
@@ -112,7 +109,7 @@ int main(int argc, char *argv[], char *envp[]){
 		}
 	}
 	
-	Crawler crawler(config_path, get_env_size(enpv), config_overrides);
+	Crawler crawler(config_path, get_env_size(envp), config_overrides);
 	crawler.poll_base(seed);
 	
 	return 0;
