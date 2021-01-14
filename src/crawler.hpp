@@ -38,6 +38,8 @@ private:
 	/* timestamp of last sync
 	 */
 	fs::path base_path_;
+	/* local source directory
+	 */
 public:
 	Crawler(const fs::path &config_path, size_t env_size, const ConfigOverrides &config_overrides);
 	/* calls config constructor with
