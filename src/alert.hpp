@@ -32,10 +32,10 @@ public:
 		if(log_level_ >= lvl) std::cout << msg << std::endl;
 	}
 	void warning(const std::string &msg){
-		std::cout << "Warning: " << msg << std::endl;
+		std::cerr << "Warning: " << msg << std::endl;
 	}
 	void error(const std::string &msg){
-		std::cout << "Error: " << msg << std::endl;
+		std::cerr << "Error: " << msg << std::endl;
 		exit(EXIT_FAILURE);
 	}
 };
