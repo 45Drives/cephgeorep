@@ -21,42 +21,41 @@
 #include "alert.hpp"
 #include "rctime.hpp"
 #include "config.hpp"
-#include "exec.hpp"
+// #include "exec.hpp"
 #include <boost/filesystem.hpp>
 #include <sys/xattr.h>
 #include <thread>
 #include <chrono>
-#include <signal.h>
 
 namespace fs = boost::filesystem;
 
-Crawler::Crawler(const fs::path &config_path, size_t env_size, const ConfigOverrides &config_overrides)
-		: config_(config_path, config_overrides), last_rctime_(config_.last_rctime_path_){
-	payload_bytes_ = 0;
+Crawler::Crawler(const fs::path &config_path, size_t envp_size, const ConfigOverrides &config_overrides)
+		: config_(config_path, config_overrides)
+		, last_rctime_(config_.last_rctime_path_)
+		, syncer(envp_size, config_){
 	base_path_ = config_.base_path_;
 }
 
 void Crawler::reset(void){
 	file_list_.clear();
-	payload_bytes_ = 0;
 }
 
-void Crawler::pollBase(bool seed){
+void Crawler::poll_base(bool seed){
 	timespec new_rctime;
-	Log("Watching: " + base_path_.string(),1);
+	Logging::log.message("Watching: " + base_path_.string(),1);
 	if(seed) last_rctime_.update({1}); // sync everything
 	do{
 		auto start = std::chrono::system_clock::now();
-		if(last_rctime_.checkForChange(base_path_, new_rctime)){
-			Log("Change detected in " + base_path.string(), 1);
+		if(last_rctime_.check_for_change(base_path_, new_rctime)){
+			Logging::log.message("Change detected in " + base_path_.string(), 1);
 			uintmax_t total_bytes = 0;
 			// take snapshot
-			fs::path snap_path = takesnap(new_rctime);
+			fs::path snap_path = create_snap(new_rctime);
 			// wait for rctime to trickle to root
-			std::this_thread::sleep_for(std::chrono::milliseconds(config_.prop_delay_ms_));
+			std::this_thread::sleep_for(config_.prop_delay_ms_);
 			// queue files
 			trigger_search(snap_path, total_bytes);
-			Log("New files to sync: "+std::to_string(file_list_.size()),1);
+			Logging::log.message("New files to sync: "+std::to_string(file_list_.size()),1);
 			// launch rsync
 			if(!file_list_.empty()){
 				// TODO: make Syncer class and call sync method here
@@ -67,47 +66,47 @@ void Crawler::pollBase(bool seed){
 			// delete snapshot
 			delete_snap(snap_path);
 			// overwrite last_rctime
-			last_rctime_.update(rctime);
+			last_rctime_.update(new_rctime);
 		}
 		auto end = std::chrono::system_clock::now();
 		std::chrono::seconds elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-		if(elapsed < config_.sync_period_ && !seed) // if it took longer than sync freq, don't wait
-			std::this_thread::sleep_for(std::chrono::seconds(config_.sync_period_) - elapsed);
+		if(elapsed < config_.sync_period_s_ && !seed) // if it took longer than sync freq, don't wait
+			std::this_thread::sleep_for(config_.sync_period_s_ - elapsed);
 	}while(!seed);
-	writeLast_rctime(last_rctime);
 }
 
-fs::path Crawler::create_snap(const timespec &rctime){
+fs::path Crawler::create_snap(const timespec &rctime) const{
+	boost::system::error_code ec;
 	std::string pid = std::to_string(getpid());
-	fs::path snapPath = fs::path(base_path_).append(".snap/"+pid+"snapshot"+rctime);
-	Log("Creating snapshot: " + snapPath.string(), 2);
-	fs::create_directories(snapPath, ec);
-	if(ec) error(PATH_CREATE, ec);
-	return snapPath;
+	fs::path snap_path = fs::path(base_path_).append(".snap/"+pid+"snapshot"+rctime);
+	Logging::log.message("Creating snapshot: " + snap_path.string(), 2);
+	fs::create_directories(snap_path, ec);
+	if(ec) Logging::log.error("Error creating path: " + snap_path.string());
+	return snap_path;
 }
 
 void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 	// launch crawler in snapshot
-	Log("Launching crawler",2);
+	Logging::log.message("Launching crawler",2);
 	// seed recursive function with snap_path
 	find_new_files_recursive(snap_path, snap_path, total_bytes);
 	// log list of new files
-	if(config_.log_level >= 2){ // skip loop if not logging
-		Log("Files to sync:",2);
-		for(auto i : sync_queue){
-			Log(i.string(),2);
+	if(config_.log_level_ >= 2){ // skip loop if not logging
+		Logging::log.message("Files to sync:",2);
+		for(auto i : file_list_){
+			Logging::log.message(i.string(),2);
 		}
 	}
 }
 
-bool Crawler::ignore_entry(const fs::directory_entry &entry){
+bool Crawler::ignore_entry(const fs::directory_entry &entry) const{
 	return (config_.ignore_hidden_ == true && entry.path().filename().string().front() == '.')
 		|| (config_.ignore_win_lock_  == true && entry.path().filename().string().substr(0,2) == "~$")
 		|| !last_rctime_.is_newer(entry);
 }
 
 void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &snap_root, uintmax_t &total_bytes){
-	for(fs::directory_iterator itr{path}; itr != fs::directory_iterator{}; *itr++){
+	for(fs::directory_iterator itr{current_path}; itr != fs::directory_iterator{}; *itr++){
 		fs::directory_entry entry = *itr;
 		if(ignore_entry(entry)) continue;
 		if(is_directory(entry)){
@@ -120,11 +119,11 @@ void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &sn
 	}
 }
 
-void Crawler::delete_snap(const fs::path &path){
-	Log("Removing snapshot: " + path.string(), 2);
+void Crawler::delete_snap(const fs::path &path) const{
 	boost::system::error_code ec;
+	Logging::log.message("Removing snapshot: " + path.string(), 2);
 	fs::remove(path, ec);
-	if(ec) error(REMOVE_SNAP, ec);
+	if(ec) Logging::log.error("Error creating path: " + path.string());
 }
 
 // -----------------------------

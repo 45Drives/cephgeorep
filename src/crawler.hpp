@@ -40,8 +40,9 @@ private:
 	fs::path base_path_;
 	/* local source directory
 	 */
+	Syncer syncer;
 public:
-	Crawler(const fs::path &config_path, size_t env_size, const ConfigOverrides &config_overrides);
+	Crawler(const fs::path &config_path, size_t envp_size, const ConfigOverrides &config_overrides);
 	/* calls config constructor with
 	 * config_path and overrides,
 	 * initialises last_rctime_ and payload_bytes_
