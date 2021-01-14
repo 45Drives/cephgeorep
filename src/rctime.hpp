@@ -64,23 +64,16 @@ public:
 	 * returns lowest rctime or mtime above last_rctime_ by reference
 	 * in new_rctime.
 	 */
-	void LastRctime::update(const timespec &new_rctime);
+	void update(const timespec &new_rctime);
 	/* copies new_rctime into last_rctime_
 	 */
-	bool operator>(const timespec &lhs, const timespec &rhs) const;
-	/* returns true if lhs > rhs
-	 */
-	std::ostream &operator<<(std::ostream &stream, const LastRctime &rhs) const;
-	/* inserts rhs into stream formated as:
-	 * seconds.nanoseconds
-	 */
-	std::string &operator+(std::string lhs, const LastRctime &rhs) const;
+	friend std::string &operator+(std::string lhs, const LastRctime &rhs);
 	/* returns rhs concatenated onto end of string
 	 */
-	std::string &operator+(const LastRctime &lhs, std::string rhs) const;
+	friend std::string &operator+(const LastRctime &lhs, std::string rhs);
 	/* returns lhs concatenated onto beginning of string
 	 */
-}
+};
 
 
 //---------------------------------------------------------

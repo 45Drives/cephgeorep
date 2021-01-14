@@ -19,14 +19,20 @@
 
 #include "rctime.hpp"
 #include "alert.hpp"
-#include <boost/filesystem.hpp>
+#include <fstream>
 #include <sys/xattr.h>
 #include <sys/stat.h>
+#include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
+inline bool operator>(const timespec &lhs, const timespec &rhs){
+	return (lhs.tv_sec > rhs.tv_sec) ||
+	((lhs.tv_sec == rhs.tv_sec) && (lhs.tv_nsec > rhs.tv_nsec));
+}
+
 LastRctime::LastRctime(const fs::path &last_rctime_path) : last_rctime_path_(last_rctime_path){
-	Log("Reading last rctime from disk.",2);
+	Logging::log.message("Reading last rctime from disk.", 2);
 	std::ifstream f(last_rctime_path_.string());
 	std::string str;
 	if(!f){
@@ -40,81 +46,73 @@ LastRctime::LastRctime(const fs::path &last_rctime_path) : last_rctime_path_(las
 		last_rctime_.tv_nsec = stol(str);
 	}catch(std::invalid_argument){
 		// last_rctime.dat corrupted
-		Log(last_rctime_path_ + " is corrupt. Reinitializing.",0);
+		Logging::log.warning(last_rctime_path_.string() + " is corrupt. Reinitializing.");
 		init_last_rctime();
-		rctime.tv_sec = rctime.tv_nsec = 0;
+		last_rctime_.tv_sec = last_rctime_.tv_nsec = 0;
 	}
 }
 
 LastRctime::~LastRctime(void){
-	Log("Writing last rctime to disk.",2);
+	Logging::log.message("Writing last rctime to disk.", 2);
 	std::ofstream f(last_rctime_path_.string());
 	if(!f){
 		init_last_rctime();
 		f.open(last_rctime_path_.string());
 	}
-	f << rctime << std::endl;
+	f << last_rctime_.tv_sec << '.' << last_rctime_.tv_nsec << std::endl;
 	f.close();
 }
 
 void LastRctime::init_last_rctime(void){
-	Log(last_rctime_path_.string() + " does not exist. Creating and initializing to 0.0.",2);
+	boost::system::error_code ec;
+	Logging::log.message(last_rctime_path_.string() + " does not exist. Creating and initializing to 0.0.", 2);
 	fs::create_directories(last_rctime_path_.parent_path(), ec);
-	if(ec) error(PATH_CREATE, ec);
+	if(ec) Logging::log.error("Cannot create path: " + last_rctime_path_.parent_path().string());
 	std::ofstream f(last_rctime_path_.string());
 	f << "0.0" << std::endl;
 	f.close();
 }
 
-bool LastRctime::is_newer(const fs::path &path){
+bool LastRctime::is_newer(const fs::path &path) const{
 	return get_rctime(path) > last_rctime_;
 }
 
-timespec LastRctime::get_rctime(const fs::path &path){
+timespec LastRctime::get_rctime(const fs::path &path) const{
 	timespec rctime;
-	switch(is_directory(path)){
-		case true: // dir
-		{
-			char value[XATTR_SIZE];
-			if(getxattr(path.c_str(), "ceph.dir.rctime", value, XATTR_SIZE) == ERR){
-				warning(READ_RCTIME);
-				Log("Ignoring " + path.string(),0);
-				rctime.tv_sec = 0;
-				rctime.tv_nsec = 0;
-			}else{
-				std::string str(value);
-				rctime.tv_sec = (time_t)stoul(str.substr(0,str.find('.')));
-				// value = <seconds> + '.09' + <nanoseconds>
-				// +3 is to remove the '.09'
-				rctime.tv_nsec = stol(str.substr(str.find('.')+3, std::string::npos));
-			}
-			break;
+	if(is_directory(path)){
+		char value[XATTR_SIZE];
+		if(getxattr(path.c_str(), "ceph.dir.rctime", value, XATTR_SIZE) == -1){
+			Logging::log.warning("Cannot read ceph.dir.rctime of " + path.string() + "\nIgnoring " + path.string());
+			rctime.tv_sec = 0;
+			rctime.tv_nsec = 0;
+		}else{
+			std::string str(value);
+			rctime.tv_sec = (time_t)stoul(str.substr(0,str.find('.')));
+			// value = <seconds> + '.09' + <nanoseconds>
+			// +3 is to remove the '.09'
+			rctime.tv_nsec = stol(str.substr(str.find('.')+3, std::string::npos));
 		}
-		case false: // file
-		{
-			struct stat t_stat;
-			if(lstat(path.c_str(), &t_stat) == ERR){
-				warning(READ_MTIME);
-				Log("Ignoring " + path.string(),0);
-				rctime.tv_sec = 0;
-				rctime.tv_nsec = 0;
-			}else{
-				rctime.tv_sec = t_stat.st_mtim.tv_sec;
-				rctime.tv_nsec = t_stat.st_mtim.tv_nsec;
-			}
-			break;
+	}else{ // file
+		struct stat t_stat;
+		if(lstat(path.c_str(), &t_stat) == -1){
+			Logging::log.warning("Cannot read mtime of " + path.string() + "\nIgnoring " + path.string());
+			rctime.tv_sec = 0;
+			rctime.tv_nsec = 0;
+		}else{
+			rctime.tv_sec = t_stat.st_mtim.tv_sec;
+			rctime.tv_nsec = t_stat.st_mtim.tv_nsec;
 		}
 	}
 	return rctime;
 }
 
-bool LastRctime::check_for_change(const fs::path &path, timespec &new_rctime){
+bool LastRctime::check_for_change(const fs::path &path, timespec &new_rctime) const{
 	bool change = false;
 	timespec temp_rctime;
 	for(fs::directory_iterator itr(path); itr != fs::directory_iterator(); *itr++){
-		if((temp_rctime = get_rctime(*itr)) > last_rctime){
+		if((temp_rctime = get_rctime(*itr)) > last_rctime_){
 			change = true;
-			if(temp_rctime > rctime) rctime = temp_rctime; // get highest
+			if(temp_rctime > new_rctime) new_rctime = temp_rctime; // get highest
 		}
 	}
 	return change;
@@ -125,21 +123,11 @@ void LastRctime::update(const timespec &new_rctime){
 	last_rctime_.tv_nsec = new_rctime.tv_nsec;
 }
 
-bool LastRctime::operator>(const timespec &lhs, const timespec &rhs){
-	return (lhs.tv_sec > rhs.tv_sec) ||
-	((lhs.tv_sec == rhs.tv_sec) && (lhs.tv_nsec > rhs.tv_nsec));
-}
-
-std::ostream &LastRctime::operator<<(std::ostream &stream, const LastRctime &rhs){
-	stream << rhs.last_rctime_.tv_sec << "." << rhs.last_rctime_.tv_nsec;
-	return stream;
-}
-
-std::string &LastRctime::operator+(std::string lhs, const LastRctime &rhs){
+std::string &operator+(std::string lhs, const LastRctime &rhs){
 	return lhs.append(std::to_string(rhs.last_rctime_.tv_sec) + "." + std::to_string(rhs.last_rctime_.tv_nsec));
 }
 
-std::string &LastRctime::operator+(const LastRctime &lhs, std::string rhs){
+std::string &operator+(const LastRctime &lhs, std::string rhs){
 	return (std::to_string(lhs.last_rctime_.tv_sec) + "." + std::to_string(lhs.last_rctime_.tv_nsec)).append(rhs);
 }
 
