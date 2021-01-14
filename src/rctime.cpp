@@ -19,6 +19,7 @@
 
 #include "rctime.hpp"
 #include "alert.hpp"
+#include "signal.hpp"
 #include <fstream>
 #include <sys/xattr.h>
 #include <sys/stat.h>
@@ -50,9 +51,14 @@ LastRctime::LastRctime(const fs::path &last_rctime_path) : last_rctime_path_(las
 		init_last_rctime();
 		last_rctime_.tv_sec = last_rctime_.tv_nsec = 0;
 	}
+	set_signal_handlers(this);
 }
 
 LastRctime::~LastRctime(void){
+	write_last_rctime();
+}
+
+void LastRctime::write_last_rctime(void) const{
 	Logging::log.message("Writing last rctime to disk.", 2);
 	std::ofstream f(last_rctime_path_.string());
 	if(!f){
@@ -63,7 +69,7 @@ LastRctime::~LastRctime(void){
 	f.close();
 }
 
-void LastRctime::init_last_rctime(void){
+void LastRctime::init_last_rctime(void) const{
 	boost::system::error_code ec;
 	Logging::log.message(last_rctime_path_.string() + " does not exist. Creating and initializing to 0.0.", 2);
 	fs::create_directories(last_rctime_path_.parent_path(), ec);

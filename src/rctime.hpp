@@ -44,9 +44,12 @@ public:
 	 * if not on disk, initializes to 0.0
 	 */
 	~LastRctime(void);
+	/* calls write_last_rctime()
+	 */
+	void write_last_rctime(void) const;
 	/* writes last_rctime_ to disk
 	 */
-	void init_last_rctime(void);
+	void init_last_rctime(void) const;
 	/* creates file to store last_rctime_
 	 * and initializes to 0.0
 	 */
