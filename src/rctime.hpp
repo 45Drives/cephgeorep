@@ -70,14 +70,14 @@ public:
 	void update(const timespec &new_rctime);
 	/* copies new_rctime into last_rctime_
 	 */
-	friend std::string &operator+(std::string lhs, const LastRctime &rhs);
-	/* returns rhs concatenated onto end of string
-	 */
-	friend std::string &operator+(const LastRctime &lhs, std::string rhs);
-	/* returns lhs concatenated onto beginning of string
-	 */
 };
 
+std::string &operator+(std::string lhs, const timespec &rhs);
+/* returns rhs concatenated onto end of string
+ */
+std::string &operator+(const timespec &lhs, std::string rhs);
+/* returns lhs concatenated onto beginning of string
+ */
 
 //---------------------------------------------------------
 

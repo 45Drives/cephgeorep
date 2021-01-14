@@ -129,12 +129,12 @@ void LastRctime::update(const timespec &new_rctime){
 	last_rctime_.tv_nsec = new_rctime.tv_nsec;
 }
 
-std::string &operator+(std::string lhs, const LastRctime &rhs){
-	return lhs.append(std::to_string(rhs.last_rctime_.tv_sec) + "." + std::to_string(rhs.last_rctime_.tv_nsec));
+std::string &operator+(std::string lhs, const timespec &rhs){
+	return lhs.append(std::to_string(rhs.tv_sec) + "." + std::to_string(rhs.tv_nsec));
 }
 
-std::string &operator+(const LastRctime &lhs, std::string rhs){
-	return (std::to_string(lhs.last_rctime_.tv_sec) + "." + std::to_string(lhs.last_rctime_.tv_nsec)).append(rhs);
+std::string &operator+(const timespec &lhs, std::string rhs){
+	return (std::to_string(lhs.tv_sec) + "." + std::to_string(lhs.tv_nsec)).append(rhs);
 }
 
 // ----------------------------
