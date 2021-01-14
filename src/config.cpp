@@ -21,8 +21,10 @@
 
 #include "config.hpp"
 #include "alert.hpp"
+#include <chrono>
 #include <boost/filesystem.hpp>
-#include <iostream>
+#include <boost/system/error_code.hpp>
+#include <fstream>
 #include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -85,9 +87,9 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 			last_rctime_path_ = fs::path(value).append(LAST_RCTIME_NAME);
 		}else if(key == "Sync Period"){
 			try{
-				sync_period_s_ = stoi(value);
+				sync_period_s_ = std::chrono::seconds(stoi(value));
 			}catch(std::invalid_argument){
-				sync_period_s_ = -1;
+				sync_period_s_ = std::chrono::seconds(-1);
 			}
 		}else if(key == "Ignore Hidden"){
 			std::istringstream(value) >> std::boolalpha >> ignore_hidden_ >> std::noboolalpha;
@@ -95,9 +97,9 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 			std::istringstream(value) >> std::boolalpha >> ignore_win_lock_ >> std::noboolalpha;
 		}else if(key == "Propagation Delay"){
 			try{
-				prop_delay_ms_ = stoi(value);
+				prop_delay_ms_ = std::chrono::milliseconds(stoi(value));
 			}catch(std::invalid_argument){
-				prop_delay_ms_ = -1;
+				prop_delay_ms_ = std::chrono::milliseconds(-1);
 			}
 		}else if(key == "Log Level"){
 			try{
@@ -113,18 +115,18 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 			try{
 				nproc_ = stoi(value);
 			}catch(std::invalid_argument){
-				rsync_nproc_ = -1;
+				nproc_ = -1;
 			}
 		}
 		// else ignore entry
 	}
 	
-	override_fields();
+	override_fields(config_overrides);
 	
 	verify(config_path);
 }
 
-void Config::override_fields(void){
+void Config::override_fields(const ConfigOverrides &config_overrides){
 	if(config_overrides.log_level_override.overridden()){
 		log_level_ = config_overrides.log_level_override.value();
 	}
@@ -133,17 +135,17 @@ void Config::override_fields(void){
 	}
 }
 
-void Config::verify(const fs::path &config_path){
+void Config::verify(const fs::path &config_path) const{
 	bool errors = false;
 	if(base_path_.empty()){
-		std::cerr << "Error: config does not contain a search directory (Source Directory)\n";
+		Logging::log.error("config does not contain a search directory (Source Directory)");
 		errors = true;
 	}
 	if(remote_host_.empty()){
 		std::cerr << "Warning: config does not contain a remote host (Remote Host)\n";
 		// just warning
 	}
-	if(remtote_directory_.empty()){
+	if(remote_directory_.empty()){
 		std::cerr << "Warning: config does not contain a remote destination (Remote Directory)\n";
 		// just warning
 	}
@@ -151,11 +153,11 @@ void Config::verify(const fs::path &config_path){
 		std::cerr << "Error: config does not contain a metadata path (Metadata Directory)\n";
 		errors = true;
 	}
-	if(sync_period_ < 0){
+	if(sync_period_s_ < std::chrono::seconds(0)){
 		std::cerr << "Error: sync frequency must be positive integer (Sync Period)\n";
 		errors = true;
 	}
-	if(prop_delay_ms_ < 0){
+	if(prop_delay_ms_ < std::chrono::milliseconds(0)){
 		std::cerr << "Error: rctime prop delay must be positive integer (Propagation Delay)\n";
 		errors = true;
 	}
@@ -181,11 +183,12 @@ void Config::verify(const fs::path &config_path){
 	}
 }
 
-void Config::init_config_file(const fs::path &config_path){
-	fs::create_directories(configPath.parent_path(), ec);
-	if(ec) error(PATH_CREATE, ec);
-	std::ofstream f(configPath.string());
-	if(!f) error(OPEN_CONFIG);
+void Config::init_config_file(const fs::path &config_path) const{
+	boost::system::error_code ec;
+	fs::create_directories(config_path.parent_path(), ec);
+// 	if(ec) error(PATH_CREATE);
+	std::ofstream f(config_path.string());
+// 	if(!f) error(OPEN_CONFIG);
 	f <<
 	"# local backup settings\n"
 	"Source Directory =               # full path to directory to backup\n"
@@ -215,7 +218,7 @@ void Config::init_config_file(const fs::path &config_path){
 	f.close();
 }
 
-void dump(void){
+void Config::dump(void) const{
 	std::cout << "configuration:" << std::endl;
 	std::cout << std::endl;
 	std::cout << "source settings:" << std::endl;
@@ -232,23 +235,23 @@ void dump(void){
 	std::cout << "Exec = " << exec_bin_ << std::endl;
 	std::cout << "Flags = " << exec_flags_ << std::endl;
 	std::cout << "Metadata Directory = " << last_rctime_path_.string() << std::endl;
-	std::cout << "Sync Period = " << sync_period_s_ << " (seconds)" << std::endl;
-	std::cout << "Propagation Delay = " << prop_delay_ms_ << " (milliseconds)" << std::endl;
+	std::cout << "Sync Period = " << sync_period_s_.count() << " (seconds)" << std::endl;
+	std::cout << "Propagation Delay = " << prop_delay_ms_.count() << " (milliseconds)" << std::endl;
 	std::cout << "Log Level = " << log_level_ << std::endl;
 }
 
-void Config::construct_destination(void){
-	// TODO: move to Syncer
-	remote_de = remote_directory_.string();
-	if(!config.receiver_host.empty()){
-		str = config.receiver_host + ":" + str;
-	}
-	if(!config.remote_user.empty()){
-		str = config.remote_user + "@" + str;
-	}
-	config.sync_remote_dest = new char[str.length()+1];
-	std::strcpy(config.sync_remote_dest, str.c_str());
-}
+// void Config::construct_destination(void){
+// 	// TODO: move to Syncer
+// 	remote_de = remote_directory_.string();
+// 	if(!config.receiver_host.empty()){
+// 		str = config.receiver_host + ":" + str;
+// 	}
+// 	if(!config.remote_user.empty()){
+// 		str = config.remote_user + "@" + str;
+// 	}
+// 	config.sync_remote_dest = new char[str.length()+1];
+// 	std::strcpy(config.sync_remote_dest, str.c_str());
+// }
 
 // ------------------------------------------
 

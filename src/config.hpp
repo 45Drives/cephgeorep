@@ -30,21 +30,21 @@ namespace fs = boost::filesystem;
 template<class T>
 class ConfigOverride{
 private:
-	T value;
-	bool overridden;
+	T value_;
+	bool overridden_;
 public:
 	ConfigOverride(void){
 		overridden = false;
 	}
-	ConfigOverride(const T &value_) : value(value_){
+	ConfigOverride(const T &value_passed) : value_(value_passed){
 		overridden = true;
 	}
 	~ConfigOverride(void) = default;
 	const T &value(void) const{
-		return value;
+		return value_;
 	}
-	bool overridden(void) const{
-		return overridden;
+	const bool &overridden(void) const{
+		return overridden_;
 	}
 };
 
@@ -81,9 +81,10 @@ public:
 	Config(const fs::path &config_path, const ConfigOverrides &config_overrides);
 	~Config() = default;
 	void init_config_file(const fs::path &config_path) const;
-	void override_fields(void);
-	void verify(void) const;
-	void construct_destination(void);
+	void override_fields(const ConfigOverrides &config_overrides);
+	void verify(const fs::path &config_path) const;
+	void dump(void) const;
+// 	void construct_destination(void);
 };
 
 // -----------------------------------------------------------------
