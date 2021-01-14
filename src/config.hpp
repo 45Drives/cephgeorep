@@ -57,6 +57,7 @@ class Crawler;
 
 class Config{
 	friend class Crawler;
+	friend class Syncer;
 private:
 	// daemon settings
 	int log_level_;
@@ -76,7 +77,6 @@ private:
 	std::string remote_user_;
 	std::string remote_host_;
 	fs::path remote_directory_;
-	std::string destination_;
 public:
 	Config(const fs::path &config_path, const ConfigOverrides &config_overrides);
 	~Config() = default;
