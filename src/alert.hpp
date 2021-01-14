@@ -34,9 +34,9 @@ public:
 	void warning(const std::string &msg){
 		std::cerr << "Warning: " << msg << std::endl;
 	}
-	void error(const std::string &msg){
+	void error(const std::string &msg, bool exit_ = true){
 		std::cerr << "Error: " << msg << std::endl;
-		exit(EXIT_FAILURE);
+		if(exit_) exit(EXIT_FAILURE);
 	}
 };
 
