@@ -19,26 +19,53 @@
 
 #pragma once
 
-#include <boost/system/error_code.hpp>
+#include <iostream>
 
-extern boost::system::error_code ec; // error code for system fucntions
-
-#define NUM_ERRS 13
-
-enum {
-	OPEN_CONFIG, PATH_CREATE, READ_RCTIME, READ_MTIME, READ_FILES_DIRS,
-	REMOVE_SNAP, FORK, LAUNCH_RSYNC, WAIT_RSYNC, NO_RSYNC, UNK_RSYNC_ERR,
-	SND_DIR_DNE, NO_PERM
+class Logger{
+private:
+	int log_level_;
+public:
+	Logger(int log_level){
+		log_level_ = log_level;
+	}
+	void message(const std::string &msg, int lvl){
+		if(log_level_ >= lvl) std::cout << msg << std::endl;
+	}
+	void warning(const std::string &msg){
+		std::cout << "Warning: " << msg << std::endl;
+	}
+	void error(const std::string &msg){
+		std::cout << "Error: " << msg << std::endl;
+		exit(EXIT_FAILURE);
+	}
 };
 
-void warning(int err);
-// print error to std::cerr but don't exit
+namespace Logging{
+	extern Logger log;
+}
 
-void error(int err, boost::system::error_code ec_ = {1,boost::system::generic_category()});
-// print error to std::cerr and exit with error code 1
+// ----------------------------------------------
 
-void Log(std::string msg, int lvl);
-// print msg to std::cout given config.log_level >= lvl
-
-void usage(void);
-// print CLI flag descriptions
+// #include <boost/system/error_code.hpp>
+// 
+// extern boost::system::error_code ec; // error code for system fucntions
+// 
+// #define NUM_ERRS 13
+// 
+// enum {
+// 	OPEN_CONFIG, PATH_CREATE, READ_RCTIME, READ_MTIME, READ_FILES_DIRS,
+// 	REMOVE_SNAP, FORK, LAUNCH_RSYNC, WAIT_RSYNC, NO_RSYNC, UNK_RSYNC_ERR,
+// 	SND_DIR_DNE, NO_PERM
+// };
+// 
+// void warning(int err);
+// // print error to std::cerr but don't exit
+// 
+// void error(int err, boost::system::error_code ec_ = {1,boost::system::generic_category()});
+// // print error to std::cerr and exit with error code 1
+// 
+// void Log(std::string msg, int lvl);
+// // print msg to std::cout given config.log_level >= lvl
+// 
+// void usage(void);
+// // print CLI flag descriptions
