@@ -26,8 +26,6 @@
 #include <boost/system/error_code.hpp>
 #include <fstream>
 #include <sstream>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 namespace fs = boost::filesystem;
 
@@ -104,6 +102,7 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 		}else if(key == "Log Level"){
 			try{
 				log_level_ = stoi(value);
+				Logging::log = Logger(log_level_);
 			}catch(std::invalid_argument){
 				log_level_ = -1;
 			}
@@ -124,6 +123,8 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 	override_fields(config_overrides);
 	
 	verify(config_path);
+	
+	if(log_level_ >= 2) dump();
 }
 
 void Config::override_fields(const ConfigOverrides &config_overrides){
@@ -138,57 +139,56 @@ void Config::override_fields(const ConfigOverrides &config_overrides){
 void Config::verify(const fs::path &config_path) const{
 	bool errors = false;
 	if(base_path_.empty()){
-		Logging::log.error("config does not contain a search directory (Source Directory)");
+		Logging::log.error("config does not contain a search directory (Source Directory)", false);
 		errors = true;
 	}
 	if(remote_host_.empty()){
-		std::cerr << "Warning: config does not contain a remote host (Remote Host)\n";
+		Logging::log.warning("config does not contain a remote host (Remote Host)");
 		// just warning
 	}
 	if(remote_directory_.empty()){
-		std::cerr << "Warning: config does not contain a remote destination (Remote Directory)\n";
+		Logging::log.warning("config does not contain a remote destination (Remote Directory)");
 		// just warning
 	}
 	if(last_rctime_path_.empty()){
-		std::cerr << "Error: config does not contain a metadata path (Metadata Directory)\n";
+		Logging::log.error("config does not contain a metadata path (Metadata Directory)", false);
 		errors = true;
 	}
 	if(sync_period_s_ < std::chrono::seconds(0)){
-		std::cerr << "Error: sync frequency must be positive integer (Sync Period)\n";
+		Logging::log.error("sync frequency must be positive integer (Sync Period)", false);
 		errors = true;
 	}
 	if(prop_delay_ms_ < std::chrono::milliseconds(0)){
-		std::cerr << "Error: rctime prop delay must be positive integer (Propagation Delay)\n";
+		Logging::log.error("rctime prop delay must be positive integer (Propagation Delay)", false);
 		errors = true;
 	}
 	if(log_level_ < 0){
-		std::cerr << "Error: log level must be positive integer (Log Level)\n";
+		Logging::log.error("log level must be positive integer (Log Level)", false);
 		errors = true;
 	}
 	if(exec_bin_.empty()){
-		std::cerr << "Error: config must contain a program to execute! (Exec)\n";
+		Logging::log.error("config must contain a program to execute! (Exec)", false);
 		errors = true;
 	}
 	if(exec_flags_.empty()){
-		std::cerr << "Warning: no execution flags present in config (Flags)\n";
+		Logging::log.warning("no execution flags present in config (Flags)");
 		// just warning
 	}
 	if(nproc_ < 0){
-		std::cerr << "Error: number of processses must be positive integer (Processes)\n";
+		Logging::log.error("number of processses must be positive integer (Processes)", false);
 		errors = true;
 	}
 	if(errors){
-		std::cerr << "Please fix these mistakes in " << config_path << "." << std::endl;
-		exit(1);
+		Logging::log.error("Please fix these mistakes in " + config_path.string());
 	}
 }
 
 void Config::init_config_file(const fs::path &config_path) const{
 	boost::system::error_code ec;
 	fs::create_directories(config_path.parent_path(), ec);
-// 	if(ec) error(PATH_CREATE);
+	if(ec) Logging::log.error("Error creating path: " + config_path.parent_path().string());
 	std::ofstream f(config_path.string());
-// 	if(!f) error(OPEN_CONFIG);
+	if(!f) Logging::log.error("Error opening config file: " + config_path.string());
 	f <<
 	"# local backup settings\n"
 	"Source Directory =               # full path to directory to backup\n"
@@ -219,25 +219,27 @@ void Config::init_config_file(const fs::path &config_path) const{
 }
 
 void Config::dump(void) const{
-	std::cout << "configuration:" << std::endl;
-	std::cout << std::endl;
-	std::cout << "source settings:" << std::endl;
-	std::cout << "Source Directory =" << base_path_.string() << std::endl;
-	std::cout << "Ignore Hidden = " << std::boolalpha << ignore_hidden_ << std::endl;
-	std::cout << "Ignore Windows Lock = " << std::boolalpha << ignore_win_lock_ << std::endl;
-	std::cout << std::endl;
-	std::cout << "remote settings:" << std::endl;
-	std::cout << "Remote User = " << remote_user_ << std::endl;
-	std::cout << "Remote Host = " << remote_host_ << std::endl;
-	std::cout << "Remote Directory = " << remote_directory_.string() << std::endl;
-	std::cout << std::endl;
-	std::cout << "daemon settings:" << std::endl;
-	std::cout << "Exec = " << exec_bin_ << std::endl;
-	std::cout << "Flags = " << exec_flags_ << std::endl;
-	std::cout << "Metadata Directory = " << last_rctime_path_.string() << std::endl;
-	std::cout << "Sync Period = " << sync_period_s_.count() << " (seconds)" << std::endl;
-	std::cout << "Propagation Delay = " << prop_delay_ms_.count() << " (milliseconds)" << std::endl;
-	std::cout << "Log Level = " << log_level_ << std::endl;
+	std::stringstream ss;
+	ss << "configuration:" << std::endl;
+	ss << std::endl;
+	ss << "source settings:" << std::endl;
+	ss << "Source Directory =" << base_path_.string() << std::endl;
+	ss << "Ignore Hidden = " << std::boolalpha << ignore_hidden_ << std::endl;
+	ss << "Ignore Windows Lock = " << std::boolalpha << ignore_win_lock_ << std::endl;
+	ss << std::endl;
+	ss << "remote settings:" << std::endl;
+	ss << "Remote User = " << remote_user_ << std::endl;
+	ss << "Remote Host = " << remote_host_ << std::endl;
+	ss << "Remote Directory = " << remote_directory_.string() << std::endl;
+	ss << std::endl;
+	ss << "daemon settings:" << std::endl;
+	ss << "Exec = " << exec_bin_ << std::endl;
+	ss << "Flags = " << exec_flags_ << std::endl;
+	ss << "Metadata Directory = " << last_rctime_path_.string() << std::endl;
+	ss << "Sync Period = " << sync_period_s_.count() << " (seconds)" << std::endl;
+	ss << "Propagation Delay = " << prop_delay_ms_.count() << " (milliseconds)" << std::endl;
+	ss << "Log Level = " << log_level_ << std::endl;
+	Logging::log.message(ss.str(), 2);
 }
 
 // void Config::construct_destination(void){
