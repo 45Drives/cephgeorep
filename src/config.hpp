@@ -34,10 +34,10 @@ private:
 	bool overridden_;
 public:
 	ConfigOverride(void){
-		overridden = false;
+		overridden_ = false;
 	}
 	ConfigOverride(const T &value_passed) : value_(value_passed){
-		overridden = true;
+		overridden_ = true;
 	}
 	~ConfigOverride(void) = default;
 	const T &value(void) const{
