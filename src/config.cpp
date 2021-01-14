@@ -130,6 +130,7 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 void Config::override_fields(const ConfigOverrides &config_overrides){
 	if(config_overrides.log_level_override.overridden()){
 		log_level_ = config_overrides.log_level_override.value();
+		Logging::log = Logger(log_level_);
 	}
 	if(config_overrides.nproc_override.overridden()){
 		nproc_ = config_overrides.nproc_override.value();
