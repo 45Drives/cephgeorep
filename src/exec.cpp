@@ -41,6 +41,8 @@ SyncProcess::SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz){
 	max_arg_sz_ = parent->max_arg_sz_;
 	start_arg_sz_= curr_arg_sz_ = parent->start_arg_sz_;
 	max_bytes_sz_ = max_bytes_sz;
+	exec_bin_ = parent->exec_bin_;
+	exec_flags_ = parent->exec_flags_;
 	destination_ = parent->destination_;
 }
 
