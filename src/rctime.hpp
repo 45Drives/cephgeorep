@@ -61,6 +61,9 @@ public:
 	/* returns timespec of mtime if path is a file
 	 * or ceph.dir.rctime if path is a directory
 	 */
+	const timespec &rctime(void) const;
+	/* return value of last_rctime_
+	 */
 	bool check_for_change(const fs::path &path, timespec &new_rctime) const;
 	/* checks rctimes and mtimes of each entry in the root directory
 	 * against last_rctime_ and returns true if there are new changes,

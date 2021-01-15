@@ -109,6 +109,10 @@ timespec LastRctime::get_rctime(const fs::path &path) const{
 	return rctime;
 }
 
+const timespec &LastRctime::rctime(void) const{
+	return last_rctime_;
+}
+
 bool LastRctime::check_for_change(const fs::path &path, timespec &new_rctime) const{
 	bool change = false;
 	timespec temp_rctime;
