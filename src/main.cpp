@@ -98,7 +98,7 @@ int main(int argc, char *argv[], char *envp[]){
 			case 'n':
 				try{
 					config_overrides.nproc_override = ConfigOverride<int>(std::stoi(optarg));
-				}catch(std::invalid_argument){
+				}catch(const std::invalid_argument &){
 					Logging::log.error("Invalid number of processes.");
 				}
 			case '?':

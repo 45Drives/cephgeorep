@@ -80,7 +80,7 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 		}else if(key == "Sync Period"){
 			try{
 				sync_period_s_ = std::chrono::seconds(stoi(value));
-			}catch(std::invalid_argument){
+			}catch(const std::invalid_argument &){
 				sync_period_s_ = std::chrono::seconds(-1);
 			}
 		}else if(key == "Ignore Hidden"){
@@ -90,14 +90,14 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 		}else if(key == "Propagation Delay"){
 			try{
 				prop_delay_ms_ = std::chrono::milliseconds(stoi(value));
-			}catch(std::invalid_argument){
+			}catch(const std::invalid_argument &){
 				prop_delay_ms_ = std::chrono::milliseconds(-1);
 			}
 		}else if(key == "Log Level"){
 			try{
 				log_level_ = stoi(value);
 				Logging::log = Logger(log_level_);
-			}catch(std::invalid_argument){
+			}catch(const std::invalid_argument &){
 				log_level_ = -1;
 			}
 		}else if(key == "Exec"){
@@ -107,7 +107,7 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 		}else if(key == "Processes"){
 			try{
 				nproc_ = stoi(value);
-			}catch(std::invalid_argument){
+			}catch(const std::invalid_argument &){
 				nproc_ = -1;
 			}
 		}

@@ -42,7 +42,7 @@ LastRctime::LastRctime(const fs::path &last_rctime_path) : last_rctime_path_(las
 		last_rctime_.tv_sec = (time_t)stoul(str);
 		getline(f, str);
 		last_rctime_.tv_nsec = stol(str);
-	}catch(std::invalid_argument){
+	}catch(const std::invalid_argument &){
 		// last_rctime.dat corrupted
 		Logging::log.warning(last_rctime_path_.string() + " is corrupt. Reinitializing.");
 		init_last_rctime();
