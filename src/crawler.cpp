@@ -34,9 +34,10 @@ void Crawler::reset(void){
 	file_list_.clear();
 }
 
-void Crawler::poll_base(bool seed){
-	timespec new_rctime;
+void Crawler::poll_base(bool seed, bool dry_run){
+	timespec new_rctime, old_rctime_cache;
 	Logging::log.message("Watching: " + base_path_.string(),1);
+	if(seed && dry_run) old_rctime_cache = last_rctime_.rctime();
 	if(seed) last_rctime_.update({1}); // sync everything
 	do{
 		auto start = std::chrono::system_clock::now();
@@ -52,20 +53,21 @@ void Crawler::poll_base(bool seed){
 			Logging::log.message("New files to sync: "+std::to_string(file_list_.size()),1);
 			// launch rsync
 			if(!file_list_.empty()){
-				syncer.launch_procs(file_list_, total_bytes);
+				if(!dry_run) syncer.launch_procs(file_list_, total_bytes);
 			}
 			// clear sync queue
 			reset();
 			// delete snapshot
 			delete_snap(snap_path);
 			// overwrite last_rctime
-			last_rctime_.update(new_rctime);
+			if(!dry_run) last_rctime_.update(new_rctime);
 		}
 		auto end = std::chrono::system_clock::now();
 		std::chrono::seconds elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-		if(elapsed < config_.sync_period_s_ && !seed) // if it took longer than sync freq, don't wait
+		if(elapsed < config_.sync_period_s_ && !seed && !dry_run) // if it took longer than sync freq, don't wait
 			std::this_thread::sleep_for(config_.sync_period_s_ - elapsed);
-	}while(!seed);
+	}while(!seed && !dry_run);
+	if(seed && dry_run) last_rctime_.update(old_rctime_cache);
 }
 
 fs::path Crawler::create_snap(const timespec &rctime) const{
