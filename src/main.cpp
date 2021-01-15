@@ -26,7 +26,6 @@
 #include "crawler.hpp"
 #include "alert.hpp"
 #include <getopt.h>
-#include <string>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;

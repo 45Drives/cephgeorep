@@ -23,15 +23,14 @@
 #include "config.hpp"
 #include <vector>
 #include <list>
-#include <thread>
 #include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
 
 #define SSH_FAIL 255
 #define NOT_INSTALLED 127
 #define SUCCESS 0
 #define PERM_DENY 23
-
-namespace fs = boost::filesystem;
 
 class Syncer;
 

@@ -18,7 +18,6 @@
  */
 
 #include "signal.hpp"
-#include "rctime.hpp"
 #include <csignal>
 
 namespace signal_handling{

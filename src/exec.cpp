@@ -20,17 +20,10 @@
 //#define DEBUG_BATCHES
 
 #include "exec.hpp"
-#include "config.hpp"
-#include "alert.hpp"
-#include <vector>
-#include <list>
 #include <algorithm>
-#include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <thread>
-#include <chrono>
 #include <sys/resource.h>
 
 #ifdef DEBUG_BATCHES
@@ -38,8 +31,6 @@
 #endif
 
 //#define MAX_SZ_LIM 3*(8*1024*1024)/4
-
-namespace fs = boost::filesystem;
 
 /* SyncProcess --------------------------------
  */

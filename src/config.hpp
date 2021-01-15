@@ -86,28 +86,3 @@ public:
 	void dump(void) const;
 // 	void construct_destination(void);
 };
-
-// -----------------------------------------------------------------
-
-// extern std::string config_path;
-// 
-// extern Config config;
-// 
-// void loadConfig(void);
-// // Load configuration parameters from file, create default config if none exists
-// 
-// void strip_whitespace(std::string &str);
-// 
-// void verifyConfig(void);
-// 
-// void construct_rsync_remote_dest(void);
-// 
-// void createConfig(const fs::path &configPath, std::fstream &configFile);
-// // creates config directory and initializes config file. Returns config file
-// // stream in &configFile.
-// 
-// void dumpConfig(void);
-// // dumps config contents to screen
-// 
-// size_t find_env_size(char *envp[]);
-// // get environment size
