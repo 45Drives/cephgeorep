@@ -52,8 +52,7 @@ void Crawler::poll_base(bool seed){
 			Logging::log.message("New files to sync: "+std::to_string(file_list_.size()),1);
 			// launch rsync
 			if(!file_list_.empty()){
-				// TODO: make Syncer class and call sync method here
-				//launch_procs(sync_queue, config.rsync_nproc, total_bytes);
+				syncer.launch_procs(file_list_, total_bytes);
 			}
 			// clear sync queue
 			reset();
