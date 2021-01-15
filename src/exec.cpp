@@ -37,66 +37,175 @@
 #include <iostream>
 #endif
 
-#define MAX_SZ_LIM 3*(8*1024*1024)/4
+//#define MAX_SZ_LIM 3*(8*1024*1024)/4
 
 namespace fs = boost::filesystem;
 
-inline size_t get_max_arg_sz(){
+/* SyncProcess --------------------------------
+ */
+
+SyncProcess::SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz){
+	id_ = -1;
+	curr_bytes_sz_ = 0;
+	max_arg_sz_ = parent->max_arg_sz_;
+	start_arg_sz_= curr_arg_sz_ = parent->start_arg_sz_;
+	max_bytes_sz_ = max_bytes_sz;
+	destination_ = parent->destination_;
+}
+
+SyncProcess::~SyncProcess(){
+	if(id_ != -1) Logging::log.message("Proc " + std::to_string(id_) + ": done.",1);
+	for(char *i : garbage_){
+		delete [] i;
+	} 
+}
+
+pid_t SyncProcess::pid() const{
+	return pid_;
+}
+
+void SyncProcess::set_id(int id){
+	id_ = id;
+}
+
+uintmax_t SyncProcess::payload_sz(void) const{
+	return curr_bytes_sz_;
+}
+
+void SyncProcess::add(const fs::path &file){
+	files_.emplace_back(file);
+	curr_arg_sz_ += strlen(file.c_str()) + 1 + sizeof(char *);
+	curr_bytes_sz_ += fs::file_size(file);
+}
+
+bool SyncProcess::full_test(const fs::path &file) const{
+	return (curr_arg_sz_ + strlen(file.c_str()) + 1 + sizeof(char *) >= max_arg_sz_)
+	|| (curr_bytes_sz_ + fs::file_size(file) > max_bytes_sz_);
+}
+
+bool SyncProcess::large_file(const fs::path &file) const{
+	return curr_bytes_sz_ < max_bytes_sz_ && fs::file_size(file) >= max_bytes_sz_;
+}
+
+void SyncProcess::consume(std::list<fs::path> &queue){
+	while(!queue.empty() && (!full_test(queue.front()) || large_file(queue.front()))){
+		add(fs::path(queue.front()));
+		queue.pop_front();
+	}
+}
+
+void SyncProcess::consume_one(std::list<fs::path> &queue){
+	add(fs::path(queue.front()));
+	queue.pop_front();
+}
+
+void SyncProcess::sync_batch(){
+	std::vector<char *> argv;
+	
+	argv.push_back((char *)exec_bin_.c_str());
+	
+	// push back flags
+	boost::tokenizer<boost::escaped_list_separator<char>> tokens(
+		exec_flags_,
+		boost::escaped_list_separator<char>(
+			std::string(""), std::string(" "), std::string("\"\'")
+		)
+	);
+	for(
+		boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
+		itr != tokens.end();
+		++itr
+	){
+		char *flag = new char[(*itr).length()+1];
+		strcpy(flag,(*itr).c_str());
+		argv.push_back(flag);
+		garbage_.push_back(flag);
+	}
+	
+	// for each file of batch
+	for(std::vector<fs::path>::iterator fitr = files_.begin(); fitr != files_.end(); ++fitr){
+		char *path = new char[fitr->string().length()+1];
+		std::strcpy(path,fitr->c_str());
+		argv.push_back(path);
+		garbage_.push_back(path); // for cleanup
+	}
+	
+	if(!destination_.empty()) argv.push_back((char *)destination_.c_str());
+	argv.push_back(NULL);
+	
+	pid_ = fork(); // create child process
+	switch(pid_){
+		case -1:
+			Logging::log.error("Forking failed");
+			break;
+		case 0: // child process
+			execvp(argv[0],&argv[0]);
+			Logging::log.error("Failed to execute " + exec_bin_);
+			break;
+		default: // parent process
+			Logging::log.message("Proc " + std::to_string(id_) + ": Launching " + exec_bin_ + " " + exec_flags_ + " with " + std::to_string(files_.size()) + " files.", 1);
+			Logging::log.message(std::to_string(curr_bytes_sz_) + " bytes", 2);
+			Logging::log.message(std::to_string(pid_) + " started.", 2);
+			break;
+	}
+}
+
+void SyncProcess::clear_file_list(void){
+	files_.clear();
+	curr_bytes_sz_ = 0;
+	curr_arg_sz_ = start_arg_sz_;
+}
+
+/* Syncer --------------------------------
+ */
+
+Syncer::Syncer(size_t envp_size, const Config &config){
+	nproc_ = config.nproc_;
+	exec_bin_ = config.exec_bin_;
+	exec_flags_ = config.exec_flags_;
+	max_arg_sz_ = get_max_arg_sz();
+	start_arg_sz_ = envp_size
+				+ exec_bin_.length() + 1// length of executable name
+				+ exec_flags_.length() + 1 // length of flags
+				+ sizeof(char *) * 2 // size of char pointers
+				+ sizeof(NULL);
+	construct_destination(config.remote_user_, config.remote_host_, config.remote_directory_);
+	if(!destination_.empty()){
+		start_arg_sz_ += destination_.length() + 1 + sizeof(char *);
+	}
+}
+
+void Syncer::construct_destination(std::string remote_user, std::string remote_host, fs::path remote_directory){
+	destination_ = remote_directory.string();
+	if(!remote_host.empty()){
+		destination_ = remote_host + ":" + destination_;
+		if(!remote_user.empty()){
+			destination_ = remote_user + "@" + destination_;
+		}
+	}
+}
+
+size_t Syncer::get_max_arg_sz(void) const{
 	struct rlimit lims;
 	getrlimit(RLIMIT_STACK, &lims);
 	size_t arg_max_sz = lims.rlim_cur / 4;
-	if(arg_max_sz > MAX_SZ_LIM) arg_max_sz = MAX_SZ_LIM;
+	// if(arg_max_sz > MAX_SZ_LIM) arg_max_sz = MAX_SZ_LIM;
 	arg_max_sz -= 4*2048; // allow 2048 bytes of headroom
 	return arg_max_sz;
 }
 
-inline size_t get_start_arg_sz(){
-	size_t size = config.env_sz // size of ENV
-	+ config.execBin.length() // length of executable name
-	+ config.execFlags.length() // length of flags
-	+ sizeof(char *) * 2 // size of char pointers
-	+ sizeof(NULL);
-	if(config.sync_remote_dest[0] != '\0'){
-		size += strlen(config.sync_remote_dest) + 1 + sizeof(char *);
-	}
-	return size;
-}
-
-inline void distribute_files(std::list<fs::path> &queue, std::list<SyncProcess> &procs){
-	// create roster for round robin distribution
-	std::list<SyncProcess *> distribute_pool;
-	for(std::list<SyncProcess>::iterator itr = procs.begin(); itr != procs.end(); ++itr){
-		distribute_pool.emplace_back(&(*itr));
-	}
-	// deal out files until either all procs are full to total_bytes/nproc or queue is empty
-	std::list<SyncProcess *>::iterator proc_itr = distribute_pool.begin();
-	while(!queue.empty() && !distribute_pool.empty()){
-		if((*proc_itr)->full_test(queue.front()) && !(*proc_itr)->large_file(queue.front())){
-			// number of bytes > total_bytes/nproc so remove proc from roster
-			proc_itr = distribute_pool.erase(proc_itr);
-		}else{
-			(*proc_itr)->consume_one(queue);
-			proc_itr++;
-		}
-		// circularly iterate
-		if(proc_itr == distribute_pool.end()) proc_itr = distribute_pool.begin();
-	}
-}
-
-void launch_procs(std::list<fs::path> &queue, int nproc, uintmax_t total_bytes){
-	Log(std::to_string(total_bytes) + " bytes", 2);
+void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) const{
 	int wstatus;
-	size_t max_arg_sz = get_max_arg_sz();
-	size_t start_arg_sz = get_start_arg_sz();
+	Logging::log.message(std::to_string(total_bytes) + " bytes", 2);
 	
 	// cap nproc to between 1 and number of files
-	nproc = std::min(nproc, (int)queue.size());
+	int nproc = std::min(nproc_, (int)queue.size());
 	nproc = std::max(nproc, 1);
 	
 	uintmax_t bytes_per_proc = total_bytes / nproc + (total_bytes % nproc != 0);
-	Log(std::to_string(bytes_per_proc) + " bytes per proc", 2);
+	Logging::log.message(std::to_string(bytes_per_proc) + " bytes per proc", 2);
 	
-	std::list<SyncProcess> procs(nproc, {max_arg_sz, start_arg_sz, bytes_per_proc});
+	std::list<SyncProcess> procs(nproc, {this, bytes_per_proc});
 	
 	// sort files from largest to smallest to get largest files out of the way first
 	queue.sort([](const fs::path &first, const fs::path &second){
@@ -125,21 +234,21 @@ void launch_procs(std::list<fs::path> &queue, int nproc, uintmax_t total_bytes){
 		// check exit code
 		switch(WEXITSTATUS(wstatus)){
 			case SUCCESS:
-				Log(std::to_string(exited_pid) + " exited successfully.",2);
+				Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
 				exited_proc->clear_file_list(); // remove synced batch
 				break;
 			case SSH_FAIL:
-				Log(config.execBin + " failed to connect to remote backup server.\n"
-				"Is the server running and connected to your network?",0);
+				Logging::log.warning(exec_bin_ + " failed to connect to remote backup server.\n"
+				"Is the server running and connected to your network?");
 				break;
 			case NOT_INSTALLED:
-				error(NO_RSYNC);
+				Logging::log.error(exec_bin_ + " is not installed.");
 				break;
 			case PERM_DENY:
-				error(NO_PERM);
+				Logging::log.error("Encountered permission error while executing " + exec_bin_);
 				break;
 			default:
-				error(UNK_RSYNC_ERR);
+				Logging::log.error("Encountered unknown error while executing " + exec_bin_);
 				break;
 		}
 		if(queue.empty() && exited_proc->payload_sz() == 0){
@@ -151,53 +260,23 @@ void launch_procs(std::list<fs::path> &queue, int nproc, uintmax_t total_bytes){
 	}
 }
 
-void SyncProcess::sync_batch(){
-	std::vector<char *> argv;
-	
-	argv.push_back((char *)config.execBin.c_str());
-	
-	// push back flags
-	boost::tokenizer<boost::escaped_list_separator<char>> tokens(
-		config.execFlags,
-		boost::escaped_list_separator<char>(
-			std::string(""), std::string(" "), std::string("\"\'")
-		)
-	);
-	for(
-		boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
-		itr != tokens.end();
-		++itr
-	){
-		char *flag = new char[(*itr).length()+1];
-		strcpy(flag,(*itr).c_str());
-		argv.push_back(flag);
-		garbage.push_back(flag);
+void Syncer::distribute_files(std::list<fs::path> &queue, std::list<SyncProcess> &procs) const{
+	// create roster for round robin distribution
+	std::list<SyncProcess *> distribute_pool;
+	for(std::list<SyncProcess>::iterator itr = procs.begin(); itr != procs.end(); ++itr){
+		distribute_pool.emplace_back(&(*itr));
 	}
-	
-	// for each file of batch
-	for(std::vector<fs::path>::iterator fitr = files.begin(); fitr != files.end(); ++fitr){
-		char *path = new char[fitr->string().length()+1];
-		std::strcpy(path,fitr->c_str());
-		argv.push_back(path);
-		garbage.push_back(path); // for cleanup
-	}
-	
-	if(config.sync_remote_dest[0] != '\0') argv.push_back(config.sync_remote_dest);
-	argv.push_back(NULL);
-	
-	pid_ = fork(); // create child process
-	switch(pid_){
-		case -1:
-			error(FORK);
-			break;
-		case 0: // child process
-			execvp(argv[0],&argv[0]);
-			error(LAUNCH_RSYNC);
-			break;
-		default: // parent process
-			Log("Proc " + std::to_string(id_) + ": Launching " + config.execBin + " " + config.execFlags + " with " + std::to_string(files.size()) + " files.", 1);
-			Log(std::to_string(curr_bytes_sz) + " bytes", 2);
-			Log(std::to_string(pid_) + " started.", 2);
-			break;
+	// deal out files until either all procs are full to total_bytes/nproc or queue is empty
+	std::list<SyncProcess *>::iterator proc_itr = distribute_pool.begin();
+	while(!queue.empty() && !distribute_pool.empty()){
+		if((*proc_itr)->full_test(queue.front()) && !(*proc_itr)->large_file(queue.front())){
+			// number of bytes > total_bytes/nproc so remove proc from roster
+			proc_itr = distribute_pool.erase(proc_itr);
+		}else{
+			(*proc_itr)->consume_one(queue);
+			proc_itr++;
+		}
+		// circularly iterate
+		if(proc_itr == distribute_pool.end()) proc_itr = distribute_pool.begin();
 	}
 }

@@ -20,6 +20,7 @@
 #pragma once
 
 #include "alert.hpp"
+#include "config.hpp"
 #include <vector>
 #include <list>
 #include <thread>
@@ -32,68 +33,52 @@
 
 namespace fs = boost::filesystem;
 
+class Syncer;
+
 class SyncProcess{
 private:
 	int id_;
 	pid_t pid_;
-	size_t start_arg_sz;
-	size_t max_arg_sz;
-	size_t curr_arg_sz;
-	uintmax_t max_bytes_sz;
-	uintmax_t curr_bytes_sz;
-	std::vector<fs::path> files;
-	std::vector<char *> garbage;
+	size_t start_arg_sz_;
+	size_t max_arg_sz_;
+	size_t curr_arg_sz_;
+	uintmax_t max_bytes_sz_;
+	uintmax_t curr_bytes_sz_;
+	std::string exec_bin_;
+	std::string exec_flags_;
+	std::string destination_;
+	std::vector<fs::path> files_;
+	std::vector<char *> garbage_;
 public:
-	pid_t pid(){ return pid_; }
-	SyncProcess(const size_t &max_arg_sz_, const size_t &start_arg_sz_, const uintmax_t &max_bytes_sz_){
-		id_ = -1;
-		curr_bytes_sz = 0;
-		max_arg_sz = max_arg_sz_;
-		start_arg_sz = curr_arg_sz = start_arg_sz_;
-		max_bytes_sz = max_bytes_sz_;
-	}
-	~SyncProcess(){
-		if(id_ != -1) Log("Proc " + std::to_string(id_) + ": done.",1);
-		for(char *i : garbage){
-			delete [] i;
-		} 
-	}
-	void set_id(int id){
-		id_ = id;
-	}
-	uintmax_t payload_sz(void){
-		return curr_bytes_sz;
-	}
-	void add(const fs::path &file){
-		files.emplace_back(file);
-		curr_arg_sz += strlen(file.c_str()) + 1 + sizeof(char *);
-		curr_bytes_sz += fs::file_size(file);
-	}
-	bool full_test(const fs::path &file){
-		return (curr_arg_sz + strlen(file.c_str()) + 1 + sizeof(char *) >= max_arg_sz)
-		|| (curr_bytes_sz + fs::file_size(file) > max_bytes_sz);
-	}
-	bool large_file(const fs::path &file){
-		return curr_bytes_sz < max_bytes_sz && fs::file_size(file) >= max_bytes_sz;
-	}
-	void consume(std::list<fs::path> &queue){
-		while(!queue.empty() && (!full_test(queue.front()) || large_file(queue.front()))){
-			add(fs::path(queue.front()));
-			queue.pop_front();
-		}
-	}
-	void consume_one(std::list<fs::path> &queue){
-		add(fs::path(queue.front()));
-		queue.pop_front();
-	}
+	SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz); //size_t max_arg_sz, size_t start_arg_sz, uintmax_t max_bytes_sz, const std::string &destination);
+	~SyncProcess();
+	pid_t pid() const;
+	void set_id(int id);
+	uintmax_t payload_sz(void) const;
+	void add(const fs::path &file);
+	bool full_test(const fs::path &file) const;
+	bool large_file(const fs::path &file) const;
+	void consume(std::list<fs::path> &queue);
+	void consume_one(std::list<fs::path> &queue);
 	void sync_batch(void);
 	// fork and execute sync program with file batch
-	void clear_file_list(void){
-		files.clear();
-		curr_bytes_sz = 0;
-		curr_arg_sz = start_arg_sz;
-	}
+	void clear_file_list(void);
 };
 
-void launch_procs(std::list<fs::path> &queue, int nproc, uintmax_t total_bytes);
-// distribute queue amongst processes and launch processes
+class Syncer{
+	friend class SyncProcess;
+private:
+	int nproc_;
+	size_t max_arg_sz_;
+	size_t start_arg_sz_;
+	std::string exec_bin_;
+	std::string exec_flags_;
+	std::string destination_;
+public:
+	Syncer(size_t envp_size, const Config &config);
+	~Syncer(void) = default;
+	void construct_destination(std::string remote_user, std::string remote_host, fs::path remote_directory);
+	size_t get_max_arg_sz(void) const;
+	void launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) const;
+	void distribute_files(std::list<fs::path> &queue, std::list<SyncProcess> &procs) const;
+};
