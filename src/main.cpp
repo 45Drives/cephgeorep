@@ -50,12 +50,16 @@ inline void usage(){
 		"  cephfssyncd [ flags ]\n"
 		"Flags:\n"
 		"  -c --config </path/to/config> - pass alternate config path\n"
-		"                                - default config: /etc/ceph/cephfssyncd.conf\n"
-		"  -s --seed                     - send all files to seed destination\n"
-		"  -n --nproc <# of processes>   - number of sync processes to run in parallel\n"
+		"                                  default config: /etc/ceph/cephfssyncd.conf\n"
+		"  -d --dry-run                  - print total files that would be synced\n"
+		"                                  when combined with -v, files will be listed\n"
+		"                                  exits after showing number of files\n"
 		"  -h --help                     - print this message\n"
+		"  -n --nproc <# of processes>   - number of sync processes to run in parallel\n"
+		"  -q --quiet                    - set log level to 0\n"
+		"  -s --seed                     - send all files to seed destination\n"
 		"  -v --verbose                  - set log level to 2\n"
-		"  -q --quiet - set log level to 0\n", 1
+		, 1
 	);
 }
 
@@ -63,6 +67,7 @@ int main(int argc, char *argv[], char *envp[]){
 	int opt;
 	int option_ind = 0;
 	bool seed = false; // sync everything but don't loop
+	bool dry_run = false; // don't actually sync
 	fs::path config_path = DEFAULT_CONFIG_PATH;
 	
 	ConfigOverrides config_overrides;
@@ -74,10 +79,11 @@ int main(int argc, char *argv[], char *envp[]){
 		{"quiet",        no_argument,       0, 'q'},
 		{"seed",         no_argument,       0, 's'},
 		{"nproc",        required_argument, 0, 'n'},
+		{"dry-run",      no_argument,       0, 'd'},
 		{0, 0, 0, 0}
 	};
 	
-	while((opt = getopt_long(argc, argv, "c:hvqsn:", long_options, &option_ind)) != -1){
+	while((opt = getopt_long(argc, argv, "c:hvqsn:d", long_options, &option_ind)) != -1){
 		switch(opt){
 			case 'c':
 				config_path = fs::path(optarg);
@@ -101,6 +107,10 @@ int main(int argc, char *argv[], char *envp[]){
 				}catch(const std::invalid_argument &){
 					Logging::log.error("Invalid number of processes.");
 				}
+				break;
+			case 'd':
+				dry_run = true;
+				break;
 			case '?':
 				break; // getopt_long prints errors
 			default:
@@ -109,7 +119,7 @@ int main(int argc, char *argv[], char *envp[]){
 	}
 	
 	Crawler crawler(config_path, get_env_size(envp), config_overrides);
-	crawler.poll_base(seed);
+	crawler.poll_base(seed, dry_run);
 	
 	return 0;
 }
