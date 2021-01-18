@@ -35,15 +35,13 @@
 /* SyncProcess --------------------------------
  */
 
-SyncProcess::SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz){
+SyncProcess::SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz)
+    : exec_bin_(parent->exec_bin_), exec_flags_(parent->exec_flags_), destination_(parent->destination_){
 	id_ = -1;
 	curr_bytes_sz_ = 0;
 	max_arg_sz_ = parent->max_arg_sz_;
 	start_arg_sz_= curr_arg_sz_ = parent->start_arg_sz_;
 	max_bytes_sz_ = max_bytes_sz;
-	exec_bin_ = parent->exec_bin_;
-	exec_flags_ = parent->exec_flags_;
-	destination_ = parent->destination_;
 }
 
 SyncProcess::~SyncProcess(){
@@ -152,10 +150,10 @@ void SyncProcess::clear_file_list(void){
 /* Syncer --------------------------------
  */
 
-Syncer::Syncer(size_t envp_size, const Config &config){
+Syncer::Syncer(size_t envp_size, const Config &config)
+    : exec_bin_(config.exec_bin_), exec_flags_(config.exec_flags_){
 	nproc_ = config.nproc_;
-	exec_bin_ = config.exec_bin_;
-	exec_flags_ = config.exec_flags_;
+	
 	max_arg_sz_ = get_max_arg_sz();
 	start_arg_sz_ = envp_size
 				+ exec_bin_.length() + 1// length of executable name
