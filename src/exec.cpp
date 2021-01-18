@@ -153,7 +153,6 @@ void SyncProcess::clear_file_list(void){
 Syncer::Syncer(size_t envp_size, const Config &config)
     : exec_bin_(config.exec_bin_), exec_flags_(config.exec_flags_){
 	nproc_ = config.nproc_;
-	
 	max_arg_sz_ = get_max_arg_sz();
 	start_arg_sz_ = envp_size
 				+ exec_bin_.length() + 1// length of executable name
