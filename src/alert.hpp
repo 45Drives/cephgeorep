@@ -24,11 +24,29 @@
 class Logger{
 private:
 	int log_level_;
+	/* Value from config file. Each log message
+	 * passes a log level to check against this number.
+	 * If the message's level is higher, it is printed.
+	 */
 public:
 	Logger(int log_level);
+	/* Constructs Logger, assigning log_level to the
+	 * internal log_level_.
+	 */
 	void message(const std::string &msg, int lvl) const;
+	/* Print message to stdout if lvl >= log_level_.
+	 * Use this for regular informational log messages.
+	 */
 	void warning(const std::string &msg) const;
+	/* Print message to stderr prepended with "Warning: ".
+	 * Use this for non-fatal errors.
+	 */
 	void error(const std::string &msg, bool exit_ = true) const;
+	/* Print message to stderr prepended with "Error: ".
+	 * Exits with EXIT_FAILURE if exit_ is left as true.
+	 * exit_ is used to delay exiting until later if there are
+	 * multiple errors to print.
+	 */
 };
 
 namespace Logging{
