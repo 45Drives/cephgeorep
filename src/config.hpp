@@ -102,7 +102,7 @@ private:
 	/* Metadata path to store last_rctime.dat in.
 	 */
 	std::string exec_bin_;
-	/* File syncing program name
+	/* File syncing program name.
 	 */
 	std::string exec_flags_;
 	/* Flags and extra args for program.
