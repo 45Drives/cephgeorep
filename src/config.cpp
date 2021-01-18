@@ -1,5 +1,5 @@
 /*
- *    Copyright (C) 2019-2021 Joshua Boudreau
+ *    Copyright (C) 2019-2021 Joshua Boudreau <jboudreau@45drives.com>
  *    
  *    This file is part of cephgeorep.
  * 
