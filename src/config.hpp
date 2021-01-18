@@ -44,7 +44,7 @@ private:
 	 * ConfigOverride object with a value, this will be true.
 	 */
 public:
-	ConfigOverride(void){
+	ConfigOverride(void) : value_() {
 		overridden_ = false;
 	}
 	ConfigOverride(const T &value_passed) : value_(value_passed){
