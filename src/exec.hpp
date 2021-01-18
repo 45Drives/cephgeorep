@@ -37,47 +37,132 @@ class Syncer;
 class SyncProcess{
 private:
 	int id_;
+	/* Integral ID for each process to be used while printing
+	 * log messages.
+	 */
 	pid_t pid_;
+	/* PID of process.
+	 */
 	size_t start_arg_sz_;
+	/* Number of bytes contained in the environment and in the
+	 * executable path and flags.
+	 */
 	size_t max_arg_sz_;
+	/* Maximum number of bytes allowed in environment and argv of called
+	 * process. Roughly 1/4 of stack.
+	 */
 	size_t curr_arg_sz_;
+	/* Keeps track of bytes in argument vector.
+	 */
 	uintmax_t max_bytes_sz_;
+	/* Number of bytes of files on disk for each process to sync.
+	 * Equal to total bytes divided by number of processes.
+	 */
 	uintmax_t curr_bytes_sz_;
+	/* Keeps track of payload size.
+	 */
 	std::string exec_bin_;
+	/* File syncing program name.
+	 */
 	std::string exec_flags_;
+	/* Flags and extra args for program.
+	 */
 	std::string destination_;
+	/* [[<user>@]<host>:][<destination path>]
+	 */
 	std::vector<fs::path> files_;
+	/* List of files to sync.
+	 */
 	std::vector<char *> garbage_;
+	/* Garbage cleanup for allocated c-strings.
+	 */
 public:
-	SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz); //size_t max_arg_sz, size_t start_arg_sz, uintmax_t max_bytes_sz, const std::string &destination);
+	SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz);
+	/* Constructor. Grabs members from parent pointer.
+	 */
 	~SyncProcess();
+	/* Destructor. Frees memory in garbage vector before returning.
+	 */
 	pid_t pid() const;
+	/* Return PID of sync process.
+	 */
 	void set_id(int id);
+	/* Assign integral ID.
+	 */
 	uintmax_t payload_sz(void) const;
+	/* Return number of bytes in file payload.
+	 */
 	void add(const fs::path &file);
+	/* Add one file to the payload.
+	 * Incrememnts curr_arg_sz_ and curr_bytes_sz_ accordingly.
+	 */
 	bool full_test(const fs::path &file) const;
+	/* Returns true if curr_arg_sz_ or curr_bytes_sz_ exceed the maximums
+	 * if file were to be added.
+	 */
 	bool large_file(const fs::path &file) const;
+	/* Check if file size is larger than maximum payload by itself.
+	 * If this wasn't checked, large files would never sync.
+	 */
 	void consume(std::list<fs::path> &queue);
+	/* Pop files from queue and push into files_ vector until full.
+	 */
 	void consume_one(std::list<fs::path> &queue);
+	/* Only pop and push one file.
+	 */
 	void sync_batch(void);
-	// fork and execute sync program with file batch
+	/* Fork and execute sync program with file batch.
+	 */
 	void clear_file_list(void);
+	/* Clear files_ and reset curr_arg_sz_ and curr_bytes_sz_ to
+	 * start_arg_sz_ and 0, respectively.
+	 */
 };
 
 class Syncer{
 	friend class SyncProcess;
+	/* Allow access to members for SyncProcess's constructor.
+	 */
 private:
 	int nproc_;
+	/* Number of processes to launch. Defined in configuration file or
+	 * in command line argument, but is limited to [1, # of files].
+	 */
 	size_t max_arg_sz_;
+	/* Maximum number of bytes allowed in environment and argv of called
+	 * process. Roughly 1/4 of stack.
+	 */
 	size_t start_arg_sz_;
+	/* Number of bytes contained in the environment and in the
+	 * executable path and flags.
+	 */
 	std::string exec_bin_;
+	/* File syncing program name.
+	 */
 	std::string exec_flags_;
+	/* Flags and extra args for program.
+	 */
 	std::string destination_;
+	/* [[<user>@]<host>:][<destination path>]
+	 */
 public:
 	Syncer(size_t envp_size, const Config &config);
+	/* Determines max_arg_sz_, start_arg_sz_, and constructs destination_.
+	 */
 	~Syncer(void) = default;
+	/* Default destructor.
+	 */
 	void construct_destination(std::string remote_user, std::string remote_host, fs::path remote_directory);
+	/* Create [<user>@][<host>:][<destination path>] string.
+	 */
 	size_t get_max_arg_sz(void) const;
+	/* Determine max_arg_sz_ from stack limits
+	 */
 	void launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) const;
+	/* Creates SyncProcesses and distributes files across each one. Assigns each process an ID then launches
+	 * them in parallel. Waits for processes to return and relaunches if there are files remaining.
+	 */
 	void distribute_files(std::list<fs::path> &queue, std::list<SyncProcess> &procs) const;
+	/* Round robin distribution of files until all processes are full.
+	 */
 };
