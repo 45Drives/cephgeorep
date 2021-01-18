@@ -51,4 +51,7 @@ public:
 
 namespace Logging{
 	extern Logger log;
+    /* Global Logger object. Use Logging::log.<method> in source
+     * files including this header.
+     */
 }
