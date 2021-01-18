@@ -24,10 +24,11 @@ namespace signal_handling{
 	const LastRctime *last_rctime_;
 }
 
-void sigint_hdlr(int signum){
+void sig_hdlr(int signum){
 	switch(signum){
-		case SIGTERM:
 		case SIGINT:
+		case SIGTERM:
+		case SIGQUIT:
 			// cleanup from termination
 			signal_handling::last_rctime_->write_last_rctime();
 			exit(EXIT_SUCCESS);
@@ -38,7 +39,7 @@ void sigint_hdlr(int signum){
 
 void set_signal_handlers(const LastRctime *last_rctime){
 	signal_handling::last_rctime_ = last_rctime;
-	signal(SIGINT, sigint_hdlr);
-	signal(SIGTERM, sigint_hdlr);
-	signal(SIGQUIT, sigint_hdlr);
+	signal(SIGINT, sig_hdlr);
+	signal(SIGTERM, sig_hdlr);
+	signal(SIGQUIT, sig_hdlr);
 }

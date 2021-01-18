@@ -23,6 +23,14 @@
 
 namespace signal_handling{
 	extern const LastRctime *last_rctime_;
+	/* Pointer to last_rctime_ member of Crawler.
+	 * Used to hook Crawler.last_rctime_.write_last_rctime() into
+	 * the signal handler for SIGINT, SIGQUIT, and SIGTERM.
+	 */
 }
 
 void set_signal_handlers(const LastRctime *last_rctime);
+/* Save pointer to crawler.last_rctime_ in signal_handling::last_rctime_
+ * and call signal() to set up each signal to be handled by the
+ * signal handler in signal.cpp.
+ */
