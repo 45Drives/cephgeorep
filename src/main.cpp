@@ -58,6 +58,7 @@ inline void usage(){
 		"  -n --nproc <# of processes>   - number of sync processes to run in parallel\n"
 		"  -q --quiet                    - set log level to 0\n"
 		"  -s --seed                     - send all files to seed destination\n"
+		"  -t --threads <# of threads>   - number of worker threads to search for files\n"
 		"  -v --verbose                  - set log level to 2\n"
 		, 1
 	);
@@ -80,10 +81,11 @@ int main(int argc, char *argv[], char *envp[]){
 		{"seed",         no_argument,       0, 's'},
 		{"nproc",        required_argument, 0, 'n'},
 		{"dry-run",      no_argument,       0, 'd'},
+		{"threads",      required_argument, 0, 't'},
 		{0, 0, 0, 0}
 	};
 	
-	while((opt = getopt_long(argc, argv, "c:hvqsn:d", long_options, &option_ind)) != -1){
+	while((opt = getopt_long(argc, argv, "c:hvqsn:dt:", long_options, &option_ind)) != -1){
 		switch(opt){
 			case 'c':
 				config_path = fs::path(optarg);
@@ -106,10 +108,19 @@ int main(int argc, char *argv[], char *envp[]){
 					config_overrides.nproc_override = ConfigOverride<int>(std::stoi(optarg));
 				}catch(const std::invalid_argument &){
 					Logging::log.error("Invalid number of processes.");
+					abort();
 				}
 				break;
 			case 'd':
 				dry_run = true;
+				break;
+			case 't':
+				try{
+					config_overrides.threads_override = ConfigOverride<int>(std::stoi(optarg));
+				}catch(const std::invalid_argument &){
+					Logging::log.error("Invalid number of threads.");
+					abort();
+				}
 				break;
 			case '?':
 				break; // getopt_long prints errors
