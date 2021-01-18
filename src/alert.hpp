@@ -29,7 +29,7 @@ private:
 	 * If the message's level is higher, it is printed.
 	 */
 public:
-	Logger(int log_level);
+	explicit Logger(int log_level);
 	/* Constructs Logger, assigning log_level to the
 	 * internal log_level_.
 	 */

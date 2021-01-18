@@ -39,7 +39,7 @@ private:
 	 * on disk
 	 */
 public:
-	LastRctime(const fs::path &last_rctime_path);
+	explicit LastRctime(const fs::path &last_rctime_path);
 	/* tries to read last_rctime_ from disk
 	 * if not on disk, initializes to 0.0
 	 */
