@@ -34,3 +34,7 @@ cephfssyncd
 
 # Kate swap file
 *.kate-swp
+
+# kdevelop
+.kdev4/
+*.kdev4
