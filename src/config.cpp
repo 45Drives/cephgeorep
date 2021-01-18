@@ -110,6 +110,12 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 			}catch(const std::invalid_argument &){
 				nproc_ = -1;
 			}
+		}else if(key == "Threads"){
+			try{
+				threads_ = stoi(value);
+			}catch(const std::invalid_argument &){
+				threads_ = -1;
+			}
 		}
 		// else ignore entry
 	}
@@ -128,6 +134,9 @@ void Config::override_fields(const ConfigOverrides &config_overrides){
 	}
 	if(config_overrides.nproc_override.overridden()){
 		nproc_ = config_overrides.nproc_override.value();
+	}
+	if(config_overrides.threads_override.overridden()){
+		threads_ = config_overrides.threads_override.value();
 	}
 }
 
@@ -173,6 +182,10 @@ void Config::verify(const fs::path &config_path) const{
 		Logging::log.error("number of processses must be positive integer (Processes)", false);
 		errors = true;
 	}
+	if(threads_ < 0){
+		Logging::log.error("number of threads must be positive integer (Processes)", false);
+		errors = true;
+	}
 	if(errors){
 		Logging::log.error("Please fix these mistakes in " + config_path.string());
 	}
@@ -202,6 +215,7 @@ void Config::init_config_file(const fs::path &config_path) const{
 	"Sync Period = 10                 # time in seconds between checks for changes\n"
 	"Propagation Delay = 100          # time in milliseconds between snapshot and sync\n"
 	"Processes = 1                    # number of parallel sync processes to launch\n"
+	"Threads = 1                      # number of worker threads to search for files\n"
 	"Log Level = 1\n"
 	"# 0 = minimum logging\n"
 	"# 1 = basic logging\n"
@@ -233,6 +247,8 @@ void Config::dump(void) const{
 	ss << "Metadata Directory = " << last_rctime_path_.string() << std::endl;
 	ss << "Sync Period = " << sync_period_s_.count() << " (seconds)" << std::endl;
 	ss << "Propagation Delay = " << prop_delay_ms_.count() << " (milliseconds)" << std::endl;
+	ss << "Processes = " << nproc_ << std::endl;
+	ss << "Threads = " << threads_ << std::endl;
 	ss << "Log Level = " << log_level_ << std::endl;
 	Logging::log.message(ss.str(), 2);
 }

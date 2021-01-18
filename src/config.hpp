@@ -68,6 +68,9 @@ struct ConfigOverrides{
 	ConfigOverride<int> nproc_override;
 	/* Overridden in main with -n --nproc flag.
 	 */
+	ConfigOverride<int> threads_override;
+	/* Overridden in main with -t --threads flag.
+	 */
 };
 
 class Crawler;
@@ -84,6 +87,9 @@ private:
 	 */
 	int nproc_;
 	/* Number of parallel sync processes.
+	 */
+	int threads_;
+	/* Number of worker threads to search directory tree.
 	 */
 	bool ignore_hidden_;
 	/* Ignore files starting with '.'.
