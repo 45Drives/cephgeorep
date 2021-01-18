@@ -24,29 +24,44 @@
 #include <condition_variable>
 
 template<class T>
-class ConcurrrentList{
+class ConcurrentList{
 private:
 	std::mutex mutex_;
 	std::condition_variable cv_;
-	std::list<T> queue_;
+	std::list<T> &list_;
+	bool done_;
 public:
+	ConcurrentList(std::list<T> &list) : list_(list){
+		done_ = false;
+	}
+	~ConcurrentList(void) = default;
+	size_t size(void) const{
+		return list_.size();
+	}
 	bool empty(void) const{
-		return queue_.empty();
+		return list_.empty();
 	}
 	void push_back(const T &val){
 		{
 			std::unique_lock<std::mutex> lk(mutex_);
-			queue_.push_back(val);
+			list_.push_back(val);
 		}
 		cv_.notify_one();
 	}
-	const T& pop_front(void){
+	void pop_front(T &val){
 		{
 			std::unique_lock<std::mutex> lk(mutex_);
-			cv_.wait(lk, [this](){ return !queue_.empty(); });
-			auto val = queue_.front();
-			queue_.pop_front();
-			return val;
-		}	
+			cv_.wait(lk, [this](){ return !this->empty() && !this->done_; });
+			if(done_) return;
+			val = list_.front();
+			list_.pop_front();
+		}
+	}
+	void wake_all(void){
+		done_ = true;
+		cv_.notify_all();
+	}
+	std::list<T> &internal_list(void){
+		return list_;
 	}
 };
