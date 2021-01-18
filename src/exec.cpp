@@ -218,7 +218,7 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) con
 		// find which object PID belongs to
 		std::list<SyncProcess>::iterator exited_proc = std::find_if (
 			procs.begin(), procs.end(),
-			[&exited_pid](SyncProcess &proc){
+			[&exited_pid](const SyncProcess &proc){
 				return proc.pid() == exited_pid;
 			}
 		);
@@ -265,7 +265,7 @@ void Syncer::distribute_files(std::list<fs::path> &queue, std::list<SyncProcess>
 			proc_itr = distribute_pool.erase(proc_itr);
 		}else{
 			(*proc_itr)->consume_one(queue);
-			proc_itr++;
+			++proc_itr;
 		}
 		// circularly iterate
 		if(proc_itr == distribute_pool.end()) proc_itr = distribute_pool.begin();
