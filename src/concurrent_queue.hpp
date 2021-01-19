@@ -19,49 +19,56 @@
 
 #pragma once
 
+#include <atomic>
+#include <queue>
 #include <list>
 #include <mutex>
 #include <condition_variable>
 
 template<class T>
-class ConcurrentList{
+class ConcurrentQueue{
 private:
 	std::mutex mutex_;
 	std::condition_variable cv_;
-	std::list<T> &list_;
-	bool done_;
+	std::queue<T> queue_;
+	std::atomic<bool> done_;
 public:
-	ConcurrentList(std::list<T> &list) : list_(list){
+	ConcurrentQueue() : queue_(){
 		done_ = false;
 	}
-	~ConcurrentList(void) = default;
+	~ConcurrentQueue(void) = default;
 	size_t size(void) const{
-		return list_.size();
+		return queue_.size();
 	}
 	bool empty(void) const{
-		return list_.empty();
+		return queue_.empty();
 	}
-	void push_back(const T &val){
+	void push(const T &val){
 		{
 			std::unique_lock<std::mutex> lk(mutex_);
-			list_.push_back(val);
+			queue_.push(val);
 		}
 		cv_.notify_one();
 	}
-	void pop_front(T &val){
+	void pop(T &val, std::atomic<int> &threads_running){
 		{
+			if(--threads_running <= 0 && queue_.empty()) wake_all();
 			std::unique_lock<std::mutex> lk(mutex_);
-			cv_.wait(lk, [this](){ return !this->empty() && !this->done_; });
-			if(done_) return;
-			val = list_.front();
-			list_.pop_front();
+			cv_.wait(lk, [this](){ return !this->empty() || this->done_; });
+			threads_running++;
+			if(done_){
+				val = "";
+				return;
+			}
+			val = queue_.front();
+			queue_.pop();
 		}
 	}
 	void wake_all(void){
 		done_ = true;
 		cv_.notify_all();
 	}
-	std::list<T> &internal_list(void){
-		return list_;
+	bool done() const{
+		return done_;
 	}
 };
