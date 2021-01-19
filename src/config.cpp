@@ -217,7 +217,7 @@ void Config::init_config_file(const fs::path &config_path) const{
 	"Metadata Directory = /var/lib/ceph/cephfssync/\n"
 	"Sync Period = 10                 # time in seconds between checks for changes\n"
 	"Propagation Delay = 100          # time in milliseconds between snapshot and sync\n"
-	"Processes = 1                    # number of parallel sync processes to launch\n"
+	"Processes = 4                    # number of parallel sync processes to launch\n"
 	"Threads = 8                      # number of worker threads to search for files\n"
 	"Log Level = 1\n"
 	"# 0 = minimum logging\n"
