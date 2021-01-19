@@ -47,6 +47,9 @@ public:
 	 * exit_ is used to delay exiting until later if there are
 	 * multiple errors to print.
 	 */
+	std::string format_bytes(uintmax_t bytes) const;
+	/* Return bytes as string in base-1024 SI units.
+	 */
 };
 
 namespace Logging{
