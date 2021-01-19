@@ -33,9 +33,7 @@ private:
 	std::queue<T> queue_;
 	std::atomic<bool> done_;
 public:
-	ConcurrentQueue() : queue_(){
-		done_ = false;
-	}
+	ConcurrentQueue() : queue_(), done_(false){}
 	~ConcurrentQueue(void) = default;
 	size_t size(void) const{
 		return queue_.size();
