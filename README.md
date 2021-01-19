@@ -56,6 +56,7 @@ Metadata Directory = /var/lib/ceph/cephfssync/
 Sync Period = 10              # time in seconds between checks for changes
 Propagation Delay = 100       # time in milliseconds between snapshot and sync
 Processes = 1                 # number of parallel sync processes to launch
+Threads = 8                   # number of worker threads to search for files
 Log Level = 1
 # 0 = minimum logging
 # 1 = basic logging
@@ -93,6 +94,7 @@ Flags:
   -n --nproc <# of processes>   - number of sync processes to run in parallel
   -q --quiet                    - set log level to 0
   -s --seed                     - send all files to seed destination
+  -t --threads <# of threads>   - number of worker threads to search for files
   -v --verbose                  - set log level to 2
 ```
 Alternate configuration files can be specified using the `-c --config` flag, which is useful for running multiple instances of cephfssyncd on the same system. `-n --nproc`, `-q --quiet`, and `-v --verbose` are used to override options from the configuration file. `-s --seed` is used for sending every file to the destination regardless of how old the file is. `-d --dry-run` will run the daemon without actually syncing any files to give the user an idea of how many files will be synced if actually ran. `-d --dry-run` combined with `-v --verbose` will also list all files that would be synced.
