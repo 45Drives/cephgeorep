@@ -22,6 +22,9 @@
 #include "exec.hpp"
 #include "config.hpp"
 #include "rctime.hpp"
+#include "concurrent_queue.hpp"
+#include <atomic>
+#include <mutex>
 #include <list>
 #include <boost/filesystem.hpp>
 
@@ -31,6 +34,9 @@ class Crawler{
 private:
 	Config config_;
 	/* Holds user configuration options.
+	 */
+	std::mutex file_list_mt_;
+	/* Make file_list_ thread safe for insertion.
 	 */
 	std::list<fs::path> file_list_;
 	/* List of files to send to remote backup.
@@ -66,7 +72,7 @@ public:
 	/* Create snapshot in base directory,
 	 * return snapshot path.
 	 */
-	void trigger_search(const fs::path &path, uintmax_t &total_bytes);
+	void trigger_search(const boost::filesystem::path& snap_path, uintmax_t& total_bytes);
 	/* Queues newly modified/created files
 	 * into file_list_, keeps tally of filesize in
 	 * total_bytes.
@@ -79,6 +85,7 @@ public:
 	/* Recursive DFS on directory tree to queue files.
 	 * Keeps tally of filesize in total_bytes.
 	 */
+	void find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::path &snap_root, std::atomic<uintmax_t> &total_bytes, std::atomic<int> &threads_running);
 	void delete_snap(const fs::path &snap_root) const;
 	/* Deletes snapshot directory.
 	 */

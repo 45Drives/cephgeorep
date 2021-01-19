@@ -83,8 +83,25 @@ fs::path Crawler::create_snap(const timespec &rctime) const{
 void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 	// launch crawler in snapshot
 	Logging::log.message("Launching crawler",2);
-	// seed recursive function with snap_path
-	find_new_files_recursive(snap_path, snap_path, total_bytes);
+	if(config_.threads_ == 1){ // DFS
+		// seed recursive function with snap_path
+		find_new_files_recursive(snap_path, snap_path, total_bytes);
+	}else if(config_.threads_ > 1){ // multithreaded BFS
+		std::atomic<uintmax_t> total_bytes_at(0);
+		std::atomic<int> threads_running(0);
+		std::vector<std::thread> threads;
+		ConcurrentQueue<fs::path> queue;
+		// seed list with root node
+		queue.push(snap_path);
+		// create threads
+		for(int i = 0; i < config_.threads_; i++){
+			threads.emplace_back(&Crawler::find_new_files_mt_bfs, this, std::ref(queue), snap_path, std::ref(total_bytes_at), std::ref(threads_running));
+		}
+		for(auto &th : threads) th.join();
+		total_bytes = total_bytes_at;
+	}else{
+		Logging::log.error("Invalid number of worker threads: " + std::to_string(config_.threads_));
+	}
 	// log list of new files
 	if(config_.log_level_ >= 2){ // skip loop if not logging
 		Logging::log.message("Files to sync:",2);
@@ -109,7 +126,41 @@ void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &sn
 		}else{
 			// cut path at sync dir for rsync /sync_dir/.snap/snapshotX/./rel_path/file
 			total_bytes += fs::file_size(entry.path());
-			file_list_.emplace_back(snap_root/fs::path(".")/fs::relative(entry.path(), snap_root));
+			file_list_.push_back(snap_root/fs::path(".")/fs::relative(entry.path(), snap_root));
+		}
+	}
+}
+
+void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::path &snap_root, std::atomic<uintmax_t> &total_bytes, std::atomic<int> &threads_running){
+	threads_running++;
+	{
+		std::string msg = "Threads running: " + std::to_string(threads_running);
+		Logging::log.message(msg, 2);
+	}
+	while(!queue.done()){
+		fs::path node;
+		queue.pop(node, threads_running);
+		if(queue.done() && node.string() == "") return;
+		{
+			std::string msg = "Popped " + node.string();
+			Logging::log.message(msg, 2);
+		}
+		// put children into queue
+		if(is_directory(node)){
+			for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
+				fs::directory_entry child = *itr;
+				if(ignore_entry(child)) continue;
+				std::string msg = "Pushing " + child.path().string();
+				Logging::log.message(msg, 2);
+				queue.push(child);
+			}
+		}else{
+			total_bytes += fs::file_size(node);
+			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node, snap_root);
+			{
+				std::unique_lock<std::mutex> lk(file_list_mt_);
+				file_list_.push_back(formatted_path);
+			}
 		}
 	}
 }
