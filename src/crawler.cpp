@@ -130,7 +130,7 @@ void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &sn
 		}else if(fs::is_symlink(entry)){
 			file_list_.push_back(snap_root/fs::path(".")/fs::relative(entry.path(), snap_root));
 		}else{
-			Logging::log.warning("Unknown file type: " + entry.path().string());
+			Logging::log.message("Ignoring unknown file type: " + entry.path().string(), 2);
 		}
 	}
 }
@@ -162,7 +162,7 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 				file_list_.push_back(formatted_path);
 			}
 		}else{
-			Logging::log.warning("Unknown file type: " + node.string());
+			Logging::log.message("Ignoring unknown file type: " + node.string(), 2);
 		}
 	}
 }
