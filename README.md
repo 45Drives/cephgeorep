@@ -9,20 +9,24 @@ You must have a Ceph file system. `rsync`, `scp`, or similar must be installed o
 ## Runtime Dependencies
 Since the binary is statically linked, no boost runtime libraries are needed on the system. It only requires that `rsync`, etc. is installed.
 
+## Quick Start
+* [Install](#installation)
+* Initialize configuration file: `cephfssyncd -d`
+* Edit according to [Configuration](#configuration): `vim /etc/ceph/cephfssyncd.conf`
+* Verify settings with dry run before seeding: `cephfssyncd -s -d`
+* Seed remote destination (this may take a while): `cephfssyncd -s`
+* Enable daemon: `systemctl enable --now cephfssyncd`
+
 ## Installation
 ### Current Release
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/v0.4.0-beta/cephgeorep-0.4.0-1.el7.x86_64.rpm`
-* Create configuration file
-* `systemctl enable --now cephfssyncd`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.1.0/cephgeorep-1.1.0-1.el7.x86_64.rpm`
 
 ### Installing from Source
 * `yum install make gcc gcc-c++ boost boost-devel rsync`
 * `git clone https://github.com/45drives/cephgeorep`
 * `cd cephgeorep`
-* `make`
+* `make -j8`
 * `sudo make install`
-* Create configuration file
-* `systemctl enable --now cephfssyncd`  
   
 If you get the following error after running make:
 ```
