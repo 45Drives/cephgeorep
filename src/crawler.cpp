@@ -133,25 +133,15 @@ void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &sn
 
 void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::path &snap_root, std::atomic<uintmax_t> &total_bytes, std::atomic<int> &threads_running){
 	threads_running++;
-	{
-		std::string msg = "Threads running: " + std::to_string(threads_running);
-		Logging::log.message(msg, 2);
-	}
 	while(!queue.done()){
 		fs::path node;
 		queue.pop(node, threads_running);
 		if(queue.done() && node.string() == "") return;
-		{
-			std::string msg = "Popped " + node.string();
-			Logging::log.message(msg, 2);
-		}
 		// put children into queue
 		if(is_directory(node)){
 			for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
 				fs::directory_entry child = *itr;
 				if(ignore_entry(child)) continue;
-				std::string msg = "Pushing " + child.path().string();
-				Logging::log.message(msg, 2);
 				queue.push(child);
 			}
 		}else{
