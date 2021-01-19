@@ -1,5 +1,5 @@
 TARGET = cephfssyncd
-LIBS =  -static -l:libboost_system.a -l:libboost_filesystem.a -lpthread
+LIBS =  -static -l:libboost_system.a -l:libboost_filesystem.a -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 CC = g++
 CFLAGS = -std=gnu++11 -Wall
 
