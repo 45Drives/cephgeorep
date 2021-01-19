@@ -87,6 +87,8 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 			std::istringstream(value) >> std::boolalpha >> ignore_hidden_ >> std::noboolalpha;
 		}else if(key == "Ignore Windows Lock"){
 			std::istringstream(value) >> std::boolalpha >> ignore_win_lock_ >> std::noboolalpha;
+		}else if(key == "Ignore Vim Swap"){
+			std::istringstream(value) >> std::boolalpha >> ignore_vim_swap_ >> std::noboolalpha;
 		}else if(key == "Propagation Delay"){
 			try{
 				prop_delay_ms_ = std::chrono::milliseconds(stoi(value));
@@ -202,6 +204,7 @@ void Config::init_config_file(const fs::path &config_path) const{
 	"Source Directory =               # full path to directory to backup\n"
 	"Ignore Hidden = false            # ignore files beginning with \".\"\n"
 	"Ignore Windows Lock = true       # ignore files beginning with \"~$\"\n"
+	"Ignore Vim Swap = true           # ignore vim .swp files (.<filename>.swp)\n"
 	"\n"
 	"# remote settings\n"
 	"Remote User =                    # user on remote backup machine (optional)\n"
@@ -235,6 +238,7 @@ void Config::dump(void) const{
 	ss << "Source Directory =" << base_path_.string() << std::endl;
 	ss << "Ignore Hidden = " << std::boolalpha << ignore_hidden_ << std::endl;
 	ss << "Ignore Windows Lock = " << std::boolalpha << ignore_win_lock_ << std::endl;
+	ss << "Ignore Vim Swap = " << std::boolalpha << ignore_vim_swap_ << std::endl;
 	ss << std::endl;
 	ss << "remote settings:" << std::endl;
 	ss << "Remote User = " << remote_user_ << std::endl;

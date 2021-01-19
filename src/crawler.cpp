@@ -114,6 +114,7 @@ void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 bool Crawler::ignore_entry(const fs::directory_entry &entry) const{
 	return (config_.ignore_hidden_ == true && entry.path().filename().string().front() == '.')
 		|| (config_.ignore_win_lock_  == true && entry.path().filename().string().substr(0,2) == "~$")
+		|| (config_.ignore_vim_swap_ == true && entry.path().filename().string().front() == '.' && entry.path().extension() == ".swp")
 		|| !last_rctime_.is_newer(entry);
 }
 

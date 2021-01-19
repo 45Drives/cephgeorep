@@ -97,6 +97,9 @@ private:
 	bool ignore_win_lock_ = false;
 	/* Ignore files starting with "~$"
 	 */
+	bool ignore_vim_swap_ = false;
+	/* ignore hidden files ending in .swp
+	 */
 	std::chrono::seconds sync_period_s_ = std::chrono::seconds(-1);
 	/* Polling period to check whether to send new files in seconds.
 	 */
