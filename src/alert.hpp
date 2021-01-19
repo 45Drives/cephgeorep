@@ -1,44 +1,60 @@
 /*
-    Copyright (C) 2019-2021 Joshua Boudreau
-    
-    This file is part of cephgeorep.
-
-    cephgeorep is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
-
-    cephgeorep is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ *    Copyright (C) 2019-2021 Joshua Boudreau <jboudreau@45drives.com>
+ *    
+ *    This file is part of cephgeorep.
+ * 
+ *    cephgeorep is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 2 of the License, or
+ *    (at your option) any later version.
+ * 
+ *    cephgeorep is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ * 
+ *    You should have received a copy of the GNU General Public License
+ *    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 #pragma once
 
-#include <boost/system/error_code.hpp>
+#include <string>
 
-extern boost::system::error_code ec; // error code for system fucntions
-
-#define NUM_ERRS 13
-
-enum {
-  OPEN_CONFIG, PATH_CREATE, READ_RCTIME, READ_MTIME, READ_FILES_DIRS,
-  REMOVE_SNAP, FORK, LAUNCH_RSYNC, WAIT_RSYNC, NO_RSYNC, UNK_RSYNC_ERR,
-  SND_DIR_DNE, NO_PERM
+class Logger{
+private:
+	int log_level_;
+	/* Value from config file. Each log message
+	 * passes a log level to check against this number.
+	 * If the message's level is higher, it is printed.
+	 */
+public:
+	explicit Logger(int log_level);
+	/* Constructs Logger, assigning log_level to the
+	 * internal log_level_.
+	 */
+	void message(const std::string &msg, int lvl) const;
+	/* Print message to stdout if lvl >= log_level_.
+	 * Use this for regular informational log messages.
+	 */
+	void warning(const std::string &msg) const;
+	/* Print message to stderr prepended with "Warning: ".
+	 * Use this for non-fatal errors.
+	 */
+	void error(const std::string &msg, bool exit_ = true) const;
+	/* Print message to stderr prepended with "Error: ".
+	 * Exits with EXIT_FAILURE if exit_ is left as true.
+	 * exit_ is used to delay exiting until later if there are
+	 * multiple errors to print.
+	 */
+	std::string format_bytes(uintmax_t bytes) const;
+	/* Return bytes as string in base-1024 SI units.
+	 */
 };
 
-void warning(int err);
-// print error to std::cerr but don't exit
-
-void error(int err, boost::system::error_code ec_ = {1,boost::system::generic_category()});
-// print error to std::cerr and exit with error code 1
-
-void Log(std::string msg, int lvl);
-// print msg to std::cout given config.log_level >= lvl
-
-void usage(void);
-// print CLI flag descriptions
+namespace Logging{
+	extern Logger log;
+	/* Global Logger object. Use Logging::log.<method> in source
+	 * files including this header.
+	 */
+}
