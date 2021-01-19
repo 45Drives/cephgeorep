@@ -50,10 +50,20 @@ void Crawler::poll_base(bool seed, bool dry_run){
 			std::this_thread::sleep_for(config_.prop_delay_ms_);
 			// queue files
 			trigger_search(snap_path, total_bytes);
-			Logging::log.message("New files to sync: "+std::to_string(file_list_.size()),1);
+			{
+				std::string msg = "New files to sync: " + std::to_string(file_list_.size());
+				msg += " (" + Logging::log.format_bytes(total_bytes) + ")";
+				Logging::log.message(msg, 1);
+			}
 			// launch rsync
 			if(!file_list_.empty()){
-				if(!dry_run) syncer.launch_procs(file_list_, total_bytes);
+				if(dry_run){
+					std::string msg = config_.exec_bin_ + " " + config_.exec_flags_ + " <file list> ";
+					msg += syncer.construct_destination(config_.remote_user_, config_.remote_host_, config_.remote_directory_);
+					Logging::log.message(msg, 1);
+				}else{
+					syncer.launch_procs(file_list_, total_bytes);
+				}
 			}
 			// clear sync queue
 			reset();
@@ -111,11 +121,19 @@ void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 	}
 }
 
-bool Crawler::ignore_entry(const fs::directory_entry &entry) const{
-	return (config_.ignore_hidden_ == true && entry.path().filename().string().front() == '.')
-		|| (config_.ignore_win_lock_  == true && entry.path().filename().string().substr(0,2) == "~$")
-		|| (config_.ignore_vim_swap_ == true && entry.path().filename().string().front() == '.' && entry.path().extension() == ".swp")
-		|| !last_rctime_.is_newer(entry);
+bool Crawler::ignore_entry(const fs::path &path) const{
+	if(config_.ignore_hidden_ && path.filename().string().front() == '.'){
+		return true;
+	}
+	if(config_.ignore_win_lock_ && path.filename().string().substr(0,2) == "~$"){
+		return true;
+	}
+	if(config_.ignore_vim_swap_ == true && path.filename().string().front() == '.'){
+		if(path.extension() == ".swp" || path.extension() == ".swpx"){
+			return true;
+		}
+	}
+	return !last_rctime_.is_newer(path);
 }
 
 void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &snap_root, uintmax_t &total_bytes){

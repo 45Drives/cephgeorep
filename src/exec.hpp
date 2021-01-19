@@ -158,7 +158,7 @@ public:
 	~Syncer(void) = default;
 	/* Default destructor.
 	 */
-	void construct_destination(std::string remote_user, std::string remote_host, fs::path remote_directory);
+	std::string construct_destination(std::string remote_user, std::string remote_host, fs::path remote_directory) const;
 	/* Create [<user>@][<host>:][<destination path>] string.
 	 */
 	size_t get_max_arg_sz(void) const;

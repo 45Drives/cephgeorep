@@ -164,20 +164,21 @@ Syncer::Syncer(size_t envp_size, const Config &config)
 				+ exec_flags_.length() + 1 // length of flags
 				+ sizeof(char *) * 2 // size of char pointers
 				+ sizeof(NULL);
-	construct_destination(config.remote_user_, config.remote_host_, config.remote_directory_);
+	destination_ = construct_destination(config.remote_user_, config.remote_host_, config.remote_directory_);
 	if(!destination_.empty()){
 		start_arg_sz_ += destination_.length() + 1 + sizeof(char *);
 	}
 }
 
-void Syncer::construct_destination(std::string remote_user, std::string remote_host, fs::path remote_directory){
-	destination_ = remote_directory.string();
+std::string Syncer::construct_destination(std::string remote_user, std::string remote_host, fs::path remote_directory) const{
+	std::string dest = remote_directory.string();
 	if(!remote_host.empty()){
-		destination_ = remote_host + ":" + destination_;
+		dest = remote_host + ":" + dest;
 		if(!remote_user.empty()){
-			destination_ = remote_user + "@" + destination_;
+			dest = remote_user + "@" + dest;
 		}
 	}
+	return dest;
 }
 
 size_t Syncer::get_max_arg_sz(void) const{
@@ -191,7 +192,6 @@ size_t Syncer::get_max_arg_sz(void) const{
 
 void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) const{
 	int wstatus;
-	Logging::log.message(std::to_string(total_bytes) + " bytes", 2);
 	
 	// cap nproc to between 1 and number of files
 	int nproc = std::min(nproc_, (int)queue.size());

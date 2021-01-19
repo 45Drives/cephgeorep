@@ -77,15 +77,20 @@ public:
 	 * into file_list_, keeps tally of filesize in
 	 * total_bytes.
 	 */
-	bool ignore_entry(const fs::directory_entry &entry) const;
+	bool ignore_entry(const fs::path &path) const;
 	/* Returns true if file should not be queued or directory should
 	 * not be searched.
 	 */
 	void find_new_files_recursive(fs::path current_path, const fs::path &snap_root, uintmax_t &total_bytes);
 	/* Recursive DFS on directory tree to queue files.
 	 * Keeps tally of filesize in total_bytes.
+	 * This is used if threads == 1.
 	 */
 	void find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::path &snap_root, std::atomic<uintmax_t> &total_bytes, std::atomic<int> &threads_running);
+	/* Worker thread function to do multithreaded BFS on directory tree to queue files.
+	 * Keeps tally of filesize in total_bytes.
+	 * This is used if threads > 1.
+	 */
 	void delete_snap(const fs::path &snap_root) const;
 	/* Deletes snapshot directory.
 	 */
