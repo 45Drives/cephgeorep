@@ -82,25 +82,25 @@ class Config{
 	 */
 private:
 	// daemon settings
-	int log_level_;
+	int log_level_ = -1;
 	/* Log level defined in config file for Logger class.
 	 */
-	int nproc_;
+	int nproc_ = -1;
 	/* Number of parallel sync processes.
 	 */
-	int threads_;
+	int threads_ = -1;
 	/* Number of worker threads to search directory tree.
 	 */
-	bool ignore_hidden_;
+	bool ignore_hidden_ = false;
 	/* Ignore files starting with '.'.
 	 */
-	bool ignore_win_lock_;
+	bool ignore_win_lock_ = false;
 	/* Ignore files starting with "~$"
 	 */
-	std::chrono::seconds sync_period_s_;
+	std::chrono::seconds sync_period_s_ = std::chrono::seconds(-1);
 	/* Polling period to check whether to send new files in seconds.
 	 */
-	std::chrono::milliseconds prop_delay_ms_;
+	std::chrono::milliseconds prop_delay_ms_ = std::chrono::milliseconds(-1);
 	/* Delay between taking a snapshot and crawling through the directory
 	 * in milliseconds.
 	 */
