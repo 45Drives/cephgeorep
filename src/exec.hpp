@@ -83,6 +83,9 @@ public:
 	~SyncProcess();
 	/* Destructor. Frees memory in garbage vector before returning.
 	 */
+	int id() const;
+	/* Return ID of sync process.
+	 */
 	pid_t pid() const;
 	/* Return PID of sync process.
 	 */
@@ -91,6 +94,9 @@ public:
 	 */
 	uintmax_t payload_sz(void) const;
 	/* Return number of bytes in file payload.
+	 */
+	uintmax_t payload_count(void) const;
+	/* Return number of files in payload.
 	 */
 	void add(const fs::path &file);
 	/* Add one file to the payload.

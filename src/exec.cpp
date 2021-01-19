@@ -45,10 +45,13 @@ SyncProcess::SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz)
 }
 
 SyncProcess::~SyncProcess(){
-	if(id_ != -1) Logging::log.message("Proc " + std::to_string(id_) + ": done.",1);
 	for(char *i : garbage_){
 		delete [] i;
 	} 
+}
+
+int SyncProcess::id() const{
+	return id_;
 }
 
 pid_t SyncProcess::pid() const{
@@ -61,6 +64,10 @@ void SyncProcess::set_id(int id){
 
 uintmax_t SyncProcess::payload_sz(void) const{
 	return curr_bytes_sz_;
+}
+
+uintmax_t SyncProcess::payload_count(void) const{
+	return files_.size();
 }
 
 void SyncProcess::add(const fs::path &file){
@@ -134,8 +141,6 @@ void SyncProcess::sync_batch(){
 			Logging::log.error("Failed to execute " + exec_bin_);
 			break;
 		default: // parent process
-			Logging::log.message("Proc " + std::to_string(id_) + ": Launching " + exec_bin_ + " " + exec_flags_ + " with " + std::to_string(files_.size()) + " files.", 1);
-			Logging::log.message(std::to_string(curr_bytes_sz_) + " bytes", 2);
 			Logging::log.message(std::to_string(pid_) + " started.", 2);
 			break;
 	}
@@ -208,7 +213,13 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) con
 	// start each process
 	int proc_id = 0; // incremental ID for each process
 	for(std::list<SyncProcess>::iterator proc_itr = procs.begin(); proc_itr != procs.end(); ++proc_itr){
+		{
+			std::string msg = "Launching " + exec_bin_ + " " + exec_flags_ + " with " + std::to_string(proc_itr->payload_count()) + " files.";
+			if(nproc > 1) msg = "Proc " + std::to_string(proc_id) + ": " + msg;
+			Logging::log.message(msg, 1);
+		}
 		proc_itr->set_id(proc_id++);
+		Logging::log.message(std::to_string(proc_itr->payload_sz()) + " bytes", 2);
 		proc_itr->sync_batch();
 	}
 	while(!procs.empty()){ // while files are remaining in batch queues
@@ -242,6 +253,11 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) con
 				break;
 		}
 		if(queue.empty() && exited_proc->payload_sz() == 0){
+			{
+				std::string msg = "done.";
+				if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
+				Logging::log.message(msg, 1);
+			}
 			procs.erase(exited_proc);
 		}else{
 			if(!queue.empty()) exited_proc->consume(queue);
