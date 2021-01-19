@@ -105,7 +105,7 @@ void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 	// log list of new files
 	if(config_.log_level_ >= 2){ // skip loop if not logging
 		Logging::log.message("Files to sync:",2);
-		for(auto i : file_list_){
+		for(auto &i : file_list_){
 			Logging::log.message(i.string(),2);
 		}
 	}
@@ -121,12 +121,16 @@ void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &sn
 	for(fs::directory_iterator itr{current_path}; itr != fs::directory_iterator{}; *itr++){
 		fs::directory_entry entry = *itr;
 		if(ignore_entry(entry)) continue;
-		if(is_directory(entry)){
-			find_new_files_recursive(current_path/(entry.path().filename()), snap_root, total_bytes); // recurse
-		}else{
-			// cut path at sync dir for rsync /sync_dir/.snap/snapshotX/./rel_path/file
+		if(fs::is_directory(entry)){
+			find_new_files_recursive(entry.path(), snap_root, total_bytes); // recurse
+		}else if(fs::is_regular_file(entry)){
 			total_bytes += fs::file_size(entry.path());
+			// cut path at sync dir for rsync /sync_dir/.snap/snapshotX/./rel_path/file
 			file_list_.push_back(snap_root/fs::path(".")/fs::relative(entry.path(), snap_root));
+		}else if(fs::is_symlink(entry)){
+			file_list_.push_back(snap_root/fs::path(".")/fs::relative(entry.path(), snap_root));
+		}else{
+			Logging::log.warning("Unknown file type: " + entry.path().string());
 		}
 	}
 }
@@ -136,21 +140,29 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 	while(!queue.done()){
 		fs::path node;
 		queue.pop(node, threads_running);
-		if(queue.done() && node.string() == "") return;
+		if(queue.done() && node.empty()) return;
 		// put children into queue
-		if(is_directory(node)){
+		if(fs::is_directory(node)){
 			for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
 				fs::directory_entry child = *itr;
 				if(ignore_entry(child)) continue;
 				queue.push(child);
 			}
-		}else{
+		}else if(fs::is_regular_file(node)){
 			total_bytes += fs::file_size(node);
 			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node, snap_root);
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
 				file_list_.push_back(formatted_path);
 			}
+		}else if(fs::is_symlink(node)){
+			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node, snap_root);
+			{
+				std::unique_lock<std::mutex> lk(file_list_mt_);
+				file_list_.push_back(formatted_path);
+			}
+		}else{
+			Logging::log.warning("Unknown file type: " + node.string());
 		}
 	}
 }
