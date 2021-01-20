@@ -19,7 +19,9 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
          libboost-system-dev | libboost-all-dev,
 Recommends: rsync
 Description: Efficient unidirectional remote backup daemon for CephFS.
- For use with a distributed Ceph File System cluster to georeplicate files to a remote backup server.
- This daemon takes advantage of Ceph's rctime directory attribute, which is the value of the highest
- mtime of all the files below a given directory tree. Using this attribute, it selectively recurses
- only into directory tree branches with modified files - instead of wasting time accessing every branch.
+ For use with a distributed Ceph File System cluster to georeplicate files
+ to a remote backup server. This daemon takes advantage of Ceph's rctime
+ directory attribute, which is the value of the highest mtime of all the
+ files below a given directory tree. Using this attribute, it selectively
+ recurses only into directory tree branches with modified files - instead
+ of wasting time accessing every branch.
