@@ -19,7 +19,7 @@ Since the binary is statically linked, no boost runtime libraries are needed on 
 
 ## Installation
 ### Current Release
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.1.0/cephgeorep-1.1.0-1.el7.x86_64.rpm`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.1.1/cephgeorep-1.1.1-1.el7.x86_64.rpm`
 
 ### Installing from Source
 * `yum install make gcc gcc-c++ boost boost-devel rsync`
