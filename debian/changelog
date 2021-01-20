@@ -1,0 +1,5 @@
+cephgeorep (1.1.1-1) unstable; urgency=medium
+
+  * Initial Ubuntu release of cephgeorep.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 20 Jan 2021 15:38:06 +0000
