@@ -261,6 +261,11 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) con
 			procs.erase(exited_proc);
 		}else{
 			if(!queue.empty()) exited_proc->consume(queue);
+			{
+				std::string msg = "Launching " + exec_bin_ + " " + exec_flags_ + " with " + std::to_string(exited_proc->payload_count()) + " files.";
+				if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
+				Logging::log.message(msg, 1);
+			}
 			exited_proc->sync_batch();
 		}
 	}
