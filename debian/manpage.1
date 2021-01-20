@@ -1,0 +1,90 @@
+.\" (C) Copyright 2021 Josh Boudreau <jboudreau@45drives.com>,
+.\"
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH CEPHGEOREP 1 "January 20 2021"
+.\" Please adjust this date whenever revising the manpage.
+
+.SH NAME
+cephgeorep \- an efficient unidirectional remote backup daemon for CephFS
+
+.SH SYNOPSIS
+.B cephgeorep [-c <path/to/config/file>] [-dhnqstv]
+
+.SH DESCRIPTION
+.B Ceph File System Remote Sync Daemon
+.P
+For use with a distributed Ceph File System cluster to georeplicate files to a remote backup server.
+This daemon takes advantage of Ceph's 
+.I rctime 
+directory attribute, which is the value of the highest mtime of all the files below a given directory tree. Using this attribute, it selectively recurses only into directory tree branches with modified files - instead of wasting time accessing every branch.
+
+.SH OPTIONS
+.IP "-c, --config <path/to/config/file>"
+Pass an alternate configuration file path. This is useful for running multiple instances of
+.B cephgeorep
+on the same system.
+Default config: /etc/ceph/cephfssyncd.conf
+.IP "-d, --dry-run"
+Print the total number of files and payload size that would be synced if ran without this flag.
+When combined with -v, all files will also be listed.
+Exits before syncing.
+.IP "-h, --help"
+Print the usage message and exit.
+.IP "-n, --nproc <# of processes>"
+Specify the number of sync processes to run in parallel, overriding the value in the configuration file.
+.IP "-q, --quiet"
+Set the log level to 0, muting output.
+.IP "-s, --seed"
+Send every file to seed the destination.
+.IP "-t, --threads <# of threads>"
+Specify the number of worker threads to search for files, overriding the value in the configuration file. Greatly reduces file search time.
+.IP "-v, --verbose"
+Set the log level to 2, showing debug log output.
+
+.SH CONFIGURATION
+The default configuration file location is /etc/ceph/cephfssyncd.conf, which can be overridden with the -c, --config option.
+.P
+Configuration format is 
+.B "Key = value"
+pairs.
+
+.P
+.I "Local Backup Settings"
+.IP "Source Directory = </path/to/sync>"
+The full path to the directory you want to backup.
+.IP "Ignore Hidden = <true|false>"
+Ignore files beginning with ".".
+.IP "Ignore Windows Lock = <true|false>"
+Ignore files beginning with "~$".
+.IP "Ignore Vim Swap = <true|false>"
+Ignore vim .swp files (.<filename>.swp, .<filename>.swpx).
+
+.P
+.I "Remote Settings"
+.IP "Remote User = <user>"
+The user on remote backup machine to connect as while syncing. (optional)
+.IP "Remote Host = <hostname|IP address>"
+The remote backup machine hostname or IP address.
+.IP "Remote Directory = </path/to/remote/destination>"
+The directory to place files in the remote backup machine.
+
+.P
+.I "Daemon Settings"
+.IP "Exec = <rsync|scp|...>"
+The program to use for syncing. To sync to s3 buckets: set this to /opt/45drives/cephgeorep/s3wrap.sh, set the flags to only the bucket name, and leave all Remote Settings fields blank.
+.IP "Flags = <-a --relative|...>"
+Execution flags for above program, space delimited. For proper usage with rsync, leave the default -a --relative options.
+.IP "Metadata Directory = </var/lib/ceph/cephfssync/|...>"
+Directory to store metadata for keeping track of file modification times.
+.IP "Sync Period = <time in seconds>"
+The polling period in seconds between each check for file changes. Default is 10. To push this daemon to quasi-synchronous replication, set this to 0.
+.IP "Propagation Delay = <time in milliseconds>
+The time in milliseconds between taking a snapshot and searching for files. This may not be needed anymore with the newest release of Ceph. Default is 100.
+.IP "Processes = <# of processes>"
+The number of sync processes to launch in parallel. Default is 4. This speeds up sending large batches of files.
+.IP "Threads = <# of threads>"
+The number of worker threads to search for files. Default is 8. For very large directory trees, increasing this number speeds up finding files.
+.IP "Log Level = <0|1|2>"
+The log level output. Choosing 0 mutes all output to stdout, but errors are still printed to stderr. Choosing 1 will show useful information messages, and 2 shows very verbose debug output. Default is 1.
