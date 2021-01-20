@@ -1,10 +1,10 @@
-cephgeorep (1.1.1-2) unstable; urgency=low
+cephgeorep (1.1.1-2) util; urgency=low
 
   * Add man page entry for cephgeorep(1)
 
  -- Josh Boudreau <jboudreau@45drives.com>  Wed, 20 Jan 2021 16:23:00 +0000
 
-cephgeorep (1.1.1-1) unstable; urgency=medium
+cephgeorep (1.1.1-1) util; urgency=medium
 
   * Initial Ubuntu release of cephgeorep.
 
