@@ -2,7 +2,7 @@ TARGET = cephfssyncd
 STATIC_LIBS = -g -static -l:libboost_system.a -l:libboost_filesystem.a -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 DYNAMIC_LIBS = -g -lboost_system -lboost_filesystem -lpthread
 CC = g++
-CFLAGS = -std=gnu++11 -Wall
+CFLAGS = -g -std=gnu++11 -Wall
 
 ifeq ($(shell lsb_release -si), Ubuntu)
 	LIBS := $(DYNAMIC_LIBS)
