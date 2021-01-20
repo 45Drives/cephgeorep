@@ -1,15 +1,18 @@
 Source: cephgeorep
-Section: unknown
+Section: utils
 Priority: optional
 Maintainer: Josh Boudreau <jboudreau@45drives.com>
-Build-Depends: debhelper-compat (= 12)
+Build-Depends: debhelper-compat (= 12),
+               libboost-filesystem-dev,
+               g++ (>= 4.8)
 Standards-Version: 4.4.1
-Homepage: <insert the upstream URL, if relevant>
+Homepage: https://github.com/45Drives/cephgeorep
 #Vcs-Browser: https://salsa.debian.org/debian/cephgeorep
 #Vcs-Git: https://salsa.debian.org/debian/cephgeorep.git
 
 Package: cephgeorep
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         libboost-filesystem,
+Recommends: rsync
+Description: An efficient unidirectional remote backup daemon for CephFS.
