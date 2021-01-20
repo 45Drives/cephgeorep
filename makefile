@@ -40,7 +40,7 @@ clean-build:
 
 install: all
 	mkdir -p $(DESTDIR)$(PREFIX)
-	mkdir -p $(DESTDIR)/usr/lib/systemd/system
+	mkdir -p $(DESTDIR)/lib/systemd/system
 	mkdir -p $(DESTDIR)/usr/bin
 	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)
 	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)
