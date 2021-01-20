@@ -48,6 +48,7 @@ install: all
 	-systemctl daemon-reload
 	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
 	ln -sf $(PREFIX)/s3wrap.sh $(DESTDIR)/usr/bin/s3wrap.sh
+	mkdir -p $(DESTDIR)/usr/share/man/man1
 	gzip -k doc/man/cephgeorep.1
 	mv doc/man/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/
 
