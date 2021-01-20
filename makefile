@@ -48,10 +48,13 @@ install: all
 	-systemctl daemon-reload
 	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
 	ln -sf $(PREFIX)/s3wrap.sh $(DESTDIR)/usr/bin/s3wrap.sh
+	gzip -k doc/man/cephgeorep.1
+	mv doc/man/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/
 
 uninstall:
 	-systemctl disable --now cephfssyncd
 	-rm -f $(DESTDIR)$(PREFIX)/$(TARGET)
 	-rm -f $(DESTDIR)$(PREFIX)/s3wrap.sh
 	-rm -f $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
+	-rm -f $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz
 	systemctl daemon-reload
