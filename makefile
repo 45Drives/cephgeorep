@@ -51,13 +51,15 @@ install: all
 	mkdir -p $(DESTDIR)/usr/share/man/man1
 	gzip -k doc/man/cephgeorep.1
 	mv doc/man/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/
-	ln -sf $(DESTDIR)/usr/share/man/man1/cephfssyncd.1 $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz
-	ln -sf $(DESTDIR)/usr/share/man/man1/s3wrap.sh.1 $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz
+	ln -sf $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/cephfssyncd.1.gz
+	ln -sf $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/s3wrap.sh.1.gz
 
 uninstall:
 	-systemctl disable --now cephfssyncd
 	-rm -f $(DESTDIR)$(PREFIX)/$(TARGET)
 	-rm -f $(DESTDIR)$(PREFIX)/s3wrap.sh
 	-rm -f $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
+	-rm -f $(DESTDIR)/usr/share/man/man1/s3wrap.sh.1.gz
+	-rm -f $(DESTDIR)/usr/share/man/man1/cephfssyncd.1.gz
 	-rm -f $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz
 	systemctl daemon-reload
