@@ -52,14 +52,14 @@ public:
 		{
 			if(--threads_running <= 0 && queue_.empty()){
 				wake_all();
-				val = "";
+				val = T();
 				return;
 			}
 			std::unique_lock<std::mutex> lk(mutex_);
 			cv_.wait(lk, [this](){ return !this->empty() || this->done_; });
 			threads_running++;
 			if(done_){
-				val = "";
+				val = T();
 				return;
 			}
 			val = queue_.front();

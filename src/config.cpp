@@ -29,7 +29,8 @@ inline void strip_whitespace(std::string &str){
 	if((strItr = str.find('#')) == std::string::npos){ // strItr point to '#' or end
 		strItr = str.length();
 	}
-	strItr--; // point to last character
+	if(strItr != 0) // protect from underflow
+		strItr--; // point to last character
 	while(strItr && (str.at(strItr) == ' ' || str.at(strItr) == '\t')){ // remove whitespace
 		strItr--;
 	} // strItr points to last character
@@ -66,6 +67,9 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 		
 		strip_whitespace(key);
 		strip_whitespace(value);
+		
+		if(key.empty() || value.empty())
+			continue; // ignore unassigned fields
 		
 		if(key == "Source Directory"){
 			base_path_ = fs::path(value);
