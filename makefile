@@ -47,7 +47,6 @@ install: all
 	cp cephfssyncd.service $(DESTDIR)/lib/systemd/system/cephfssyncd.service
 	-systemctl daemon-reload
 	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
-	ln -sf $(PREFIX)/s3wrap.sh $(DESTDIR)/usr/bin/s3wrap.sh
 	mkdir -p $(DESTDIR)/usr/share/man/man1
 	gzip -k doc/man/cephgeorep.1
 	mv doc/man/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/
@@ -59,6 +58,7 @@ uninstall:
 	-rm -f $(DESTDIR)$(PREFIX)/$(TARGET)
 	-rm -f $(DESTDIR)$(PREFIX)/s3wrap.sh
 	-rm -f $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
+	-rm -f $(DESTDIR)/usr/bin/$(TARGET)
 	-rm -f $(DESTDIR)/usr/share/man/man1/s3wrap.sh.1.gz
 	-rm -f $(DESTDIR)/usr/share/man/man1/cephfssyncd.1.gz
 	-rm -f $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz
