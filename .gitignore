@@ -42,6 +42,7 @@ cephfssyncd
 # deb packaging
 debian/cephgeorep
 debian/cephgeorep.substvars
+debian/cephgeorep.postrm.debhelper
 debian/debhelper-build-stamp
 debian/files
 debian/.debhelper
