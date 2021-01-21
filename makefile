@@ -1,7 +1,7 @@
 TARGET = cephfssyncd
-LIBS =  -static -l:libboost_system.a -l:libboost_filesystem.a -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+LIBS = -g -lboost_system -lboost_filesystem -lpthread
 CC = g++
-CFLAGS = -std=gnu++11 -Wall
+CFLAGS = -g -std=gnu++11 -Wall
 
 OBJECTS = $(patsubst %.cpp, %.o, $(wildcard src/*.cpp))
 HEADERS = $(wildcard src/*.hpp)
@@ -10,10 +10,12 @@ ifeq ($(PREFIX),)
 	PREFIX := /opt/45drives/cephgeorep
 endif
 
-.PHONY: default all clean clean-build clean-target install uninstall
+.PHONY: default all static clean clean-build clean-target install uninstall
 
 default: $(TARGET)
 all: default
+static: LIBS = -g -static -l:libboost_system.a -l:libboost_filesystem.a -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+static: default
 
 %.o: %.cpp $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -33,18 +35,26 @@ clean-build:
 
 install: all
 	mkdir -p $(DESTDIR)$(PREFIX)
-	mkdir -p $(DESTDIR)/usr/lib/systemd/system
+	mkdir -p $(DESTDIR)/lib/systemd/system
 	mkdir -p $(DESTDIR)/usr/bin
 	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)
 	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)
-	cp cephfssyncd.service $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
+	cp cephfssyncd.service $(DESTDIR)/lib/systemd/system/cephfssyncd.service
 	-systemctl daemon-reload
 	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
-	ln -sf $(PREFIX)/s3wrap.sh $(DESTDIR)/usr/bin/s3wrap.sh
+	mkdir -p $(DESTDIR)/usr/share/man/man1
+	gzip -k doc/man/cephgeorep.1
+	mv doc/man/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/
+	ln -sf $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/cephfssyncd.1.gz
+	ln -sf $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/s3wrap.sh.1.gz
 
 uninstall:
 	-systemctl disable --now cephfssyncd
 	-rm -f $(DESTDIR)$(PREFIX)/$(TARGET)
 	-rm -f $(DESTDIR)$(PREFIX)/s3wrap.sh
 	-rm -f $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
+	-rm -f $(DESTDIR)/usr/bin/$(TARGET)
+	-rm -f $(DESTDIR)/usr/share/man/man1/s3wrap.sh.1.gz
+	-rm -f $(DESTDIR)/usr/share/man/man1/cephfssyncd.1.gz
+	-rm -f $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz
 	systemctl daemon-reload

@@ -38,3 +38,10 @@ cephfssyncd
 # kdevelop
 .kdev4/
 *.kdev4
+
+# deb packaging
+debian/cephgeorep
+debian/cephgeorep.substvars
+debian/debhelper-build-stamp
+debian/files
+debian/.debhelper
