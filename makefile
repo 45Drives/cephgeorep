@@ -1,14 +1,7 @@
 TARGET = cephfssyncd
-STATIC_LIBS = -g -static -l:libboost_system.a -l:libboost_filesystem.a -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
-DYNAMIC_LIBS = -g -lboost_system -lboost_filesystem -lpthread
+LIBS = -g -lboost_system -lboost_filesystem -lpthread
 CC = g++
 CFLAGS = -g -std=gnu++11 -Wall
-
-ifeq ($(shell lsb_release -si), Ubuntu)
-	LIBS := $(DYNAMIC_LIBS)
-else
-	LIBS := $(STATIC_LIBS)
-endif
 
 OBJECTS = $(patsubst %.cpp, %.o, $(wildcard src/*.cpp))
 HEADERS = $(wildcard src/*.hpp)
@@ -17,10 +10,12 @@ ifeq ($(PREFIX),)
 	PREFIX := /opt/45drives/cephgeorep
 endif
 
-.PHONY: default all clean clean-build clean-target install uninstall
+.PHONY: default all static clean clean-build clean-target install uninstall
 
 default: $(TARGET)
 all: default
+static: LIBS = -g -static -l:libboost_system.a -l:libboost_filesystem.a -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+static: default
 
 %.o: %.cpp $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
