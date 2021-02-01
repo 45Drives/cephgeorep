@@ -44,7 +44,7 @@ Specify the number of worker threads to search for files, overriding the value i
 Set the log level to 2, showing debug log output.
 
 .SH CONFIGURATION
-The default configuration file location is /etc/ceph/cephfssyncd.conf, which can be overridden with the -c, --config option.
+The default configuration file location is /etc/cephfssyncd.conf, which can be overridden with the -c, --config option.
 .P
 Configuration format is 
 .B "Key = value"
@@ -76,7 +76,7 @@ The directory to place files in the remote backup machine.
 The program to use for syncing. To sync to s3 buckets: set this to /opt/45drives/cephgeorep/s3wrap.sh, set the flags to only the bucket name, and leave all Remote Settings fields blank.
 .IP "Flags = <-a --relative|...>"
 Execution flags for above program, space delimited. For proper usage with rsync, leave the default -a --relative options.
-.IP "Metadata Directory = </var/lib/ceph/cephfssync/|...>"
+.IP "Metadata Directory = </var/lib/cephfssync/|...>"
 Directory to store metadata for keeping track of file modification times.
 .IP "Sync Period = <time in seconds>"
 The polling period in seconds between each check for file changes. Default is 10. To push this daemon to quasi-synchronous replication, set this to 0.
