@@ -36,6 +36,8 @@ void Crawler::reset(void){
 
 void Crawler::poll_base(bool seed, bool dry_run){
 	timespec new_rctime, old_rctime_cache;
+	std::chrono::steady_clock::duration last_rctime_flush_period = std::chrono::hours(1);
+	std::chrono::steady_clock::time_point last_rctime_last_flush = std::chrono::steady_clock::now();
 	Logging::log.message("Watching: " + base_path_.string(),1);
 	if(seed && dry_run) old_rctime_cache = last_rctime_.rctime();
 	if(seed) last_rctime_.update({1}); // sync everything
@@ -71,6 +73,11 @@ void Crawler::poll_base(bool seed, bool dry_run){
 			delete_snap(snap_path);
 			// overwrite last_rctime
 			if(!dry_run) last_rctime_.update(new_rctime);
+			auto now = std::chrono::steady_clock::now();
+			if(now - last_rctime_last_flush >= last_rctime_flush_period){
+				last_rctime_.write_last_rctime();
+				last_rctime_last_flush = now;
+			}
 		}
 		auto end = std::chrono::steady_clock::now();
 		std::chrono::duration<double, std::ratio<1,1>> elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1,1>>>(end - start);
