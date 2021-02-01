@@ -57,6 +57,8 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 	// read file
 	while(config_file){
 		getline(config_file, line);
+		
+		strip_whitespace(line);
 		// full line comments:
 		if(line.empty() || line.front() == '#')
 			continue; // ignore comments
