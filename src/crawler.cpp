@@ -35,12 +35,16 @@ void Crawler::reset(void){
 }
 
 void Crawler::poll_base(bool seed, bool dry_run){
-	timespec new_rctime, old_rctime_cache;
+	timespec new_rctime = {0};
+	timespec old_rctime_cache = {0};
+	std::chrono::steady_clock::duration last_rctime_flush_period = std::chrono::hours(1);
+	std::chrono::steady_clock::time_point last_rctime_last_flush = std::chrono::steady_clock::now();
 	Logging::log.message("Watching: " + base_path_.string(),1);
 	if(seed && dry_run) old_rctime_cache = last_rctime_.rctime();
 	if(seed) last_rctime_.update({1}); // sync everything
 	do{
-		auto start = std::chrono::system_clock::now();
+		auto start = std::chrono::steady_clock::now();
+		Logging::log.message("Checking for change.", 2);
 		if(last_rctime_.check_for_change(base_path_, new_rctime)){
 			Logging::log.message("Change detected in " + base_path_.string(), 1);
 			uintmax_t total_bytes = 0;
@@ -70,9 +74,16 @@ void Crawler::poll_base(bool seed, bool dry_run){
 			// delete snapshot
 			delete_snap(snap_path);
 			// overwrite last_rctime
-			if(!dry_run) last_rctime_.update(new_rctime);
+			if(!dry_run){
+				last_rctime_.update(new_rctime);
+				auto now = std::chrono::steady_clock::now();
+				if(now - last_rctime_last_flush >= last_rctime_flush_period){
+					last_rctime_.write_last_rctime();
+					last_rctime_last_flush = now;
+				}
+			}
 		}
-		auto end = std::chrono::system_clock::now();
+		auto end = std::chrono::steady_clock::now();
 		std::chrono::seconds elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 		if(elapsed < config_.sync_period_s_ && !seed && !dry_run) // if it took longer than sync freq, don't wait
 			std::this_thread::sleep_for(config_.sync_period_s_ - elapsed);

@@ -40,13 +40,13 @@ install: all
 	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)
 	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)
 	cp cephfssyncd.service $(DESTDIR)/lib/systemd/system/cephfssyncd.service
-	-systemctl daemon-reload
 	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
 	mkdir -p $(DESTDIR)/usr/share/man/man1
 	gzip -k doc/man/cephgeorep.1
 	mv doc/man/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/
 	ln -sf $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/cephfssyncd.1.gz
 	ln -sf $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/s3wrap.sh.1.gz
+	-systemctl daemon-reload
 
 uninstall:
 	-systemctl disable --now cephfssyncd

@@ -119,7 +119,10 @@ bool LastRctime::check_for_change(const fs::path &path, timespec &new_rctime) co
 	for(fs::directory_iterator itr(path); itr != fs::directory_iterator(); *itr++){
 		if((temp_rctime = get_rctime(*itr)) > last_rctime_){
 			change = true;
-			if(temp_rctime > new_rctime) new_rctime = temp_rctime; // get highest
+			if(temp_rctime > new_rctime){ // get highest
+				new_rctime.tv_sec = temp_rctime.tv_sec;
+				new_rctime.tv_nsec = temp_rctime.tv_nsec;
+			}
 		}
 	}
 	return change;

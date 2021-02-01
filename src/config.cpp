@@ -57,6 +57,8 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 	// read file
 	while(config_file){
 		getline(config_file, line);
+		
+		strip_whitespace(line);
 		// full line comments:
 		if(line.empty() || line.front() == '#')
 			continue; // ignore comments
@@ -218,7 +220,7 @@ void Config::init_config_file(const fs::path &config_path) const{
 	"# daemon settings\n"
 	"Exec = rsync                     # program to use for syncing - rsync or scp\n"
 	"Flags = -a --relative            # execution flags for above program (space delim)\n"
-	"Metadata Directory = /var/lib/ceph/cephfssync/\n"
+	"Metadata Directory = /var/lib/cephgeorep/\n"
 	"Sync Period = 10                 # time in seconds between checks for changes\n"
 	"Propagation Delay = 100          # time in milliseconds between snapshot and sync\n"
 	"Processes = 4                    # number of parallel sync processes to launch\n"
