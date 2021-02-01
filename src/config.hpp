@@ -24,7 +24,7 @@
 
 namespace fs = boost::filesystem;
 
-#define DEFAULT_CONFIG_PATH "/etc/ceph/cephfssyncd.conf"
+#define DEFAULT_CONFIG_PATH "/etc/cephfssyncd.conf"
 #define LAST_RCTIME_NAME "last_rctime.dat"
 
 template<class T>
