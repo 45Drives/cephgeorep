@@ -33,7 +33,7 @@ clean-target:
 clean-build:
 	-rm -f src/*.o
 
-install: all
+install: all inst-man-pages
 	mkdir -p $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)/lib/systemd/system
 	mkdir -p $(DESTDIR)/usr/bin
@@ -41,20 +41,24 @@ install: all
 	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)
 	cp cephfssyncd.service $(DESTDIR)/lib/systemd/system/cephfssyncd.service
 	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
-	mkdir -p $(DESTDIR)/usr/share/man/man1
-	gzip -k doc/man/cephgeorep.1
-	mv doc/man/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/
-	ln -sf $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/cephfssyncd.1.gz
-	ln -sf $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz $(DESTDIR)/usr/share/man/man1/s3wrap.sh.1.gz
 	-systemctl daemon-reload
 
-uninstall:
+uninstall: rm-man-pages
 	-systemctl disable --now cephfssyncd
 	-rm -f $(DESTDIR)$(PREFIX)/$(TARGET)
 	-rm -f $(DESTDIR)$(PREFIX)/s3wrap.sh
 	-rm -f $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
 	-rm -f $(DESTDIR)/usr/bin/$(TARGET)
-	-rm -f $(DESTDIR)/usr/share/man/man1/s3wrap.sh.1.gz
-	-rm -f $(DESTDIR)/usr/share/man/man1/cephfssyncd.1.gz
-	-rm -f $(DESTDIR)/usr/share/man/man1/cephgeorep.1.gz
 	systemctl daemon-reload
+
+inst-man-pages:
+	mkdir -p $(DESTDIR)/usr/share/man/man8
+	gzip -k doc/man/cephgeorep.8
+	mv doc/man/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/
+	ln -sf $(DESTDIR)/usr/share/man/man8/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/cephfssyncd.8.gz
+	ln -sf $(DESTDIR)/usr/share/man/man8/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/s3wrap.sh.8.gz
+
+rm-man-pages:
+	-rm -f $(DESTDIR)/usr/share/man/man8/s3wrap.sh.8.gz
+	-rm -f $(DESTDIR)/usr/share/man/man8/cephfssyncd.8.gz
+	-rm -f $(DESTDIR)/usr/share/man/man8/cephgeorep.8.gz
