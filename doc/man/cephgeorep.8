@@ -3,14 +3,19 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH CEPHGEOREP 1 "February 01 2021"
+.TH CEPHGEOREP 8 "February 02 2021" "cephgeorep 1.1.3"
 .\" Please adjust this date whenever revising the manpage.
 
 .SH NAME
 cephgeorep \- an efficient unidirectional remote backup daemon for CephFS
 
 .SH SYNOPSIS
-.B cephfssyncd [-c <path/to/config/file>] [-dhnqstv]
+.B cephfssyncd
+[ -c 
+.I path/to/config/file
+] [
+.I -dhnqstv
+]
 
 .SH DESCRIPTION
 .B Ceph File System Remote Sync Daemon
@@ -44,7 +49,9 @@ Specify the number of worker threads to search for files, overriding the value i
 Set the log level to 2, showing debug log output.
 
 .SH CONFIGURATION
-The default configuration file location is /etc/cephfssyncd.conf, which can be overridden with the -c, --config option.
+The default configuration file location is /etc/cephfssyncd.conf, which can be overridden with the 
+.I -c, --config
+option.
 .P
 Configuration format is 
 .B "Key = value"
@@ -88,3 +95,7 @@ The number of sync processes to launch in parallel. Default is 4. This speeds up
 The number of worker threads to search for files. Default is 8. For very large directory trees, increasing this number speeds up finding files.
 .IP "Log Level = <0|1|2>"
 The log level output. Choosing 0 mutes all output to stdout, but errors are still printed to stderr. Choosing 1 will show useful information messages, and 2 shows very verbose debug output. Default is 1.
+
+.SH AUTHOR
+.B cephgeorep
+was created by Josh Boudreau <jboudreau@45drives.com> and is maintained by the research and development team at 45Drives.
