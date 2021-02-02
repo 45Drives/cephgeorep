@@ -34,7 +34,7 @@ void Crawler::reset(void){
 	file_list_.clear();
 }
 
-void Crawler::poll_base(bool seed, bool dry_run){
+void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime){
 	timespec new_rctime = {0};
 	timespec old_rctime_cache = {0};
 	std::chrono::steady_clock::duration last_rctime_flush_period = std::chrono::hours(1);
@@ -54,7 +54,7 @@ void Crawler::poll_base(bool seed, bool dry_run){
 			std::this_thread::sleep_for(config_.prop_delay_ms_);
 			// queue files
 			trigger_search(snap_path, total_bytes);
-			{
+			if(!set_rctime){
 				std::string msg = "New files to sync: " + std::to_string(file_list_.size());
 				msg += " (" + Logging::log.format_bytes(total_bytes) + ")";
 				Logging::log.message(msg, 1);
@@ -65,7 +65,7 @@ void Crawler::poll_base(bool seed, bool dry_run){
 					std::string msg = config_.exec_bin_ + " " + config_.exec_flags_ + " <file list> ";
 					msg += syncer.construct_destination(config_.remote_user_, config_.remote_host_, config_.remote_directory_);
 					Logging::log.message(msg, 1);
-				}else{
+				}else if(!set_rctime){
 					syncer.launch_procs(file_list_, total_bytes);
 				}
 			}
@@ -85,9 +85,9 @@ void Crawler::poll_base(bool seed, bool dry_run){
 		}
 		auto end = std::chrono::steady_clock::now();
 		std::chrono::seconds elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-		if(elapsed < config_.sync_period_s_ && !seed && !dry_run) // if it took longer than sync freq, don't wait
+		if(elapsed < config_.sync_period_s_ && !seed && !dry_run && !set_rctime) // if it took longer than sync freq, don't wait
 			std::this_thread::sleep_for(config_.sync_period_s_ - elapsed);
-	}while(!seed && !dry_run);
+	}while(!seed && !dry_run && !set_rctime);
 	if(seed && dry_run) last_rctime_.update(old_rctime_cache);
 }
 
