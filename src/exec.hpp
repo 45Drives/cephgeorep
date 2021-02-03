@@ -123,6 +123,9 @@ public:
 	/* Clear files_ and reset curr_arg_sz_ and curr_bytes_sz_ to
 	 * start_arg_sz_ and 0, respectively.
 	 */
+	bool payload_empty(void) const;
+	/* Returns files_.empty().
+	 */
 };
 
 class Syncer{

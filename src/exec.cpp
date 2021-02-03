@@ -22,9 +22,13 @@
 #include "exec.hpp"
 #include <algorithm>
 #include <boost/tokenizer.hpp>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/resource.h>
+
+extern "C" {
+	#include <unistd.h>
+	#include <sys/wait.h>
+	#include <sys/resource.h>
+	#include <fcntl.h>
+}
 
 #ifdef DEBUG_BATCHES
 #include <iostream>
@@ -137,6 +141,12 @@ void SyncProcess::sync_batch(){
 			Logging::log.error("Forking failed");
 			break;
 		case 0: // child process
+			{
+				int null_fd = open("/dev/null", O_WRONLY);
+				dup2(null_fd, 1);
+				dup2(null_fd, 2);
+				close(null_fd);
+			}
 			execvp(argv[0],&argv[0]);
 			Logging::log.error("Failed to execute " + exec_bin_);
 			break;
@@ -150,6 +160,10 @@ void SyncProcess::clear_file_list(void){
 	files_.clear();
 	curr_bytes_sz_ = 0;
 	curr_arg_sz_ = start_arg_sz_;
+}
+
+bool SyncProcess::payload_empty(void) const{
+	return files_.empty();
 }
 
 /* Syncer --------------------------------
@@ -256,12 +270,14 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 				num_ssh_fails = 0;
 				break;
 			case SSH_FAIL:
-				Logging::log.warning(exec_bin_ + " failed to connect to" + *destination_ + "\n"
+				Logging::log.warning(exec_bin_ + " failed to connect to " + *destination_ + "\n"
 				"Is the server running and connected to your network?");
 				if(std::next(destination_) == destinations_.end())
 					Logging::log.error("No more backup destinations to try.");
-				if((num_ssh_fails = (num_ssh_fails + 1) % nproc) == 0)
+				if((num_ssh_fails = (num_ssh_fails + 1) % nproc) == 0){
+					Logging::log.message("Trying next destination", 1);
 					++destination_; // increment destination itr if all procs fail
+				}
 				break;
 			case NOT_INSTALLED:
 				Logging::log.error(exec_bin_ + " is not installed.");
@@ -273,7 +289,7 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 				Logging::log.error("Encountered unknown error while executing " + exec_bin_);
 				break;
 		}
-		if(queue.empty() && exited_proc->payload_sz() == 0){
+		if(queue.empty() && exited_proc->payload_empty()){
 			{
 				std::string msg = "done.";
 				if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
