@@ -17,8 +17,6 @@
  *    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//#define DEBUG_BATCHES
-
 #include "exec.hpp"
 #include <algorithm>
 #include <boost/tokenizer.hpp>
@@ -30,12 +28,6 @@ extern "C" {
 	#include <fcntl.h>
 	#include <string.h>
 }
-
-#ifdef DEBUG_BATCHES
-#include <iostream>
-#endif
-
-//#define MAX_SZ_LIM 3*(8*1024*1024)/4
 
 /* SyncProcess --------------------------------
  */
@@ -103,6 +95,7 @@ void SyncProcess::consume_one(std::list<fs::path> &queue){
 }
 
 void SyncProcess::sync_batch(){
+	sending_to_ = *destination_;
 	std::vector<char *> argv;
 	
 	argv.push_back((char *)exec_bin_.c_str());
@@ -166,6 +159,10 @@ void SyncProcess::clear_file_list(void){
 
 bool SyncProcess::payload_empty(void) const{
 	return files_.empty();
+}
+
+const std::string &SyncProcess::destination(void) const{
+	return sending_to_;
 }
 
 /* Syncer --------------------------------
@@ -255,74 +252,85 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 		Logging::log.message(std::to_string(proc_itr->payload_sz()) + " bytes", 2);
 		proc_itr->sync_batch();
 	}
-	int num_ssh_fails = 0;
+	int num_ssh_fails_to_inc = 0; // increment destination_ when ssh fails and this is 0
 	while(!procs.empty()){ // while files are remaining in batch queues
 		// wait for a child to change state then relaunch remaining batches
 		pid_t exited_pid = wait(&wstatus);
-		// find which object PID belongs to
-		std::list<SyncProcess>::iterator exited_proc = std::find_if (
-			procs.begin(), procs.end(),
-			[&exited_pid](const SyncProcess &proc){
-				return proc.pid() == exited_pid;
-			}
-		);
-		// check exit code
-		switch(WEXITSTATUS(wstatus)){
-			case SUCCESS:
-				Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
-				exited_proc->clear_file_list(); // remove synced batch
-				num_ssh_fails = 0;
-				break;
-			case SSH_FAIL:
-				Logging::log.warning(exec_bin_ + " failed to connect to " + *destination_ + "\n"
-				"Is the server running and connected to your network?");
-				if(std::next(destination_) == destinations_.end())
-					Logging::log.error("No more backup destinations to try.");
-				if((num_ssh_fails = (num_ssh_fails + 1) % nproc) == 0){
-					Logging::log.message("Trying next destination", 1);
-					++destination_; // increment destination itr if all procs fail
+		if(exited_pid == -1){
+			Logging::log.error("No children to wait for");
+		}else{
+			// find which object PID belongs to
+			std::list<SyncProcess>::iterator exited_proc = std::find_if (
+				procs.begin(), procs.end(),
+				[&exited_pid](const SyncProcess &proc){
+					return proc.pid() == exited_pid;
 				}
-				break;
-			case NOT_INSTALLED:
-				Logging::log.error(exec_bin_ + " is not installed.");
-				break;
-			case PERM_DENY:
-				Logging::log.error("Encountered permission error while executing " + exec_bin_);
-				break;
-			default:
-				int8_t status = WEXITSTATUS(wstatus);
-				if(status > 0)
-					Logging::log.error(
-						"Encountered unknown error while executing " + exec_bin_ + "\n"
-						"Exit code: " + std::to_string(status)
-					);
-				else{
-					char *errno_msg = strerror(-status);
-					if(errno_msg)
-						Logging::log.error("Failed to execute " + exec_bin_ + ": " + errno_msg);
-					else
+			);
+			// check exit code
+			switch(WEXITSTATUS(wstatus)){
+				case SUCCESS:
+					Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
+					exited_proc->clear_file_list(); // remove synced batch
+					break;
+				case SSH_FAIL:
+					{
+						std::string msg = exec_bin_ + " failed to connect to " + exited_proc->destination() + ". Is the server running and connected to your network?";
+						if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
+						Logging::log.warning(msg);
+					}
+					if(num_ssh_fails_to_inc == 0){
+						if(std::next(destination_) == destinations_.end())
+							Logging::log.error("No more backup destinations to try.");
+						Logging::log.message("Trying next destination", 1);
+						++destination_; // increment destination itr if all procs fail
+						num_ssh_fails_to_inc = nproc - 1;
+					}else{
+						--num_ssh_fails_to_inc;
+					}
+					break;
+				case NOT_INSTALLED:
+					Logging::log.error(exec_bin_ + " is not installed.");
+					break;
+				case PERM_DENY:
+					Logging::log.error("Encountered permission error while executing " + exec_bin_);
+					break;
+				default:
+					int8_t status = WEXITSTATUS(wstatus);
+					if(status > 0)
 						Logging::log.error(
 							"Encountered unknown error while executing " + exec_bin_ + "\n"
 							"Exit code: " + std::to_string(status)
 						);
+					else{
+						char *errno_msg = strerror(-status);
+						if(errno_msg)
+							Logging::log.error("Failed to execute " + exec_bin_ + ": " + errno_msg);
+						else
+							Logging::log.error(
+								"Encountered unknown error while executing " + exec_bin_ + "\n"
+								"Exit code: " + std::to_string(status)
+							);
+					}
+					break;
+			}
+			if(queue.empty() && exited_proc->payload_empty()){
+				{
+					std::string msg = "done.";
+					if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
+					Logging::log.message(msg, 1);
 				}
-				break;
-		}
-		if(queue.empty() && exited_proc->payload_empty()){
-			{
-				std::string msg = "done.";
-				if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
-				Logging::log.message(msg, 1);
+				procs.erase(exited_proc);
+			}else if(exited_proc->payload_empty()){
+				if(!queue.empty()) exited_proc->consume(queue);
+				{
+					std::string msg = "Launching " + exec_bin_ + " " + exec_flags_ + " with " + std::to_string(exited_proc->payload_count()) + " files.";
+					if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
+					Logging::log.message(msg, 1);
+				}
+				exited_proc->sync_batch();
+			}else{
+				exited_proc->sync_batch();
 			}
-			procs.erase(exited_proc);
-		}else{
-			if(!queue.empty()) exited_proc->consume(queue);
-			{
-				std::string msg = "Launching " + exec_bin_ + " " + exec_flags_ + " with " + std::to_string(exited_proc->payload_count()) + " files.";
-				if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
-				Logging::log.message(msg, 1);
-			}
-			exited_proc->sync_batch();
 		}
 	}
 }

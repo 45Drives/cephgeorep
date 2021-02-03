@@ -70,6 +70,9 @@ private:
 	std::vector<std::string>::iterator &destination_;
 	/* [[<user>@]<host>:][<destination path>]
 	 */
+	std::string sending_to_;
+	/* For printing failures after iterator changes.
+	 */
 	std::vector<fs::path> files_;
 	/* List of files to sync.
 	 */
@@ -125,6 +128,9 @@ public:
 	 */
 	bool payload_empty(void) const;
 	/* Returns files_.empty().
+	 */
+	const std::string &destination(void) const;
+	/* Returns sending_to_.
 	 */
 };
 
