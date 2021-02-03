@@ -5,6 +5,9 @@ cephgeorep (1.2.0-1focal) focal; urgency=low
 
   * Added --version flag to print version and exit.
 
+  * Implemented destination failover with multiple destinations
+    when SSH fails. Output of rsync is muted to clean up log messages.
+
  -- Josh Boudreau <jboudreau@45drives.com>  Tue, 02 Feb 2021 3:29:00 -0400
 
 cephgeorep (1.1.3-3focal) focal; urgency=low

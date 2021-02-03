@@ -3,7 +3,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH CEPHGEOREP 8 "February 02 2021" "cephgeorep 1.2.0"
+.TH CEPHGEOREP 8 "February 03 2021" "cephgeorep 1.2.0"
 .\" Please adjust this date whenever revising the manpage.
 
 .SH NAME
@@ -64,7 +64,7 @@ Configuration format is
 pairs.
 
 .P
-.I "Local Backup Settings"
+.SS "Local Backup Settings"
 .IP "Source Directory = </path/to/sync>"
 The full path to the directory you want to backup.
 .IP "Ignore Hidden = <true|false>"
@@ -75,16 +75,14 @@ Ignore files beginning with "~$".
 Ignore vim .swp files (.<filename>.swp, .<filename>.swpx).
 
 .P
-.I "Remote Settings"
-.IP "Remote User = <user>"
-The user on remote backup machine to connect as while syncing. (optional)
-.IP "Remote Host = <hostname|IP address>"
-The remote backup machine hostname or IP address.
-.IP "Remote Directory = </path/to/remote/destination>"
-The directory to place files in the remote backup machine.
+.SS "Remote Settings"
+.IP "Destination = [[user@]host:][path]"
+Comma or space separated list of backup destinations. If multiple destinations are defined, they are only
+used as failovers - data will not be duplicated to each destination. Multiple failovers are intended to be used with multiple
+gateways to a single backup storage pool. This parameter can appear multiple times if you do not want to put the list on one line.
 
 .P
-.I "Daemon Settings"
+.SS "Daemon Settings"
 .IP "Exec = <rsync|scp|...>"
 The program to use for syncing. To sync to s3 buckets: set this to /opt/45drives/cephgeorep/s3wrap.sh, set the flags to only the bucket name, and leave all Remote Settings fields blank.
 .IP "Flags = <-a --relative|...>"
@@ -102,6 +100,19 @@ The number of worker threads to search for files. Default is 8. For very large d
 .IP "Log Level = <0|1|2>"
 The log level output. Choosing 0 mutes all output to stdout, but errors are still printed to stderr. Choosing 1 will show useful information messages, and 2 shows very verbose debug output. Default is 1.
 
+.SS "Deprecated Settings"
+These settings are still valid, but a warning will be given while using them. The following remote settings cannot be used if
+.I Destination
+is set.
+.IP "Remote User = <user>"
+The user on remote backup machine to connect as while syncing. (optional)
+.IP "Remote Host = <hostname|IP address>"
+The remote backup machine hostname or IP address.
+.IP "Remote Directory = </path/to/remote/destination>"
+The directory to place files in the remote backup machine.
+
 .SH AUTHOR
 .B cephgeorep
 was created by Josh Boudreau <jboudreau@45drives.com> and is maintained by the research and development team at 45Drives.
+
+.SH 

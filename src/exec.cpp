@@ -28,6 +28,7 @@ extern "C" {
 	#include <sys/wait.h>
 	#include <sys/resource.h>
 	#include <fcntl.h>
+	#include <string.h>
 }
 
 #ifdef DEBUG_BATCHES
@@ -146,9 +147,10 @@ void SyncProcess::sync_batch(){
 				dup2(null_fd, 1);
 				dup2(null_fd, 2);
 				close(null_fd);
+				execvp(argv[0],&argv[0]);
+				int execvp_errno = -errno;
+				exit(execvp_errno);
 			}
-			execvp(argv[0],&argv[0]);
-			Logging::log.error("Failed to execute " + exec_bin_);
 			break;
 		default: // parent process
 			Logging::log.message(std::to_string(pid_) + " started.", 2);
@@ -189,6 +191,8 @@ Syncer::Syncer(size_t envp_size, const Config &config)
 		itr != tokens.end();
 		++itr
 	){
+		if(itr->empty())
+			continue;
 		destinations_.emplace_back(*itr);
 	}
 	if(destinations_.empty())
@@ -286,7 +290,22 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 				Logging::log.error("Encountered permission error while executing " + exec_bin_);
 				break;
 			default:
-				Logging::log.error("Encountered unknown error while executing " + exec_bin_);
+				int8_t status = WEXITSTATUS(wstatus);
+				if(status > 0)
+					Logging::log.error(
+						"Encountered unknown error while executing " + exec_bin_ + "\n"
+						"Exit code: " + std::to_string(status)
+					);
+				else{
+					char *errno_msg = strerror(-status);
+					if(errno_msg)
+						Logging::log.error("Failed to execute " + exec_bin_ + ": " + errno_msg);
+					else
+						Logging::log.error(
+							"Encountered unknown error while executing " + exec_bin_ + "\n"
+							"Exit code: " + std::to_string(status)
+						);
+				}
 				break;
 		}
 		if(queue.empty() && exited_proc->payload_empty()){
