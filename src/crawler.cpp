@@ -19,6 +19,7 @@
 
 #include "crawler.hpp"
 #include "alert.hpp"
+#include "signal.hpp"
 #include <thread>
 #include <chrono>
 
@@ -31,6 +32,7 @@ Crawler::Crawler(const fs::path &config_path, size_t envp_size, const ConfigOver
 		, last_rctime_(config_.last_rctime_path_)
 		, syncer(envp_size, config_){
 	base_path_ = config_.base_path_;
+	set_signal_handlers(this);
 }
 
 void Crawler::reset(void){
@@ -52,11 +54,11 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime){
 			Logging::log.message("Change detected in " + base_path_.string(), 1);
 			uintmax_t total_bytes = 0;
 			// take snapshot
-			fs::path snap_path = create_snap(new_rctime);
+			snap_path_ = create_snap(new_rctime);
 			// wait for rctime to trickle to root
 			std::this_thread::sleep_for(config_.prop_delay_ms_);
 			// queue files
-			trigger_search(snap_path, total_bytes);
+			trigger_search(snap_path_, total_bytes);
 			if(!set_rctime){
 				std::string msg = "New files to sync: " + std::to_string(file_list_.size());
 				msg += " (" + Logging::log.format_bytes(total_bytes) + ")";
@@ -75,7 +77,7 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime){
 			// clear sync queue
 			reset();
 			// delete snapshot
-			delete_snap(snap_path);
+			delete_snap(snap_path_);
 			// overwrite last_rctime
 			if(!dry_run){
 				last_rctime_.update(new_rctime);
@@ -204,5 +206,11 @@ void Crawler::delete_snap(const fs::path &path) const{
 	boost::system::error_code ec;
 	Logging::log.message("Removing snapshot: " + path.string(), 2);
 	fs::remove(path, ec);
-	if(ec) Logging::log.error("Error creating path: " + path.string());
+	if(ec) Logging::log.error("Error removing path: " + path.string());
+}
+
+void Crawler::cleanup(void) const{
+	last_rctime_.write_last_rctime();
+	if(fs::is_directory(snap_path_))
+		rmdir(snap_path_.c_str());
 }

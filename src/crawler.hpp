@@ -47,7 +47,12 @@ private:
 	fs::path base_path_;
 	/* Local source directory.
 	 */
+	fs::path snap_path_;
+	/* Path to current snapshot.
+	 */
 	Syncer syncer;
+	/* Controls executing the sync program.
+	 */
 public:
 	Crawler(const fs::path &config_path, size_t envp_size, const ConfigOverrides &config_overrides);
 	/* Calls config constructor with
@@ -93,5 +98,8 @@ public:
 	 */
 	void delete_snap(const fs::path &snap_root) const;
 	/* Deletes snapshot directory.
+	 */
+	void cleanup(void) const;
+	/* Clean up actions before exiting.
 	 */
 };

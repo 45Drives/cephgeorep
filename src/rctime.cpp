@@ -19,7 +19,6 @@
 
 #include "rctime.hpp"
 #include "alert.hpp"
-#include "signal.hpp"
 #include <fstream>
 
 extern "C" {
@@ -51,7 +50,6 @@ LastRctime::LastRctime(const fs::path &last_rctime_path) : last_rctime_path_(las
 		init_last_rctime();
 		last_rctime_.tv_sec = last_rctime_.tv_nsec = 0;
 	}
-	set_signal_handlers(this);
 }
 
 LastRctime::~LastRctime(void){
