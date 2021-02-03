@@ -21,8 +21,11 @@
 #include "alert.hpp"
 #include "signal.hpp"
 #include <fstream>
-#include <sys/xattr.h>
-#include <sys/stat.h>
+
+extern "C" {
+	#include <sys/xattr.h>
+	#include <sys/stat.h>
+}
 
 inline bool operator>(const timespec &lhs, const timespec &rhs){
 	return (lhs.tv_sec > rhs.tv_sec) ||

@@ -25,8 +25,11 @@
 #include "config.hpp"
 #include "crawler.hpp"
 #include "alert.hpp"
-#include <getopt.h>
 #include <boost/filesystem.hpp>
+
+extern "C" {
+	#include <getopt.h>
+}
 
 #define VERS "1.2.0"
 

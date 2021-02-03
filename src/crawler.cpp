@@ -19,9 +19,12 @@
 
 #include "crawler.hpp"
 #include "alert.hpp"
-#include <sys/xattr.h>
 #include <thread>
 #include <chrono>
+
+extern "C"{
+	#include <sys/xattr.h>
+}
 
 Crawler::Crawler(const fs::path &config_path, size_t envp_size, const ConfigOverrides &config_overrides)
 		: config_(config_path, config_overrides)
