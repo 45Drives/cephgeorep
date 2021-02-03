@@ -259,8 +259,8 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 				Logging::log.warning(exec_bin_ + " failed to connect to" + *destination_ + "\n"
 				"Is the server running and connected to your network?");
 				if(std::next(destination_) == destinations_.end())
-					Logging::log.error("No more beackup destinations to try.");
-				if((num_ssh_fails = ++num_ssh_fails % nproc) == 0)
+					Logging::log.error("No more backup destinations to try.");
+				if((num_ssh_fails = (num_ssh_fails + 1) % nproc) == 0)
 					++destination_; // increment destination itr if all procs fail
 				break;
 			case NOT_INSTALLED:
