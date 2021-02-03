@@ -44,7 +44,7 @@ void Logger::warning(const std::string &msg) const{
 void Logger::error(const std::string &msg, bool exit_) const{
 	std::cerr << "Error: " << msg << std::endl;
 	if(exit_){
-		signal_handling::cleanup();
+		signal_handling::error_cleanup();
 		exit(EXIT_FAILURE);
 	}
 }

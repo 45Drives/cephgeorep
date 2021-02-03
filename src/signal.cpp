@@ -29,7 +29,8 @@ namespace signal_handling{
 
 void sig_hdlr(int signum){
 	// cleanup from termination
-	signal_handling::cleanup();
+	signal_handling::crawler_->write_last_rctime();
+	signal_handling::crawler_->delete_snap();
 	switch(signum){
 		case SIGINT:
 		case SIGTERM:
@@ -47,6 +48,6 @@ void set_signal_handlers(const Crawler *crawler){
 	signal(SIGQUIT, sig_hdlr);
 }
 
-void signal_handling::cleanup(void){
-	signal_handling::crawler_->cleanup();
+void signal_handling::error_cleanup(void){
+	signal_handling::crawler_->delete_snap();
 }

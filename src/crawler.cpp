@@ -54,7 +54,7 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime){
 			Logging::log.message("Change detected in " + base_path_.string(), 1);
 			uintmax_t total_bytes = 0;
 			// take snapshot
-			snap_path_ = create_snap(new_rctime);
+			create_snap(new_rctime);
 			// wait for rctime to trickle to root
 			std::this_thread::sleep_for(config_.prop_delay_ms_);
 			// queue files
@@ -77,7 +77,7 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime){
 			// clear sync queue
 			reset();
 			// delete snapshot
-			delete_snap(snap_path_);
+			delete_snap();
 			// overwrite last_rctime
 			if(!dry_run){
 				last_rctime_.update(new_rctime);
@@ -96,14 +96,13 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime){
 	if(seed && dry_run) last_rctime_.update(old_rctime_cache);
 }
 
-fs::path Crawler::create_snap(const timespec &rctime) const{
+void Crawler::create_snap(const timespec &rctime){
 	boost::system::error_code ec;
 	std::string pid = std::to_string(getpid());
-	fs::path snap_path = fs::path(base_path_).append(".snap/"+pid+"snapshot"+rctime);
-	Logging::log.message("Creating snapshot: " + snap_path.string(), 2);
-	fs::create_directories(snap_path, ec);
-	if(ec) Logging::log.error("Error creating path: " + snap_path.string());
-	return snap_path;
+	snap_path_ = fs::path(base_path_).append(".snap/"+pid+"snapshot"+rctime);
+	Logging::log.message("Creating snapshot: " + snap_path_.string(), 2);
+	fs::create_directories(snap_path_, ec);
+	if(ec) Logging::log.error("Error creating path: " + snap_path_.string());
 }
 
 void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
@@ -202,15 +201,13 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 	}
 }
 
-void Crawler::delete_snap(const fs::path &path) const{
+void Crawler::delete_snap(void) const{
 	boost::system::error_code ec;
-	Logging::log.message("Removing snapshot: " + path.string(), 2);
-	fs::remove(path, ec);
-	if(ec) Logging::log.error("Error removing path: " + path.string());
+	Logging::log.message("Removing snapshot: " + snap_path_.string(), 2);
+	fs::remove(snap_path_, ec);
+	if(ec) Logging::log.error("Error removing path: " + snap_path_.string());
 }
 
-void Crawler::cleanup(void) const{
+void Crawler::write_last_rctime(void) const{
 	last_rctime_.write_last_rctime();
-	if(fs::is_directory(snap_path_))
-		rmdir(snap_path_.c_str());
 }

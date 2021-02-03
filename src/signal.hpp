@@ -30,7 +30,7 @@ void set_signal_handlers(const Crawler *crawler);
  */
 
 namespace signal_handling{
-	void cleanup(void);
+	void error_cleanup(void);
 	/* Call signal_handling::crawler_->cleanup();
 	 */
 }

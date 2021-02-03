@@ -73,9 +73,8 @@ public:
 	 * taken and the file queuing
 	 * search is triggered.
 	 */
-	fs::path create_snap(const timespec &rctime) const;
-	/* Create snapshot in base directory,
-	 * return snapshot path.
+	void create_snap(const timespec &rctime);
+	/* Create snapshot in base directory
 	 */
 	void trigger_search(const boost::filesystem::path& snap_path, uintmax_t& total_bytes);
 	/* Queues newly modified/created files
@@ -96,10 +95,10 @@ public:
 	 * Keeps tally of filesize in total_bytes.
 	 * This is used if threads > 1.
 	 */
-	void delete_snap(const fs::path &snap_root) const;
+	void delete_snap(void) const;
 	/* Deletes snapshot directory.
 	 */
-	void cleanup(void) const;
-	/* Clean up actions before exiting.
+	void write_last_rctime(void) const;
+	/* Call last_rctime_.write_last_rctime().
 	 */
 };
