@@ -35,7 +35,7 @@
 /* SyncProcess --------------------------------
  */
 
-SyncProcess::SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz)
+SyncProcess::SyncProcess(Syncer *parent, uintmax_t max_bytes_sz)
     : exec_bin_(parent->exec_bin_), exec_flags_(parent->exec_flags_), destination_(parent->destination_){
 	id_ = -1;
 	curr_bytes_sz_ = 0;
@@ -106,7 +106,7 @@ void SyncProcess::sync_batch(){
 	boost::tokenizer<boost::escaped_list_separator<char>> tokens(
 		exec_flags_,
 		boost::escaped_list_separator<char>(
-			std::string(""), std::string(" "), std::string("\"\'")
+			std::string("\\"), std::string(" "), std::string("\"\'")
 		)
 	);
 	for(
@@ -128,7 +128,7 @@ void SyncProcess::sync_batch(){
 		garbage_.push_back(path); // for cleanup
 	}
 	
-	if(!destination_.empty()) argv.push_back((char *)destination_.c_str());
+	if(!destination_->empty()) argv.push_back((char *)destination_->c_str());
 	argv.push_back(NULL);
 	
 	pid_ = fork(); // create child process
@@ -164,9 +164,24 @@ Syncer::Syncer(size_t envp_size, const Config &config)
 				+ exec_flags_.length() + 1 // length of flags
 				+ sizeof(char *) * 2 // size of char pointers
 				+ sizeof(NULL);
-	destination_ = construct_destination(config.remote_user_, config.remote_host_, config.remote_directory_);
-	if(!destination_.empty()){
-		start_arg_sz_ += destination_.length() + 1 + sizeof(char *);
+	boost::tokenizer<boost::escaped_list_separator<char>> tokens(
+		config.destinations_,
+		boost::escaped_list_separator<char>(
+			std::string("\\"), std::string(", "), std::string("\"\'")
+		)
+	);
+	for(
+		boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
+		itr != tokens.end();
+		++itr
+	){
+		destinations_.emplace_back(*itr);
+	}
+	if(destinations_.empty())
+		destinations_.push_back(construct_destination(config.remote_user_, config.remote_host_, config.remote_directory_));
+	destination_ = destinations_.begin();
+	if(!destination_->empty()){
+		start_arg_sz_ += destination_->length() + 1 + sizeof(char *);
 	}
 }
 
@@ -190,7 +205,7 @@ size_t Syncer::get_max_arg_sz(void) const{
 	return arg_max_sz;
 }
 
-void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) const{
+void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 	int wstatus;
 	
 	// cap nproc to between 1 and number of files
@@ -222,6 +237,7 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) con
 		Logging::log.message(std::to_string(proc_itr->payload_sz()) + " bytes", 2);
 		proc_itr->sync_batch();
 	}
+	int num_ssh_fails = 0;
 	while(!procs.empty()){ // while files are remaining in batch queues
 		// wait for a child to change state then relaunch remaining batches
 		pid_t exited_pid = wait(&wstatus);
@@ -237,10 +253,15 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) con
 			case SUCCESS:
 				Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
 				exited_proc->clear_file_list(); // remove synced batch
+				num_ssh_fails = 0;
 				break;
 			case SSH_FAIL:
-				Logging::log.warning(exec_bin_ + " failed to connect to remote backup server.\n"
+				Logging::log.warning(exec_bin_ + " failed to connect to" + *destination_ + "\n"
 				"Is the server running and connected to your network?");
+				if(std::next(destination_) == destinations_.end())
+					Logging::log.error("No more beackup destinations to try.");
+				if((num_ssh_fails = ++num_ssh_fails % nproc) == 0)
+					++destination_; // increment destination itr if all procs fail
 				break;
 			case NOT_INSTALLED:
 				Logging::log.error(exec_bin_ + " is not installed.");

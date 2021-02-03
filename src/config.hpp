@@ -132,6 +132,10 @@ private:
 	fs::path remote_directory_;
 	/* Backup directory to place files in. Optional.
 	 */
+	std::string destinations_;
+	/* List of destinations. Conflicts with remote_user_ || remote_host_ || remote_directory_.
+	 * Used for destination failover.
+	 */
 public:
 	Config(const fs::path &config_path, const ConfigOverrides &config_overrides);
 	/* Construct Config object and load in configuration settings from disk.

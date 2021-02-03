@@ -67,7 +67,7 @@ private:
 	std::string exec_flags_;
 	/* Flags and extra args for program.
 	 */
-	std::string destination_;
+	std::vector<std::string>::iterator &destination_;
 	/* [[<user>@]<host>:][<destination path>]
 	 */
 	std::vector<fs::path> files_;
@@ -77,7 +77,7 @@ private:
 	/* Garbage cleanup for allocated c-strings.
 	 */
 public:
-	SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz);
+	SyncProcess(Syncer *parent, uintmax_t max_bytes_sz);
 	/* Constructor. Grabs members from parent pointer.
 	 */
 	~SyncProcess();
@@ -148,9 +148,10 @@ private:
 	std::string exec_flags_;
 	/* Flags and extra args for program.
 	 */
-	std::string destination_;
+	std::vector<std::string> destinations_;
 	/* [[<user>@]<host>:][<destination path>]
 	 */
+	std::vector<std::string>::iterator destination_;
 public:
 	Syncer(size_t envp_size, const Config &config);
 	/* Determines max_arg_sz_, start_arg_sz_, and constructs destination_.
@@ -164,7 +165,7 @@ public:
 	size_t get_max_arg_sz(void) const;
 	/* Determine max_arg_sz_ from stack limits
 	 */
-	void launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) const;
+	void launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes);
 	/* Creates SyncProcesses and distributes files across each one. Assigns each process an ID then launches
 	 * them in parallel. Waits for processes to return and relaunches if there are files remaining.
 	 */
