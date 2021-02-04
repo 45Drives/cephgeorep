@@ -8,11 +8,9 @@ Ignore Windows Lock = true    # ignore files beginning with "~$"
 Ignore Vim Swap = true        # ignore vim .swp files (.<filename>.swp)
 
 # remote settings
-Destination =                 # one or more backup targets (failover only)
-# list of destinations can be space or comma separated and Destination can be
-# defined multiple times to append more failover targets.
-# Destination format: [[user@]host:][path]
-# Destination = root@backup-gw1:/tank/backup,root@backup-gw2:/tank/backup
+Remote User =                 # user on remote backup machine (optional)
+Remote Host =                 # remote backup machine address/host
+Remote Directory =            # directory in remote backup
 
 # daemon settings
 Exec = rsync                  # program to use for syncing - rsync or scp
