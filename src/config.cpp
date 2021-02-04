@@ -81,6 +81,11 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 			remote_host_ = value;
 		}else if(key == "Remote Directory"){
 			remote_directory_ = fs::path(value);
+		}else if(key == "Destination"){
+			if(destinations_.empty())
+				destinations_ = value;
+			else
+				destinations_ += "," + value;
 		}else if(key == "Metadata Directory"){
 			last_rctime_path_ = fs::path(value).append(LAST_RCTIME_NAME);
 		}else if(key == "Sync Period"){
@@ -151,16 +156,24 @@ void Config::override_fields(const ConfigOverrides &config_overrides){
 void Config::verify(const fs::path &config_path) const{
 	bool errors = false;
 	if(base_path_.empty()){
-		Logging::log.error("config does not contain a search directory (Source Directory)", false);
+		Logging::log.error("Config does not contain a search directory (Source Directory).", false);
 		errors = true;
 	}
-	if(remote_host_.empty()){
-		Logging::log.warning("config does not contain a remote host (Remote Host)");
+	if(!remote_user_.empty()){
+		Logging::log.warning("Remote User field is deprecated. Instead use `Destination = user@host:directory`.");
 		// just warning
 	}
-	if(remote_directory_.empty()){
-		Logging::log.warning("config does not contain a remote destination (Remote Directory)");
+	if(!remote_host_.empty()){
+		Logging::log.warning("Remote Host field is deprecated. Instead use `Destination = user@host:directory`.");
 		// just warning
+	}
+	if(!remote_directory_.empty()){
+		Logging::log.warning("Remote Directory field is deprecated. Instead use `Destination = user@host:directory`.");
+		// just warning
+	}
+	if((!remote_user_.empty() || !remote_host_.empty() || !remote_directory_.empty()) && !destinations_.empty()){
+		Logging::log.error("(Destination) list conflicts with (Remote User, Remote Host, Remote Directory) in config", false);
+		errors = true;
 	}
 	if(last_rctime_path_.empty()){
 		Logging::log.error("config does not contain a metadata path (Metadata Directory)", false);
@@ -213,9 +226,7 @@ void Config::init_config_file(const fs::path &config_path) const{
 	"Ignore Vim Swap = true           # ignore vim .swp files (.<filename>.swp)\n"
 	"\n"
 	"# remote settings\n"
-	"Remote User =                    # user on remote backup machine (optional)\n"
-	"Remote Host =                    # remote backup machine address/host\n"
-	"Remote Directory =               # directory in remote backup\n"
+	"Destination =                    # [[user@]host:][directory] (root@backup:/tank)\n"
 	"\n"
 	"# daemon settings\n"
 	"Exec = rsync                     # program to use for syncing - rsync or scp\n"
@@ -250,6 +261,7 @@ void Config::dump(void) const{
 	ss << "Remote User = " << remote_user_ << std::endl;
 	ss << "Remote Host = " << remote_host_ << std::endl;
 	ss << "Remote Directory = " << remote_directory_.string() << std::endl;
+	ss << "Destination = " << destinations_ << std::endl;
 	ss << std::endl;
 	ss << "daemon settings:" << std::endl;
 	ss << "Exec = " << exec_bin_ << std::endl;
