@@ -1,0 +1,33 @@
+# cephgeorep configuration
+# see `man cephgeorep` for configuration details
+
+# local backup settings
+Source Directory =            # path to the ceph directory you want backed up
+Ignore Hidden = false         # ignore files beginning with "."
+Ignore Windows Lock = true    # ignore files beginning with "~$"
+Ignore Vim Swap = true        # ignore vim .swp files (.<filename>.swp)
+
+# remote settings
+Destination =                 # one or more backup targets (failover only)
+# list of destinations can be space or comma separated and Destination can be
+# defined multiple times to append more failover targets.
+# Destination format: [[user@]host:][path]
+# Destination = root@backup-gw1:/tank/backup,root@backup-gw2:/tank/backup
+
+# daemon settings
+Exec = rsync                  # program to use for syncing - rsync or scp
+Flags = -a --relative         # execution flags for above program (space delim)
+Metadata Directory = /var/lib/cephgeorep/ # put metadata on the ceph cluster if
+                                          # you want to use pacemaker with
+                                          # redundant gateways
+Sync Period = 10              # time in seconds between checks for changes
+Propagation Delay = 100       # time in milliseconds between snapshot and sync
+Processes = 4                 # number of parallel sync processes to launch
+Threads = 8                   # number of worker threads to search for files
+Log Level = 1
+# 0 = minimum logging
+# 1 = basic logging
+# 2 = debug logging
+# Propagation Delay is to account for the limit that Ceph can
+# propagate the modification time of a file all the way back to
+# the root of the sync directory.
