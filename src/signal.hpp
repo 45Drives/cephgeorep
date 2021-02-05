@@ -21,16 +21,16 @@
 
 #include "rctime.hpp"
 
-namespace signal_handling{
-	extern const LastRctime *last_rctime_;
-	/* Pointer to last_rctime_ member of Crawler.
-	 * Used to hook Crawler.last_rctime_.write_last_rctime() into
-	 * the signal handler for SIGINT, SIGQUIT, and SIGTERM.
-	 */
-}
+class Crawler;
 
-void set_signal_handlers(const LastRctime *last_rctime);
-/* Save pointer to crawler.last_rctime_ in signal_handling::last_rctime_
+void set_signal_handlers(const Crawler *crawler);
+/* Save pointer to crawler in signal_handling::crawler_
  * and call signal() to set up each signal to be handled by the
  * signal handler in signal.cpp.
  */
+
+namespace signal_handling{
+	void error_cleanup(void);
+	/* Call signal_handling::crawler_->cleanup();
+	 */
+}

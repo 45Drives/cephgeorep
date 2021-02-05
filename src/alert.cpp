@@ -18,6 +18,7 @@
  */
 
 #include "alert.hpp"
+#include "signal.hpp"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -42,7 +43,10 @@ void Logger::warning(const std::string &msg) const{
 
 void Logger::error(const std::string &msg, bool exit_) const{
 	std::cerr << "Error: " << msg << std::endl;
-	if(exit_) exit(EXIT_FAILURE);
+	if(exit_){
+		signal_handling::error_cleanup();
+		exit(EXIT_FAILURE);
+	}
 }
 
 #define N_INDEX 9

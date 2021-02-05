@@ -19,22 +19,27 @@
 
 #include "crawler.hpp"
 #include "alert.hpp"
-#include <sys/xattr.h>
+#include "signal.hpp"
 #include <thread>
 #include <chrono>
+
+extern "C"{
+	#include <sys/xattr.h>
+}
 
 Crawler::Crawler(const fs::path &config_path, size_t envp_size, const ConfigOverrides &config_overrides)
 		: config_(config_path, config_overrides)
 		, last_rctime_(config_.last_rctime_path_)
 		, syncer(envp_size, config_){
 	base_path_ = config_.base_path_;
+	set_signal_handlers(this);
 }
 
 void Crawler::reset(void){
 	file_list_.clear();
 }
 
-void Crawler::poll_base(bool seed, bool dry_run){
+void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime){
 	timespec new_rctime = {0};
 	timespec old_rctime_cache = {0};
 	std::chrono::steady_clock::duration last_rctime_flush_period = std::chrono::hours(1);
@@ -49,12 +54,12 @@ void Crawler::poll_base(bool seed, bool dry_run){
 			Logging::log.message("Change detected in " + base_path_.string(), 1);
 			uintmax_t total_bytes = 0;
 			// take snapshot
-			fs::path snap_path = create_snap(new_rctime);
+			create_snap(new_rctime);
 			// wait for rctime to trickle to root
 			std::this_thread::sleep_for(config_.prop_delay_ms_);
 			// queue files
-			trigger_search(snap_path, total_bytes);
-			{
+			trigger_search(snap_path_, total_bytes);
+			if(!set_rctime){
 				std::string msg = "New files to sync: " + std::to_string(file_list_.size());
 				msg += " (" + Logging::log.format_bytes(total_bytes) + ")";
 				Logging::log.message(msg, 1);
@@ -65,14 +70,14 @@ void Crawler::poll_base(bool seed, bool dry_run){
 					std::string msg = config_.exec_bin_ + " " + config_.exec_flags_ + " <file list> ";
 					msg += syncer.construct_destination(config_.remote_user_, config_.remote_host_, config_.remote_directory_);
 					Logging::log.message(msg, 1);
-				}else{
+				}else if(!set_rctime){
 					syncer.launch_procs(file_list_, total_bytes);
 				}
 			}
 			// clear sync queue
 			reset();
 			// delete snapshot
-			delete_snap(snap_path);
+			delete_snap();
 			// overwrite last_rctime
 			if(!dry_run){
 				last_rctime_.update(new_rctime);
@@ -85,20 +90,19 @@ void Crawler::poll_base(bool seed, bool dry_run){
 		}
 		auto end = std::chrono::steady_clock::now();
 		std::chrono::seconds elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-		if(elapsed < config_.sync_period_s_ && !seed && !dry_run) // if it took longer than sync freq, don't wait
+		if(elapsed < config_.sync_period_s_ && !seed && !dry_run && !set_rctime) // if it took longer than sync freq, don't wait
 			std::this_thread::sleep_for(config_.sync_period_s_ - elapsed);
-	}while(!seed && !dry_run);
+	}while(!seed && !dry_run && !set_rctime);
 	if(seed && dry_run) last_rctime_.update(old_rctime_cache);
 }
 
-fs::path Crawler::create_snap(const timespec &rctime) const{
+void Crawler::create_snap(const timespec &rctime){
 	boost::system::error_code ec;
 	std::string pid = std::to_string(getpid());
-	fs::path snap_path = fs::path(base_path_).append(".snap/"+pid+"snapshot"+rctime);
-	Logging::log.message("Creating snapshot: " + snap_path.string(), 2);
-	fs::create_directories(snap_path, ec);
-	if(ec) Logging::log.error("Error creating path: " + snap_path.string());
-	return snap_path;
+	snap_path_ = fs::path(base_path_).append(".snap/"+pid+"snapshot"+rctime);
+	Logging::log.message("Creating snapshot: " + snap_path_.string(), 2);
+	fs::create_directories(snap_path_, ec);
+	if(ec) Logging::log.error("Error creating path: " + snap_path_.string());
 }
 
 void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
@@ -171,22 +175,23 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 		fs::path node;
 		queue.pop(node, threads_running);
 		if(queue.done() && node.empty()) return;
-		// put children into queue
-		if(fs::is_directory(node)){
+		fs::file_status status = fs::symlink_status(node);
+		if(fs::is_directory(status)){
+			// put children into queue
 			for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
 				fs::directory_entry child = *itr;
 				if(ignore_entry(child)) continue;
 				queue.push(child);
 			}
-		}else if(fs::is_regular_file(node)){
+		}else if(fs::is_regular_file(status)){
 			total_bytes += fs::file_size(node);
 			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node, snap_root);
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
 				file_list_.push_back(formatted_path);
 			}
-		}else if(fs::is_symlink(node)){
-			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node, snap_root);
+		}else if(fs::is_symlink(status)){
+			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node.parent_path(), snap_root) / node.filename();
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
 				file_list_.push_back(formatted_path);
@@ -197,9 +202,13 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 	}
 }
 
-void Crawler::delete_snap(const fs::path &path) const{
+void Crawler::delete_snap(void) const{
 	boost::system::error_code ec;
-	Logging::log.message("Removing snapshot: " + path.string(), 2);
-	fs::remove(path, ec);
-	if(ec) Logging::log.error("Error creating path: " + path.string());
+	Logging::log.message("Removing snapshot: " + snap_path_.string(), 2);
+	fs::remove(snap_path_, ec);
+	if(ec) Logging::log.error("Error removing path: " + snap_path_.string());
+}
+
+void Crawler::write_last_rctime(void) const{
+	last_rctime_.write_last_rctime();
 }

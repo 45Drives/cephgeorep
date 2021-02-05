@@ -25,8 +25,13 @@
 #include "config.hpp"
 #include "crawler.hpp"
 #include "alert.hpp"
-#include <getopt.h>
 #include <boost/filesystem.hpp>
+
+extern "C" {
+	#include <getopt.h>
+}
+
+#define VERS "1.2.0"
 
 namespace fs = boost::filesystem;
 
@@ -58,8 +63,11 @@ inline void usage(){
 		"  -n --nproc <# of processes>   - number of sync processes to run in parallel\n"
 		"  -q --quiet                    - set log level to 0\n"
 		"  -s --seed                     - send all files to seed destination\n"
+		"  -S --set-last-change          - prime last change time to only sync changes\n"
+		"                                  that occur after running with this flag.\n"
 		"  -t --threads <# of threads>   - number of worker threads to search for files\n"
 		"  -v --verbose                  - set log level to 2\n"
+		"  --version                     - print version and exit\n"
 		, 1
 	);
 }
@@ -69,24 +77,31 @@ int main(int argc, char *argv[], char *envp[]){
 	int option_ind = 0;
 	bool seed = false; // sync everything but don't loop
 	bool dry_run = false; // don't actually sync
+	bool set_rctime = false; // prime last_rctime so only changes after running will be sent
+	int print_vers_and_exit = 0;
 	fs::path config_path = DEFAULT_CONFIG_PATH;
 	
 	ConfigOverrides config_overrides;
 	
 	static struct option long_options[] = {
-		{"config",       required_argument, 0, 'c'},
-		{"help",         no_argument,       0, 'h'},
-		{"verbose",      no_argument,       0, 'v'},
-		{"quiet",        no_argument,       0, 'q'},
-		{"seed",         no_argument,       0, 's'},
-		{"nproc",        required_argument, 0, 'n'},
-		{"dry-run",      no_argument,       0, 'd'},
-		{"threads",      required_argument, 0, 't'},
+		{"config",          required_argument, 0, 'c'},
+		{"help",            no_argument,       0, 'h'},
+		{"verbose",         no_argument,       0, 'v'},
+		{"quiet",           no_argument,       0, 'q'},
+		{"seed",            no_argument,       0, 's'},
+		{"set-last-change", no_argument,       0, 'S'},
+		{"nproc",           required_argument, 0, 'n'},
+		{"dry-run",         no_argument,       0, 'd'},
+		{"threads",         required_argument, 0, 't'},
+		{"version",         no_argument,       &print_vers_and_exit, 1},
 		{0, 0, 0, 0}
 	};
 	
-	while((opt = getopt_long(argc, argv, "c:hvqsn:dt:", long_options, &option_ind)) != -1){
+	while((opt = getopt_long(argc, argv, "c:hvqsSn:dt:", long_options, &option_ind)) != -1){
 		switch(opt){
+			case 0:
+				// flag set
+				break;
 			case 'c':
 				config_path = fs::path(optarg);
 				break;
@@ -122,6 +137,9 @@ int main(int argc, char *argv[], char *envp[]){
 					abort();
 				}
 				break;
+			case 'S':
+				set_rctime = true;
+				break;
 			case '?':
 				break; // getopt_long prints errors
 			default:
@@ -129,8 +147,13 @@ int main(int argc, char *argv[], char *envp[]){
 		}
 	}
 	
+	if(print_vers_and_exit){
+		Logging::log.message("cephgeorep v" VERS, 1);
+		return 0;
+	}
+	
 	Crawler crawler(config_path, get_env_size(envp), config_overrides);
-	crawler.poll_base(seed, dry_run);
+	crawler.poll_base(seed, dry_run, set_rctime);
 	
 	return 0;
 }

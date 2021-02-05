@@ -18,28 +18,36 @@
  */
 
 #include "signal.hpp"
+#include "crawler.hpp"
 #include <csignal>
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
 
 namespace signal_handling{
-	const LastRctime *last_rctime_;
+	const Crawler *crawler_;
 }
 
 void sig_hdlr(int signum){
+	// cleanup from termination
+	signal_handling::crawler_->write_last_rctime();
+	signal_handling::crawler_->delete_snap();
 	switch(signum){
 		case SIGINT:
 		case SIGTERM:
 		case SIGQUIT:
-			// cleanup from termination
-			signal_handling::last_rctime_->write_last_rctime();
 			exit(EXIT_SUCCESS);
 		default:
 			exit(signum);
 	}
 }
 
-void set_signal_handlers(const LastRctime *last_rctime){
-	signal_handling::last_rctime_ = last_rctime;
+void set_signal_handlers(const Crawler *crawler){
+	signal_handling::crawler_ = crawler;
 	signal(SIGINT, sig_hdlr);
 	signal(SIGTERM, sig_hdlr);
 	signal(SIGQUIT, sig_hdlr);
+}
+
+void signal_handling::error_cleanup(void){
+	signal_handling::crawler_->delete_snap();
 }
