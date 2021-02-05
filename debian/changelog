@@ -1,3 +1,18 @@
+cephgeorep (1.2.0-1focal) focal; urgency=low
+
+ * Added -S --set-last-change flag to prime the last change time to only 
+   sync changes that occur after running with this flag.
+
+ * Added --version flag to print version and exit.
+
+ * Implemented destination failover with multiple destinations
+   when SSH fails. Output of rsync is muted to clean up log messages.
+
+ * Last rctime now flushes to disk and snap path is deleted in the
+   signal handler, and before exiting in Logging::log.error().
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 02 Feb 2021 3:29:00 -0400
+
 cephgeorep (1.1.4-1focal) focal; urgency=medium
 
   * Fixed crash with self-referencing symlinks.
