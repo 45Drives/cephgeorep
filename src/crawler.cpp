@@ -175,22 +175,23 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 		fs::path node;
 		queue.pop(node, threads_running);
 		if(queue.done() && node.empty()) return;
-		// put children into queue
-		if(fs::is_directory(node)){
+		fs::file_status status = fs::symlink_status(node);
+		if(fs::is_directory(status)){
+			// put children into queue
 			for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
 				fs::directory_entry child = *itr;
 				if(ignore_entry(child)) continue;
 				queue.push(child);
 			}
-		}else if(fs::is_regular_file(node)){
+		}else if(fs::is_regular_file(status)){
 			total_bytes += fs::file_size(node);
 			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node, snap_root);
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
 				file_list_.push_back(formatted_path);
 			}
-		}else if(fs::is_symlink(node)){
-			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node, snap_root);
+		}else if(fs::is_symlink(status)){
+			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node.parent_path(), snap_root) / node.filename();
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
 				file_list_.push_back(formatted_path);
