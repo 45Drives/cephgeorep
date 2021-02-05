@@ -83,9 +83,9 @@ bool LastRctime::is_newer(const fs::path &path) const{
 
 timespec LastRctime::get_rctime(const fs::path &path) const{
 	timespec rctime;
-	if(is_directory(path)){
+	if(is_directory(fs::symlink_status(path))){
 		char value[XATTR_SIZE];
-		if(getxattr(path.c_str(), "ceph.dir.rctime", value, XATTR_SIZE) == -1){
+		if(lgetxattr(path.c_str(), "ceph.dir.rctime", value, XATTR_SIZE) == -1){
 			Logging::log.warning("Cannot read ceph.dir.rctime of " + path.string() + "\nIgnoring " + path.string());
 			rctime.tv_sec = 0;
 			rctime.tv_nsec = 0;

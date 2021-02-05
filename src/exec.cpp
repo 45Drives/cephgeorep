@@ -70,10 +70,15 @@ uintmax_t SyncProcess::payload_count(void) const{
 void SyncProcess::add(const fs::path &file){
 	files_.emplace_back(file);
 	curr_arg_sz_ += strlen(file.c_str()) + 1 + sizeof(char *);
-	curr_bytes_sz_ += fs::file_size(file);
+	fs::file_status status = fs::symlink_status(file);
+	if(!fs::is_symlink(status))
+		curr_bytes_sz_ += fs::file_size(file);
 }
 
 bool SyncProcess::full_test(const fs::path &file) const{
+	fs::file_status status = fs::symlink_status(file);
+	if(fs::is_symlink(status))
+		return (curr_arg_sz_ + strlen(file.c_str()) + 1 + sizeof(char *) >= max_arg_sz_);
 	return (curr_arg_sz_ + strlen(file.c_str()) + 1 + sizeof(char *) >= max_arg_sz_)
 	|| (curr_bytes_sz_ + fs::file_size(file) > max_bytes_sz_);
 }
@@ -234,6 +239,12 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 	
 	// sort files from largest to smallest to get largest files out of the way first
 	queue.sort([](const fs::path &first, const fs::path &second){
+		fs::file_status first_status = fs::symlink_status(first);
+		fs::file_status second_status = fs::symlink_status(second);
+		if(fs::is_symlink(first_status))
+			return false;
+		if(fs::is_symlink(second_status))
+			return true;
 		return fs::file_size(first) > fs::file_size(second);
 	});
 	
