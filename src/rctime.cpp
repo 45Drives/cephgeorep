@@ -19,10 +19,12 @@
 
 #include "rctime.hpp"
 #include "alert.hpp"
-#include "signal.hpp"
 #include <fstream>
-#include <sys/xattr.h>
-#include <sys/stat.h>
+
+extern "C" {
+	#include <sys/xattr.h>
+	#include <sys/stat.h>
+}
 
 inline bool operator>(const timespec &lhs, const timespec &rhs){
 	return (lhs.tv_sec > rhs.tv_sec) ||
@@ -48,7 +50,6 @@ LastRctime::LastRctime(const fs::path &last_rctime_path) : last_rctime_path_(las
 		init_last_rctime();
 		last_rctime_.tv_sec = last_rctime_.tv_nsec = 0;
 	}
-	set_signal_handlers(this);
 }
 
 LastRctime::~LastRctime(void){

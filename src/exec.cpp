@@ -17,25 +17,22 @@
  *    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//#define DEBUG_BATCHES
-
 #include "exec.hpp"
 #include <algorithm>
 #include <boost/tokenizer.hpp>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/resource.h>
 
-#ifdef DEBUG_BATCHES
-#include <iostream>
-#endif
-
-//#define MAX_SZ_LIM 3*(8*1024*1024)/4
+extern "C" {
+	#include <unistd.h>
+	#include <sys/wait.h>
+	#include <sys/resource.h>
+	#include <fcntl.h>
+	#include <string.h>
+}
 
 /* SyncProcess --------------------------------
  */
 
-SyncProcess::SyncProcess(const Syncer *parent, uintmax_t max_bytes_sz)
+SyncProcess::SyncProcess(Syncer *parent, uintmax_t max_bytes_sz)
     : exec_bin_(parent->exec_bin_), exec_flags_(parent->exec_flags_), destination_(parent->destination_){
 	id_ = -1;
 	curr_bytes_sz_ = 0;
@@ -103,6 +100,7 @@ void SyncProcess::consume_one(std::list<fs::path> &queue){
 }
 
 void SyncProcess::sync_batch(){
+	sending_to_ = *destination_;
 	std::vector<char *> argv;
 	
 	argv.push_back((char *)exec_bin_.c_str());
@@ -111,7 +109,7 @@ void SyncProcess::sync_batch(){
 	boost::tokenizer<boost::escaped_list_separator<char>> tokens(
 		exec_flags_,
 		boost::escaped_list_separator<char>(
-			std::string(""), std::string(" "), std::string("\"\'")
+			std::string("\\"), std::string(" "), std::string("\"\'")
 		)
 	);
 	for(
@@ -133,7 +131,7 @@ void SyncProcess::sync_batch(){
 		garbage_.push_back(path); // for cleanup
 	}
 	
-	if(!destination_.empty()) argv.push_back((char *)destination_.c_str());
+	if(!destination_->empty()) argv.push_back((char *)destination_->c_str());
 	argv.push_back(NULL);
 	
 	pid_ = fork(); // create child process
@@ -142,8 +140,15 @@ void SyncProcess::sync_batch(){
 			Logging::log.error("Forking failed");
 			break;
 		case 0: // child process
-			execvp(argv[0],&argv[0]);
-			Logging::log.error("Failed to execute " + exec_bin_);
+			{
+				int null_fd = open("/dev/null", O_WRONLY);
+				dup2(null_fd, 1);
+				dup2(null_fd, 2);
+				close(null_fd);
+				execvp(argv[0],&argv[0]);
+				int execvp_errno = -errno;
+				exit(execvp_errno);
+			}
 			break;
 		default: // parent process
 			Logging::log.message(std::to_string(pid_) + " started.", 2);
@@ -155,6 +160,14 @@ void SyncProcess::clear_file_list(void){
 	files_.clear();
 	curr_bytes_sz_ = 0;
 	curr_arg_sz_ = start_arg_sz_;
+}
+
+bool SyncProcess::payload_empty(void) const{
+	return files_.empty();
+}
+
+const std::string &SyncProcess::destination(void) const{
+	return sending_to_;
 }
 
 /* Syncer --------------------------------
@@ -169,9 +182,26 @@ Syncer::Syncer(size_t envp_size, const Config &config)
 				+ exec_flags_.length() + 1 // length of flags
 				+ sizeof(char *) * 2 // size of char pointers
 				+ sizeof(NULL);
-	destination_ = construct_destination(config.remote_user_, config.remote_host_, config.remote_directory_);
-	if(!destination_.empty()){
-		start_arg_sz_ += destination_.length() + 1 + sizeof(char *);
+	boost::tokenizer<boost::escaped_list_separator<char>> tokens(
+		config.destinations_,
+		boost::escaped_list_separator<char>(
+			std::string("\\"), std::string(", "), std::string("\"\'")
+		)
+	);
+	for(
+		boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
+		itr != tokens.end();
+		++itr
+	){
+		if(itr->empty())
+			continue;
+		destinations_.emplace_back(*itr);
+	}
+	if(destinations_.empty())
+		destinations_.push_back(construct_destination(config.remote_user_, config.remote_host_, config.remote_directory_));
+	destination_ = destinations_.begin();
+	if(!destination_->empty()){
+		start_arg_sz_ += destination_->length() + 1 + sizeof(char *);
 	}
 }
 
@@ -195,7 +225,7 @@ size_t Syncer::get_max_arg_sz(void) const{
 	return arg_max_sz;
 }
 
-void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) const{
+void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 	int wstatus;
 	
 	// cap nproc to between 1 and number of files
@@ -233,51 +263,85 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes) con
 		Logging::log.message(std::to_string(proc_itr->payload_sz()) + " bytes", 2);
 		proc_itr->sync_batch();
 	}
+	int num_ssh_fails_to_inc = 0; // increment destination_ when ssh fails and this is 0
 	while(!procs.empty()){ // while files are remaining in batch queues
 		// wait for a child to change state then relaunch remaining batches
 		pid_t exited_pid = wait(&wstatus);
-		// find which object PID belongs to
-		std::list<SyncProcess>::iterator exited_proc = std::find_if (
-			procs.begin(), procs.end(),
-			[&exited_pid](const SyncProcess &proc){
-				return proc.pid() == exited_pid;
-			}
-		);
-		// check exit code
-		switch(WEXITSTATUS(wstatus)){
-			case SUCCESS:
-				Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
-				exited_proc->clear_file_list(); // remove synced batch
-				break;
-			case SSH_FAIL:
-				Logging::log.warning(exec_bin_ + " failed to connect to remote backup server.\n"
-				"Is the server running and connected to your network?");
-				break;
-			case NOT_INSTALLED:
-				Logging::log.error(exec_bin_ + " is not installed.");
-				break;
-			case PERM_DENY:
-				Logging::log.error("Encountered permission error while executing " + exec_bin_);
-				break;
-			default:
-				Logging::log.error("Encountered unknown error while executing " + exec_bin_);
-				break;
-		}
-		if(queue.empty() && exited_proc->payload_sz() == 0){
-			{
-				std::string msg = "done.";
-				if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
-				Logging::log.message(msg, 1);
-			}
-			procs.erase(exited_proc);
+		if(exited_pid == -1){
+			Logging::log.error("No children to wait for");
 		}else{
-			if(!queue.empty()) exited_proc->consume(queue);
-			{
-				std::string msg = "Launching " + exec_bin_ + " " + exec_flags_ + " with " + std::to_string(exited_proc->payload_count()) + " files.";
-				if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
-				Logging::log.message(msg, 1);
+			// find which object PID belongs to
+			std::list<SyncProcess>::iterator exited_proc = std::find_if (
+				procs.begin(), procs.end(),
+				[&exited_pid](const SyncProcess &proc){
+					return proc.pid() == exited_pid;
+				}
+			);
+			// check exit code
+			switch(WEXITSTATUS(wstatus)){
+				case SUCCESS:
+					Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
+					exited_proc->clear_file_list(); // remove synced batch
+					break;
+				case SSH_FAIL:
+					{
+						std::string msg = exec_bin_ + " failed to connect to " + exited_proc->destination() + ". Is the server running and connected to your network?";
+						if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
+						Logging::log.warning(msg);
+					}
+					if(num_ssh_fails_to_inc == 0){
+						if(std::next(destination_) == destinations_.end())
+							Logging::log.error("No more backup destinations to try.");
+						Logging::log.message("Trying next destination", 1);
+						++destination_; // increment destination itr if all procs fail
+						num_ssh_fails_to_inc = nproc - 1;
+					}else{
+						--num_ssh_fails_to_inc;
+					}
+					break;
+				case NOT_INSTALLED:
+					Logging::log.error(exec_bin_ + " is not installed.");
+					break;
+				case PERM_DENY:
+					Logging::log.error("Encountered permission error while executing " + exec_bin_);
+					break;
+				default:
+					int8_t status = WEXITSTATUS(wstatus);
+					if(status > 0)
+						Logging::log.error(
+							"Encountered unknown error while executing " + exec_bin_ + "\n"
+							"Exit code: " + std::to_string(status)
+						);
+					else{
+						char *errno_msg = strerror(-status);
+						if(errno_msg)
+							Logging::log.error("Failed to execute " + exec_bin_ + ": " + errno_msg);
+						else
+							Logging::log.error(
+								"Encountered unknown error while executing " + exec_bin_ + "\n"
+								"Exit code: " + std::to_string(status)
+							);
+					}
+					break;
 			}
-			exited_proc->sync_batch();
+			if(queue.empty() && exited_proc->payload_empty()){
+				{
+					std::string msg = "done.";
+					if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
+					Logging::log.message(msg, 1);
+				}
+				procs.erase(exited_proc);
+			}else if(exited_proc->payload_empty()){
+				if(!queue.empty()) exited_proc->consume(queue);
+				{
+					std::string msg = "Launching " + exec_bin_ + " " + exec_flags_ + " with " + std::to_string(exited_proc->payload_count()) + " files.";
+					if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
+					Logging::log.message(msg, 1);
+				}
+				exited_proc->sync_batch();
+			}else{
+				exited_proc->sync_batch();
+			}
 		}
 	}
 }

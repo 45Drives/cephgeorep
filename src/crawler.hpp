@@ -47,7 +47,12 @@ private:
 	fs::path base_path_;
 	/* Local source directory.
 	 */
+	fs::path snap_path_;
+	/* Path to current snapshot.
+	 */
 	Syncer syncer;
+	/* Controls executing the sync program.
+	 */
 public:
 	Crawler(const fs::path &config_path, size_t envp_size, const ConfigOverrides &config_overrides);
 	/* Calls config constructor with
@@ -61,16 +66,15 @@ public:
 	/* Clear file_list_ and set
 	 * payload_bytes_ to 0.
 	 */
-	void poll_base(bool seed, bool dry_run);
+	void poll_base(bool seed, bool dry_run, bool set_rctime);
 	/* Main loop of program.
 	 * Polls for change in root sync path,
 	 * if change detected, a snapshot is
 	 * taken and the file queuing
 	 * search is triggered.
 	 */
-	fs::path create_snap(const timespec &rctime) const;
-	/* Create snapshot in base directory,
-	 * return snapshot path.
+	void create_snap(const timespec &rctime);
+	/* Create snapshot in base directory
 	 */
 	void trigger_search(const boost::filesystem::path& snap_path, uintmax_t& total_bytes);
 	/* Queues newly modified/created files
@@ -91,7 +95,10 @@ public:
 	 * Keeps tally of filesize in total_bytes.
 	 * This is used if threads > 1.
 	 */
-	void delete_snap(const fs::path &snap_root) const;
+	void delete_snap(void) const;
 	/* Deletes snapshot directory.
+	 */
+	void write_last_rctime(void) const;
+	/* Call last_rctime_.write_last_rctime().
 	 */
 };

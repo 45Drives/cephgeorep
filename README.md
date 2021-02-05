@@ -133,7 +133,7 @@ Processes = 1                 # number of parallel sync processes to launch
 Threads = 8                   # number of worker threads to search for files
 Log Level = 1
 ```
-With this setup, `cephfssynd` will call the s3cmd wrapper script, which in turn calls `s3cmd put ...` for each new file passed to it by `cephfssyncd`, maintaining the directory tree hierarchy.
+With this setup, `cephfssyncd` will call the s3cmd wrapper script, which in turn calls `s3cmd put ...` for each new file passed to it by `cephfssyncd`, maintaining the directory tree hierarchy.
 
 ## Notes
 * If your backup server is down, cephfssyncd will try to launch rsync or scp and fail, however it will retry. All new files in the server created while cephfssyncd is waiting for rsync or scp to succeed will be synced on the next cycle.  
