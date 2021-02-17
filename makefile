@@ -65,4 +65,4 @@ rm-man-pages:
 
 inst-config:
 	mkdir -p $(DESTDIR)/etc
-	-cp doc/cephfssyncd.conf.template $(DESTDIR)/etc/cephfssyncd.conf
+	cp -n doc/cephfssyncd.conf.template $(DESTDIR)/etc/cephfssyncd.conf
