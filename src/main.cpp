@@ -96,7 +96,7 @@ int main(int argc, char *argv[], char *envp[]){
 		{0, 0, 0, 0}
 	};
 	
-	while((opt = getopt_long(argc, argv, "c:hvqsSn:dt:", long_options, &option_ind)) != -1){
+	while((opt = getopt_long(argc, argv, "c:hvqsSn:dt:V", long_options, &option_ind)) != -1){
 		switch(opt){
 			case 0:
 				// flag set
