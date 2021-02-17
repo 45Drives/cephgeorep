@@ -22,6 +22,7 @@
  * 
  */
 
+#include "version.hpp"
 #include "config.hpp"
 #include "crawler.hpp"
 #include "alert.hpp"
@@ -30,8 +31,6 @@
 extern "C" {
 	#include <getopt.h>
 }
-
-#define VERS "1.2.0"
 
 namespace fs = boost::filesystem;
 
@@ -148,7 +147,7 @@ int main(int argc, char *argv[], char *envp[]){
 	}
 	
 	if(print_vers_and_exit){
-		Logging::log.message("cephgeorep v" VERS, 1);
+		Logging::log.message("cephgeorep " VERS, 1);
 		return 0;
 	}
 	
