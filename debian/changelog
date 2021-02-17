@@ -8,6 +8,8 @@ cephgeorep (1.2.1-1focal) focal; urgency=low
 
   * add -V flag along with --version
 
+  * add bash tab completion script
+
  -- Josh Boudreau <jboudreau@45drives.com>  Wed, 17 Feb 2021 11:35:00 -0400
 
 cephgeorep (1.2.0-1focal) focal; urgency=low

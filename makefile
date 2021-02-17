@@ -33,7 +33,7 @@ clean-target:
 clean-build:
 	-rm -f src/*.o
 
-install: all inst-man-pages inst-config
+install: all inst-man-pages inst-config inst-completion
 	mkdir -p $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)/lib/systemd/system
 	mkdir -p $(DESTDIR)/usr/bin
@@ -43,7 +43,7 @@ install: all inst-man-pages inst-config
 	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
 	-systemctl daemon-reload
 
-uninstall: rm-man-pages
+uninstall: rm-man-pages rm-completion
 	-systemctl disable --now cephfssyncd
 	-rm -f $(DESTDIR)$(PREFIX)/$(TARGET)
 	-rm -f $(DESTDIR)$(PREFIX)/s3wrap.sh
@@ -66,3 +66,11 @@ rm-man-pages:
 inst-config:
 	mkdir -p $(DESTDIR)/etc
 	cp -n doc/cephfssyncd.conf.template $(DESTDIR)/etc/cephfssyncd.conf
+
+inst-completion:
+	mkdir -p $(DESTDIR)/usr/share/bash-completion/completions
+	cp doc/completion/cephfssyncd.bash-completion $(DESTDIR)/usr/share/bash-completion/completions/cephfssyncd
+
+rm-completion:
+	-rm -f $(DESTDIR)/usr/share/bash-completion/completions/cephfssyncd
+
