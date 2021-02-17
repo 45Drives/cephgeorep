@@ -101,8 +101,11 @@ Flags:
   -n --nproc <# of processes>   - number of sync processes to run in parallel
   -q --quiet                    - set log level to 0
   -s --seed                     - send all files to seed destination
+  -S --set-last-change          - prime last change time to only sync changes
+                                  that occur after running with this flag.
   -t --threads <# of threads>   - number of worker threads to search for files
   -v --verbose                  - set log level to 2
+  -V --version                  - print version and exit
 ```
 Alternate configuration files can be specified using the `-c --config` flag, which is useful for running multiple instances of cephfssyncd on the same system. `-n --nproc`, `-q --quiet`, `-t --threads` and `-v --verbose` are used to override options from the configuration file. `-s --seed` is used for sending every file to the destination regardless of how old the file is. `-d --dry-run` will run the daemon without actually syncing any files to give the user an idea of how many files will be synced if actually ran. `-d --dry-run` combined with `-v --verbose` will also list all files that would be synced.
 ## Usage with s3 Buckets

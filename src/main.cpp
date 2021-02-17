@@ -66,7 +66,7 @@ inline void usage(){
 		"                                  that occur after running with this flag.\n"
 		"  -t --threads <# of threads>   - number of worker threads to search for files\n"
 		"  -v --verbose                  - set log level to 2\n"
-		"  --version                     - print version and exit\n"
+		"  -V --version                  - print version and exit\n"
 		, 1
 	);
 }
@@ -77,7 +77,7 @@ int main(int argc, char *argv[], char *envp[]){
 	bool seed = false; // sync everything but don't loop
 	bool dry_run = false; // don't actually sync
 	bool set_rctime = false; // prime last_rctime so only changes after running will be sent
-	int print_vers_and_exit = 0;
+	bool print_vers_and_exit = false;
 	fs::path config_path = DEFAULT_CONFIG_PATH;
 	
 	ConfigOverrides config_overrides;
@@ -92,7 +92,7 @@ int main(int argc, char *argv[], char *envp[]){
 		{"nproc",           required_argument, 0, 'n'},
 		{"dry-run",         no_argument,       0, 'd'},
 		{"threads",         required_argument, 0, 't'},
-		{"version",         no_argument,       &print_vers_and_exit, 1},
+		{"version",         no_argument,       0, 'V'},
 		{0, 0, 0, 0}
 	};
 	
@@ -138,6 +138,9 @@ int main(int argc, char *argv[], char *envp[]){
 				break;
 			case 'S':
 				set_rctime = true;
+				break;
+			case 'V':
+				print_vers_and_exit = true;
 				break;
 			case '?':
 				break; // getopt_long prints errors
