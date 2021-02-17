@@ -17,7 +17,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
          libstdc++6,
          libboost-filesystem-dev | libboost-all-dev,
          libboost-system-dev | libboost-all-dev,
-Recommends: rsync
+Recommends: rsync,
+            bash-completion
 Description: Efficient unidirectional remote backup daemon for CephFS.
  For use with a distributed Ceph File System cluster to georeplicate files
  to a remote backup server. This daemon takes advantage of Ceph's rctime
