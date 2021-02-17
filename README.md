@@ -23,7 +23,7 @@ Since the binary is statically linked, no boost runtime libraries are needed on 
 * `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.1.4/cephgeorep-1.1.4-1.el7.x86_64.rpm`
 #### Ubuntu
 * `wget https://github.com/45Drives/cephgeorep/releases/download/v1.1.4/cephgeorep_1.1.4-1focal_amd64.deb`
-* `dpkg -i cephgeorep_1.1.2-1_amd64.deb`
+* `dpkg -i cephgeorep_1.1.4-1focal_amd64.deb`
 
 ### Installing from Source
 * `yum install make gcc gcc-c++ boost boost-devel rsync`
@@ -66,7 +66,7 @@ Log Level = 1
 # propagate the modification time of a file all the way back to
 # the root of the sync directory.
 ```
-You can also specify a different config file with the command line argument `-c` or `--config`, i.e. `cephfssynd -c /alternate/path/to/config.conf`. If you are planning on running multiple instances of `cephfssyncd` with different config files, be sure to have unique paths for `LAST_RCTIME_DIR` for each config.  
+You can also specify a different config file with the command line argument `-c` or `--config`, i.e. `cephfssynd -c /alternate/path/to/config.conf`. If you are planning on running multiple instances of `cephfssyncd` with different config files, be sure to have unique paths for `Metadata Directory` for each config.  
 
 \* The Ceph file system has a propagation delay for recursive ctime to make its way from the changed file to the
 top level directory it's contained in. To account for this delay in deep directory trees, there is a user-defined
