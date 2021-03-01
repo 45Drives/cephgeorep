@@ -1,3 +1,12 @@
+cephgeorep (1.2.2-1focal) focal; urgency=low
+
+  * Use parallel execution policy for sorting file list, shortening time between
+   finding files and sending files.
+
+  * Added verbose exit status logging for rsync errors.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 01 Mar 2021 14:52:00 -0400
+
 cephgeorep (1.2.1-1focal) focal; urgency=low
 
   * Updated man page formatting.
@@ -55,8 +64,11 @@ cephgeorep (1.1.3-1focal) focal; urgency=high
 
   * Fixed a bug where new_rctime isn't initialized when declared so
     a random value would be assigned.
+
   * Periodically flush last sync timestamp to disk, at most once per hour.
+
   * Add postinst script to trigger systemctl daemon-reload.
+
   * Add prerm and postrm scripts to stop systemd unit and
     tirgger daemon-reload.
 
