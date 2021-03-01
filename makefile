@@ -1,7 +1,7 @@
 TARGET = cephfssyncd
-LIBS = -g -lboost_system -lboost_filesystem -lpthread
+LIBS = -lboost_system -lboost_filesystem -lpthread -ltbb
 CC = g++
-CFLAGS = -g -std=gnu++11 -Wall
+CFLAGS = -std=c++17 -g -O2 -Wall
 
 OBJECTS = $(patsubst %.cpp, %.o, $(wildcard src/*.cpp))
 HEADERS = $(wildcard src/*.hpp)
@@ -14,7 +14,8 @@ endif
 
 default: $(TARGET)
 all: default
-static: LIBS = -g -static -l:libboost_system.a -l:libboost_filesystem.a -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+static: LIBS = -static -lboost_system -lboost_filesystem -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
+static: CFLAGS = -DNO_PARALLEL_SORT -std=c++11 -g -O2 -Wall
 static: default
 
 %.o: %.cpp $(HEADERS)
