@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+if [[ "$#" == 1 && "$1" == "clean" ]]; then
+	pushd debian
+	rm -f cephgeorep.postrm.debhelper cephgeorep.substvars debhelper-build-stamp files
+	rm -rf .debhelper cephgeorep
+	popd
+	exit 0
+fi
+
 command -v docker > /dev/null 2>&1 || {
 	echo "please install docker.";
 	exit 1;
