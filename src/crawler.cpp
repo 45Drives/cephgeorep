@@ -102,7 +102,10 @@ void Crawler::create_snap(const timespec &rctime){
 	snap_path_ = fs::path(base_path_).append(".snap/"+pid+"snapshot"+rctime);
 	Logging::log.message("Creating snapshot: " + snap_path_.string(), 2);
 	fs::create_directories(snap_path_, ec);
-	if(ec) Logging::log.error("Error creating path: " + snap_path_.string());
+	if(ec){
+		Logging::log.error("Error creating path: " + snap_path_.string());
+		l::exit(EXIT_FAILURE);
+	}
 }
 
 void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
@@ -126,6 +129,7 @@ void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 		total_bytes = total_bytes_at;
 	}else{
 		Logging::log.error("Invalid number of worker threads: " + std::to_string(config_.threads_));
+		l::exit(EXIT_FAILURE);
 	}
 	// log list of new files
 	if(config_.log_level_ >= 2){ // skip loop if not logging
@@ -206,7 +210,10 @@ void Crawler::delete_snap(void) const{
 	boost::system::error_code ec;
 	Logging::log.message("Removing snapshot: " + snap_path_.string(), 2);
 	fs::remove(snap_path_, ec);
-	if(ec) Logging::log.error("Error removing path: " + snap_path_.string());
+	if(ec){
+		Logging::log.error("Error removing path: " + snap_path_.string());
+		l::exit(EXIT_FAILURE);
+	}
 }
 
 void Crawler::write_last_rctime(void) const{

@@ -19,6 +19,7 @@
 
 #include "rctime.hpp"
 #include "alert.hpp"
+#include "signal.hpp"
 #include <fstream>
 
 extern "C" {
@@ -71,7 +72,10 @@ void LastRctime::init_last_rctime(void) const{
 	boost::system::error_code ec;
 	Logging::log.message(last_rctime_path_.string() + " does not exist. Creating and initializing to 0.0.", 2);
 	fs::create_directories(last_rctime_path_.parent_path(), ec);
-	if(ec) Logging::log.error("Cannot create path: " + last_rctime_path_.parent_path().string());
+	if(ec){
+		Logging::log.error("Cannot create path: " + last_rctime_path_.parent_path().string());
+		l::exit(EXIT_FAILURE);
+	}
 	std::ofstream f(last_rctime_path_.string());
 	f << "0.0" << std::endl;
 	f.close();

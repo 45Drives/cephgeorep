@@ -51,3 +51,8 @@ void set_signal_handlers(const Crawler *crawler){
 void signal_handling::error_cleanup(void){
 	signal_handling::crawler_->delete_snap();
 }
+
+void l::exit(int num){
+	signal_handling::error_cleanup();
+	::exit(num);
+}

@@ -19,6 +19,7 @@
 
 #include "config.hpp"
 #include "alert.hpp"
+#include "signal.hpp"
 #include <boost/system/error_code.hpp>
 #include <fstream>
 #include <sstream>
@@ -156,7 +157,7 @@ void Config::override_fields(const ConfigOverrides &config_overrides){
 void Config::verify(const fs::path &config_path) const{
 	bool errors = false;
 	if(base_path_.empty()){
-		Logging::log.error("Config does not contain a search directory (Source Directory).", false);
+		Logging::log.error("Config does not contain a search directory (Source Directory).");
 		errors = true;
 	}
 	if(!remote_user_.empty()){
@@ -172,27 +173,27 @@ void Config::verify(const fs::path &config_path) const{
 		// just warning
 	}
 	if((!remote_user_.empty() || !remote_host_.empty() || !remote_directory_.empty()) && !destinations_.empty()){
-		Logging::log.error("(Destination) list conflicts with (Remote User, Remote Host, Remote Directory) in config", false);
+		Logging::log.error("(Destination) list conflicts with (Remote User, Remote Host, Remote Directory) in config");
 		errors = true;
 	}
 	if(last_rctime_path_.empty()){
-		Logging::log.error("config does not contain a metadata path (Metadata Directory)", false);
+		Logging::log.error("config does not contain a metadata path (Metadata Directory)");
 		errors = true;
 	}
 	if(sync_period_s_ < std::chrono::seconds(0)){
-		Logging::log.error("sync frequency must be positive integer (Sync Period)", false);
+		Logging::log.error("sync frequency must be positive integer (Sync Period)");
 		errors = true;
 	}
 	if(prop_delay_ms_ < std::chrono::milliseconds(0)){
-		Logging::log.error("rctime prop delay must be positive integer (Propagation Delay)", false);
+		Logging::log.error("rctime prop delay must be positive integer (Propagation Delay)");
 		errors = true;
 	}
 	if(log_level_ < 0){
-		Logging::log.error("log level must be positive integer (Log Level)", false);
+		Logging::log.error("log level must be positive integer (Log Level)");
 		errors = true;
 	}
 	if(exec_bin_.empty()){
-		Logging::log.error("config must contain a program to execute! (Exec)", false);
+		Logging::log.error("config must contain a program to execute! (Exec)");
 		errors = true;
 	}
 	if(exec_flags_.empty()){
@@ -200,24 +201,31 @@ void Config::verify(const fs::path &config_path) const{
 		// just warning
 	}
 	if(nproc_ < 0){
-		Logging::log.error("number of processses must be positive integer (Processes)", false);
+		Logging::log.error("number of processses must be positive integer (Processes)");
 		errors = true;
 	}
 	if(threads_ < 0){
-		Logging::log.error("number of threads must be positive integer (Processes)", false);
+		Logging::log.error("number of threads must be positive integer (Processes)");
 		errors = true;
 	}
 	if(errors){
 		Logging::log.error("Please fix these mistakes in " + config_path.string());
+		l::exit(EXIT_FAILURE);
 	}
 }
 
 void Config::init_config_file(const fs::path &config_path) const{
 	boost::system::error_code ec;
 	fs::create_directories(config_path.parent_path(), ec);
-	if(ec) Logging::log.error("Error creating path: " + config_path.parent_path().string());
+	if(ec){
+		Logging::log.error("Error creating path: " + config_path.parent_path().string());
+		l::exit(EXIT_FAILURE);
+	}
 	std::ofstream f(config_path.string());
-	if(!f) Logging::log.error("Error opening config file: " + config_path.string());
+	if(!f){
+		Logging::log.error("Error opening config file: " + config_path.string());
+		l::exit(EXIT_FAILURE);
+	}
 	f <<
 	"# local backup settings\n"
 	"Source Directory =               # full path to directory to backup\n"

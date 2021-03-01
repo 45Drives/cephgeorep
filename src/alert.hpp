@@ -41,14 +41,14 @@ public:
 	/* Print message to stderr prepended with "Warning: ".
 	 * Use this for non-fatal errors.
 	 */
-	void error(const std::string &msg, bool exit_ = true) const;
+	void error(const std::string &msg) const;
 	/* Print message to stderr prepended with "Error: ".
-	 * Exits with EXIT_FAILURE if exit_ is left as true.
-	 * exit_ is used to delay exiting until later if there are
-	 * multiple errors to print.
 	 */
 	std::string format_bytes(uintmax_t bytes) const;
 	/* Return bytes as string in base-1024 SI units.
+	 */
+	std::string rsync_error(int err) const;
+	/* Translate rsync exit code to error message.
 	 */
 };
 

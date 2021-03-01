@@ -34,3 +34,7 @@ namespace signal_handling{
 	/* Call signal_handling::crawler_->cleanup();
 	 */
 }
+
+namespace l{
+	void exit(int num);
+}

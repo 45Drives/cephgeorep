@@ -41,12 +41,8 @@ void Logger::warning(const std::string &msg) const{
 	std::cerr << "Warning: " << msg << std::endl;
 }
 
-void Logger::error(const std::string &msg, bool exit_) const{
+void Logger::error(const std::string &msg) const{
 	std::cerr << "Error: " << msg << std::endl;
-	if(exit_){
-		signal_handling::error_cleanup();
-		exit(EXIT_FAILURE);
-	}
 }
 
 #define N_INDEX 9
@@ -59,4 +55,51 @@ std::string Logger::format_bytes(uintmax_t bytes) const{
 	double formatted = double(bytes) / p;
 	formatted_ss << std::fixed << std::setprecision(2) << formatted << units[i];
 	return formatted_ss.str();
+}
+
+std::string Logger::rsync_error(int err) const{
+	switch(err){
+		case 0:
+			return "Success";
+		case 1:
+			return "Syntax or usage error";
+		case 2:
+			return "Protocol incompatibility";
+		case 3:
+			return "Errors selecting input/output files, dirs";
+		case 4:
+			return "Requested action not supported";
+		case 5:
+			return "Error starting client-server protocol";
+		case 6:
+			return "Daemon unable to append to log-file";
+		case 10:
+			return "Error in socket I/O";
+		case 11:
+			return "Error in file I/O";
+		case 12:
+			return "Error in rsync protocol data stream";
+		case 13:
+			return "Errors with program diagnostics";
+		case 14:
+			return "Error in IPC code";
+		case 20:
+			return "Received SIGUSR1 or SIGINT";
+		case 21:
+			return "Some error returned by waitpid()";
+		case 22:
+			return "Error allocating core memory buffers";
+		case 23:
+			return "Partial transfer due to error";
+		case 24:
+			return "Partial transfer due to vanished source files";
+		case 25:
+			return "The --max-delete limit stopped deletions";
+		case 30:
+			return "Timeout in data send/receive";
+		case 35:
+			return "Timeout waiting for daemon connection";
+		default:
+			return "Unknown error: " + std::to_string(err);
+	}
 }

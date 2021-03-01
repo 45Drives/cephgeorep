@@ -18,7 +18,13 @@
  */
 
 #include "exec.hpp"
+#include "signal.hpp"
 #include <algorithm>
+
+#ifndef NO_PARALLEL_SORT
+#include <execution>
+#endif
+
 #include <boost/tokenizer.hpp>
 
 extern "C" {
@@ -87,16 +93,15 @@ bool SyncProcess::large_file(const fs::path &file) const{
 	return curr_bytes_sz_ < max_bytes_sz_ && fs::file_size(file) >= max_bytes_sz_;
 }
 
-void SyncProcess::consume(std::list<fs::path> &queue){
+void SyncProcess::consume(std::vector<fs::path> &queue){
 	while(!queue.empty() && (!full_test(queue.front()) || large_file(queue.front()))){
-		add(fs::path(queue.front()));
-		queue.pop_front();
+		consume_one(queue);
 	}
 }
 
-void SyncProcess::consume_one(std::list<fs::path> &queue){
-	add(fs::path(queue.front()));
-	queue.pop_front();
+void SyncProcess::consume_one(std::vector<fs::path> &queue){
+	add(fs::path(queue.back()));
+	queue.pop_back();
 }
 
 void SyncProcess::sync_batch(){
@@ -138,7 +143,7 @@ void SyncProcess::sync_batch(){
 	switch(pid_){
 		case -1:
 			Logging::log.error("Forking failed");
-			break;
+			l::exit(EXIT_FAILURE);
 		case 0: // child process
 			{
 				int null_fd = open("/dev/null", O_WRONLY);
@@ -225,7 +230,7 @@ size_t Syncer::get_max_arg_sz(void) const{
 	return arg_max_sz;
 }
 
-void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
+void Syncer::launch_procs(std::vector<fs::path> &queue, uintmax_t total_bytes){
 	int wstatus;
 	
 	// cap nproc to between 1 and number of files
@@ -237,15 +242,20 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 	
 	std::list<SyncProcess> procs(nproc, {this, bytes_per_proc});
 	
-	// sort files from largest to smallest to get largest files out of the way first
-	queue.sort([](const fs::path &first, const fs::path &second){
+	// sort files from smallest to largest to get largest files out of the way first from end
+	std::sort(
+#ifndef NO_PARALLEL_SORT
+		std::execution::par,
+#endif
+		queue.begin(), queue.end(),
+		[](const fs::path &first, const fs::path &second){
 		fs::file_status first_status = fs::symlink_status(first);
 		fs::file_status second_status = fs::symlink_status(second);
 		if(fs::is_symlink(first_status))
-			return false;
-		if(fs::is_symlink(second_status))
 			return true;
-		return fs::file_size(first) > fs::file_size(second);
+		if(fs::is_symlink(second_status))
+			return false;
+		return fs::file_size(first) < fs::file_size(second);
 	});
 	
 	// round-robin distribute until procs are full to total_bytes/nproc
@@ -269,6 +279,7 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 		pid_t exited_pid = wait(&wstatus);
 		if(exited_pid == -1){
 			Logging::log.error("No children to wait for");
+			l::exit(EXIT_FAILURE);
 		}else{
 			// find which object PID belongs to
 			std::list<SyncProcess>::iterator exited_proc = std::find_if (
@@ -290,8 +301,10 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 						Logging::log.warning(msg);
 					}
 					if(num_ssh_fails_to_inc == 0){
-						if(std::next(destination_) == destinations_.end())
+						if(std::next(destination_) == destinations_.end()){
 							Logging::log.error("No more backup destinations to try.");
+							l::exit(EXIT_FAILURE);
+						}
 						Logging::log.message("Trying next destination", 1);
 						++destination_; // increment destination itr if all procs fail
 						num_ssh_fails_to_inc = nproc - 1;
@@ -301,26 +314,31 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 					break;
 				case NOT_INSTALLED:
 					Logging::log.error(exec_bin_ + " is not installed.");
-					break;
+					l::exit(EXIT_FAILURE);
 				case PERM_DENY:
 					Logging::log.error("Encountered permission error while executing " + exec_bin_);
-					break;
+					l::exit(EXIT_FAILURE);
 				default:
 					int8_t status = WEXITSTATUS(wstatus);
-					if(status > 0)
+					if(status > 0){
 						Logging::log.error(
-							"Encountered unknown error while executing " + exec_bin_ + "\n"
+							"Encountered error while executing " + exec_bin_ + "\n"
 							"Exit code: " + std::to_string(status)
 						);
-					else{
+						if(exec_bin_.find("rsync") != std::string::npos)
+							Logging::log.error("rsync exit status: " + Logging::log.rsync_error(status));
+						l::exit(EXIT_FAILURE);
+					}else{
 						char *errno_msg = strerror(-status);
-						if(errno_msg)
+						if(errno_msg){
 							Logging::log.error("Failed to execute " + exec_bin_ + ": " + errno_msg);
-						else
+						}else{
 							Logging::log.error(
 								"Encountered unknown error while executing " + exec_bin_ + "\n"
 								"Exit code: " + std::to_string(status)
 							);
+						}
+						l::exit(EXIT_FAILURE);
 					}
 					break;
 			}
@@ -346,7 +364,7 @@ void Syncer::launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes){
 	}
 }
 
-void Syncer::distribute_files(std::list<fs::path> &queue, std::list<SyncProcess> &procs) const{
+void Syncer::distribute_files(std::vector<fs::path> &queue, std::list<SyncProcess> &procs) const{
 	// create roster for round robin distribution
 	std::list<SyncProcess *> distribute_pool;
 	for(std::list<SyncProcess>::iterator itr = procs.begin(); itr != procs.end(); ++itr){

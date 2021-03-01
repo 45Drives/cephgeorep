@@ -113,10 +113,10 @@ public:
 	/* Check if file size is larger than maximum payload by itself.
 	 * If this wasn't checked, large files would never sync.
 	 */
-	void consume(std::list<fs::path> &queue);
+	void consume(std::vector<fs::path> &queue);
 	/* Pop files from queue and push into files_ vector until full.
 	 */
-	void consume_one(std::list<fs::path> &queue);
+	void consume_one(std::vector<fs::path> &queue);
 	/* Only pop and push one file.
 	 */
 	void sync_batch(void);
@@ -174,11 +174,11 @@ public:
 	size_t get_max_arg_sz(void) const;
 	/* Determine max_arg_sz_ from stack limits
 	 */
-	void launch_procs(std::list<fs::path> &queue, uintmax_t total_bytes);
+	void launch_procs(std::vector<fs::path> &queue, uintmax_t total_bytes);
 	/* Creates SyncProcesses and distributes files across each one. Assigns each process an ID then launches
 	 * them in parallel. Waits for processes to return and relaunches if there are files remaining.
 	 */
-	void distribute_files(std::list<fs::path> &queue, std::list<SyncProcess> &procs) const;
+	void distribute_files(std::vector<fs::path> &queue, std::list<SyncProcess> &procs) const;
 	/* Round robin distribution of files until all processes are full.
 	 */
 };

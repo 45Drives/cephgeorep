@@ -38,7 +38,7 @@ private:
 	std::mutex file_list_mt_;
 	/* Make file_list_ thread safe for insertion.
 	 */
-	std::list<fs::path> file_list_;
+	std::vector<fs::path> file_list_;
 	/* List of files to send to remote backup.
 	 */
 	LastRctime last_rctime_;
