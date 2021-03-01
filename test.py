@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Ceph File System Sync Daemon Testing Script
 
 # Created: Josh Boudreau	2019-01-17
@@ -34,10 +35,10 @@ from datetime import datetime
 random.seed(datetime.now())
 
 if not len(sys.argv) == 5:
-	print "Script takes four arguments: dir depth, dir width, number of files, and file size in kB."
+	print("Script takes four arguments: dir depth, dir width, number of files, and file size in kB.")
 	exit()
 
-path = "/mnt/cephfs/test"
+path = "/mnt/cephfs/cephgeorep/test"
 
 depth_ = int(sys.argv[1])
 
@@ -56,7 +57,7 @@ def calc(d, w):
 	for n in range(d):
 		sum += math.pow(w,n+1)
 	if sum > 1000:
-		print str(int(sum)) + " dirs will be created. are you sure?"
+		print(str(int(sum)) + " dirs will be created. are you sure?")
 		choice = raw_input("y/n:")
 		if (choice == "y") or (choice == "Y") or (choice == "yes") or (choice == "Yes"):
 			return
@@ -76,7 +77,7 @@ def recurse(path, depth):
 def touch(fname):
 	f = open(fname,"wb")
 	for i in range(fsize):
-		f.write('\0' * 1024) # single kilobyte
+		f.write(b'\0' * 1024) # single kilobyte
 	f.close()
 	return
 
@@ -84,7 +85,7 @@ def touch(fname):
 def recursefile(path, depth, filename):
 	if depth <= 0:
 		touch(os.path.join(path,str(filename) + ".img"))
-		print "Made file: " + os.path.join(path,str(filename) + ".img")
+		print("Made file: " + os.path.join(path,str(filename) + ".img"))
 		return
 	dir_ = random.randint(1,width_)
 	recursefile(os.path.join(path,str(dir_)),depth-1,filename)
@@ -93,10 +94,15 @@ calc(depth_,width_)
 
 recurse(path, depth_)
 
+depths = range(0, depth_+1)
+probabilities = [0] * len(depths)
+for i in range(0, depth_+1):
+	probabilities[i] = (depths[i] + 1) / len(probabilities)
+
 for i in range(files):
-	depth = random.randint(0,depth_)
-	recursefile(path,depth,i+1)
+	depth = random.choices(depths, probabilities)
+	recursefile(path,depth[0],i+1)
 	time.sleep(random.uniform(0.1,maxwait_))
 
 
-print "Done"
+print("Done")
