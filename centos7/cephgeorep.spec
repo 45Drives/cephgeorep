@@ -25,7 +25,6 @@ only into directory tree branches with modified files - instead of wasting time 
 %prep
 %setup -q
 
-
 %build
 # empty
 
