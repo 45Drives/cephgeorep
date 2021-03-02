@@ -13,8 +13,6 @@ Source0:        %{name}-%{version}.tar.gz
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
-Requires:       lsof
-
 %description
 Ceph File System Remote Sync Daemon
 For use with a distributed Ceph File System cluster to georeplicate files to a remote backup server.
