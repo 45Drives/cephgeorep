@@ -1,3 +1,9 @@
+cephgeorep (1.2.2-2focal) focal; urgency=low
+
+  * Overhaul packaging using Docker.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 02 Mar 2021 12:44:00 -0400
+
 cephgeorep (1.2.2-1focal) focal; urgency=low
 
   * Use parallel execution policy for sorting file list, shortening time between

@@ -3,8 +3,8 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           cephgeorep
-Version:        1.2.1
-Release:        1%{?dist}
+Version:        1.2.2
+Release:        2%{?dist}
 Summary:        Ceph File System Remote Sync Daemon
 
 License:        GPL+
@@ -59,6 +59,14 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Tue Mar 02 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.2-2
+- Overhaul packaging using Docker.
+
+* Mon Mar 01 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.2-1
+- Use parallel execution policy for sorting file list, shortening time between
+  finding files and sending files. (Not implemented in Centos 7)
+- Added verbose exit status logging for rsync errors.
+
 * Wed Feb 17 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.1-1
 - Updated man page formatting.
 - Moved version definition to its own header file.
