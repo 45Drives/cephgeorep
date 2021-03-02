@@ -4,4 +4,6 @@ if [[ "$(docker images -q ubuntu-builder 2> /dev/null)" == "" ]]; then
 	docker build -t ubuntu-builder .
 fi
 
-docker run -w /build -it -v$(pwd):/build --rm ubuntu-builder make "$@"
+docker run -u $(id -u):$(id -g) -w /build -it -v$(pwd):/build --rm ubuntu-builder make "$@"
+
+exit $?
