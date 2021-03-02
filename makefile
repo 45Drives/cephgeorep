@@ -1,4 +1,4 @@
-TARGET = cephfssyncd
+TARGET = dist/from_source/cephfssyncd
 LIBS = -lboost_system -lboost_filesystem -lpthread -ltbb
 CC = g++
 CFLAGS = -std=c++17 -g -O2 -Wall
@@ -26,7 +26,7 @@ $(OBJECT_FILES): build/%.o : src/%.cpp
 
 $(TARGET): $(OBJECT_FILES)
 	mkdir -p dist/from_source
-	$(CC) $(OBJECT_FILES) -Wall $(LIBS) -o dist/from_source/$@
+	$(CC) $(OBJECT_FILES) -Wall $(LIBS) -o $@
 
 clean: clean-build clean-target
 
@@ -40,27 +40,27 @@ install: all inst-man-pages inst-config inst-completion
 	mkdir -p $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)/lib/systemd/system
 	mkdir -p $(DESTDIR)/usr/bin
-	install -m 755 dist/from_source/$(TARGET) $(DESTDIR)$(PREFIX)
+	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)
 	install -m 755 s3wrap.sh $(DESTDIR)$(PREFIX)
 	cp cephfssyncd.service $(DESTDIR)/lib/systemd/system/cephfssyncd.service
-	ln -sf $(PREFIX)/$(TARGET) $(DESTDIR)/usr/bin/$(TARGET)
+	ln -sf $(PREFIX)/$(notdir $(TARGET)) $(DESTDIR)/usr/bin/$(notdir $(TARGET))
 ifneq ($(PACKAGING),1)
 	-systemctl daemon-reload
 endif
 
 uninstall: rm-man-pages rm-completion
 	-systemctl disable --now cephfssyncd
-	-rm -f $(DESTDIR)$(PREFIX)/$(TARGET)
+	-rm -f $(DESTDIR)$(PREFIX)/$(notdir $(TARGET))
 	-rm -f $(DESTDIR)$(PREFIX)/s3wrap.sh
 	-rm -f $(DESTDIR)/usr/lib/systemd/system/cephfssyncd.service
-	-rm -f $(DESTDIR)/usr/bin/$(TARGET)
+	-rm -f $(DESTDIR)/usr/bin/$(notdir $(TARGET))
 ifneq ($(PACKAGING),1)
 	systemctl daemon-reload
 endif
 
 inst-man-pages:
 	mkdir -p $(DESTDIR)/usr/share/man/man8
-	gzip -k doc/man/cephgeorep.8
+	gzip -kf doc/man/cephgeorep.8
 	mv doc/man/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/
 	ln -sf $(DESTDIR)/usr/share/man/man8/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/cephfssyncd.8.gz
 	ln -sf $(DESTDIR)/usr/share/man/man8/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/s3wrap.sh.8.gz
