@@ -24,13 +24,15 @@
 namespace fs = boost::filesystem;
 
 namespace signal_handling{
-	const Crawler *crawler_;
+	const Crawler *crawler_ = nullptr;
 }
 
 void sig_hdlr(int signum){
 	// cleanup from termination
-	signal_handling::crawler_->write_last_rctime();
-	signal_handling::crawler_->delete_snap();
+	if(signal_handling::crawler_){
+		signal_handling::crawler_->write_last_rctime();
+		signal_handling::crawler_->delete_snap();
+	}
 	switch(signum){
 		case SIGINT:
 		case SIGTERM:
@@ -49,7 +51,8 @@ void set_signal_handlers(const Crawler *crawler){
 }
 
 void signal_handling::error_cleanup(void){
-	signal_handling::crawler_->delete_snap();
+	if(signal_handling::crawler_)
+		signal_handling::crawler_->delete_snap();
 }
 
 void l::exit(int num){
