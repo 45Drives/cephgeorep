@@ -62,8 +62,8 @@ inst-man-pages:
 	mkdir -p $(DESTDIR)/usr/share/man/man8
 	gzip -kf doc/man/cephgeorep.8
 	mv doc/man/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/
-	ln -sf $(DESTDIR)/usr/share/man/man8/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/cephfssyncd.8.gz
-	ln -sf $(DESTDIR)/usr/share/man/man8/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/s3wrap.sh.8.gz
+	ln -sf cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/cephfssyncd.8.gz
+	ln -sf cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/s3wrap.sh.8.gz
 
 rm-man-pages:
 	-rm -f $(DESTDIR)/usr/share/man/man8/s3wrap.sh.8.gz
