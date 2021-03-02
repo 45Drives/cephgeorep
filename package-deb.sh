@@ -22,6 +22,8 @@ if [[ "$(docker images -q ubuntu-builder 2> /dev/null)" == "" ]]; then
 	fi
 fi
 
+make clean
+
 mkdir -p dist/ubuntu
 
 docker run -u $(id -u):$(id -g) -w /home/deb/build -it -v$(pwd):/home/deb/build -v$(pwd)/dist/ubuntu:/home/deb --rm ubuntu-builder dpkg-buildpackage -us -uc -b
