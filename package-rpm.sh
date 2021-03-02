@@ -64,6 +64,6 @@ fi
 
 rm -rf dist/tmp
 
-echo "rpm is in dist/centos7/"
+echo "rpm is in dist/el7/"
 
 exit 0
