@@ -1,9 +1,38 @@
 #!/usr/bin/env bash
 
+#    Copyright (C) 2019-2021 Joshua Boudreau <jboudreau@45drives.com>
+# 
+#    This file is part of cephgeorep.
+# 
+#    cephgeorep is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 2 of the License, or
+#    (at your option) any later version.
+# 
+#    cephgeorep is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+# 
+#    You should have received a copy of the GNU General Public License
+#    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
+
+command -v docker > /dev/null 2>&1 || {
+	echo "Please install docker.";
+	exit 1;
+}
+
+# if docker image DNE, build it
 if [[ "$(docker images -q ubuntu-builder 2> /dev/null)" == "" ]]; then
-	docker build -t ubuntu-builder .
+	docker build -t ubuntu-builder - < docker/ubuntu
+	res=$?
+	if [ $res -ne 0 ]; then
+		echo "Building docker image failed."
+		exit $res
+	fi
 fi
 
+# mirror current directory into container and run make, passing all arguments
 docker run -u $(id -u):$(id -g) -w /build -it -v$(pwd):/build --rm ubuntu-builder make "$@"
 
 exit $?
