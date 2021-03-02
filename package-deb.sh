@@ -14,7 +14,7 @@ command -v docker > /dev/null 2>&1 || {
 }
 
 if [[ "$(docker images -q ubuntu-builder 2> /dev/null)" == "" ]]; then
-	docker build -t ubuntu-builder .
+	docker build -t ubuntu-builder - < docker/ubuntu
 	res=$?
 	if [ $res -ne 0 ]; then
 		echo "building docker image failed."
