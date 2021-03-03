@@ -1,3 +1,9 @@
+cephgeorep (1.2.3-1focal) focal; urgency=low
+
+  * Add oneshot flag to manually sync changes once and exit.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 03 Mar 2021 13:56:00 -0400
+
 cephgeorep (1.2.2-2focal) focal; urgency=low
 
   * Overhaul packaging using Docker.

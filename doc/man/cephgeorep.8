@@ -3,7 +3,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH CEPHGEOREP 8 "March 02 2021" "cephgeorep 1.2.2"
+.TH CEPHGEOREP 8 "March 03 2021" "cephgeorep 1.2.3"
 .\" Please adjust this date whenever revising the manpage.
 
 .SH NAME
@@ -38,6 +38,9 @@ Print the usage message and exit.
 .TP
 .BI "\-n\fR,\fP \-\^\-nproc " "# of processes"
 Specify the number of sync processes to run in parallel, overriding the value in the configuration file.
+.TP
+.BI "\-o\fR,\fP \-\^\-oneshot"
+Manually sync changes once and exit.
 .TP
 .BI "\-q\fR,\fP \-\^\-quiet"
 Set the log level to 0, muting output.

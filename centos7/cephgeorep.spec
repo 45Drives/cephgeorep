@@ -56,6 +56,9 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Wed Mar 03 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.3-1
+- Add oneshot flag to manually sync changes once and exit.
+
 * Tue Mar 02 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.2-2
 - Overhaul packaging using Docker.
 
