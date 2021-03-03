@@ -17,6 +17,12 @@
 #    You should have received a copy of the GNU General Public License
 #    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
 
+if [[ "$#" == 1 && "$1" == "clean" ]]; then
+	rm -rf dist/tmp
+	rm -rf dist/el7
+	exit 0
+fi
+
 command -v docker > /dev/null 2>&1 || {
 	echo "Please install docker.";
 	exit 1;

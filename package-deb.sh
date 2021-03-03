@@ -22,6 +22,7 @@ if [[ "$#" == 1 && "$1" == "clean" ]]; then
 	rm -f cephgeorep.postrm.debhelper cephgeorep.substvars debhelper-build-stamp files
 	rm -rf .debhelper cephgeorep
 	popd
+	rm -rf dist/ubuntu
 	exit 0
 fi
 
