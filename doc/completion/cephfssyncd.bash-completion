@@ -18,7 +18,7 @@ _CephfssyncdCompleteBash () {
 			;;
 		*)
 			COMPREPLY=(
-				$(compgen -W '-c --config -d --dry-run -h --help -n --nproc -q --quiet -s --seed -S --set-last-change -t --threads -v --verbose -V --version' -- $cur)
+				$(compgen -W '-c --config -d --dry-run -h --help -n --nproc -o --oneshot -q --quiet -s --seed -S --set-last-change -t --threads -v --verbose -V --version' -- $cur)
 			)
 			;;
 	esac
