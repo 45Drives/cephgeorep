@@ -26,12 +26,6 @@
 *.a
 *.lib
 
-# Executables
-*.exe
-*.out
-*.app
-cephfssyncd
-
 # Kate swap file
 *.kate-swp
 
@@ -47,4 +41,5 @@ debian/debhelper-build-stamp
 debian/files
 debian/.debhelper
 
+# build output
 dist
