@@ -34,23 +34,26 @@ from datetime import datetime
 
 random.seed(datetime.now())
 
-if not len(sys.argv) == 5:
-	print("Script takes four arguments: dir depth, dir width, number of files, and file size in kB.")
+if not len(sys.argv) == 6:
+	print("Script takes five arguments: working path, dir depth, dir width, number of files, and file size in kB. Optional 6th argument of maximum wait time to simulate file creation by users")
 	exit()
 
-path = "/mnt/cephfs/cephgeorep/test"
+path = sys.argv[1]
 
-depth_ = int(sys.argv[1])
+depth_ = int(sys.argv[2])
 
-width_ = int(sys.argv[2])
+width_ = int(sys.argv[3])
 
-files = int(sys.argv[3])
+files = int(sys.argv[4])
 
-fsize = int(sys.argv[4])
+fsize = int(sys.argv[5])
 
 temp_path = path
 
-maxwait_ = 3
+maxwait_ = 0
+
+if len(sys.argv) == 7:
+	maxwait_ = int(sys.argv[6])
 
 def calc(d, w):
 	sum = 0
@@ -58,7 +61,7 @@ def calc(d, w):
 		sum += math.pow(w,n+1)
 	if sum > 1000:
 		print(str(int(sum)) + " dirs will be created. are you sure?")
-		choice = raw_input("y/n:")
+		choice = input("y/n:")
 		if (choice == "y") or (choice == "Y") or (choice == "yes") or (choice == "Yes"):
 			return
 		else:
