@@ -39,7 +39,7 @@ void Crawler::reset(void){
 	file_list_.clear();
 }
 
-void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime){
+void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime, bool oneshot){
 	timespec new_rctime = {0};
 	timespec old_rctime_cache = {0};
 	std::chrono::steady_clock::duration last_rctime_flush_period = std::chrono::hours(1);
@@ -88,6 +88,8 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime){
 				}
 			}
 		}
+		if(oneshot)
+			break;
 		auto end = std::chrono::steady_clock::now();
 		std::chrono::seconds elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 		if(elapsed < config_.sync_period_s_ && !seed && !dry_run && !set_rctime) // if it took longer than sync freq, don't wait

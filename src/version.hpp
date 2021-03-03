@@ -1,3 +1,3 @@
 #pragma once
 
-#define VERS "1.2.2"
+#define VERS "1.2.3"

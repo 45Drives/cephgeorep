@@ -66,7 +66,7 @@ public:
 	/* Clear file_list_ and set
 	 * payload_bytes_ to 0.
 	 */
-	void poll_base(bool seed, bool dry_run, bool set_rctime);
+	void poll_base(bool seed, bool dry_run, bool set_rctime, bool oneshot);
 	/* Main loop of program.
 	 * Polls for change in root sync path,
 	 * if change detected, a snapshot is

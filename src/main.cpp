@@ -60,6 +60,7 @@ inline void usage(){
 		"                                  exits after showing number of files\n"
 		"  -h --help                     - print this message\n"
 		"  -n --nproc <# of processes>   - number of sync processes to run in parallel\n"
+		"  -o --oneshot                  - manually sync changes once and exit\n"
 		"  -q --quiet                    - set log level to 0\n"
 		"  -s --seed                     - send all files to seed destination\n"
 		"  -S --set-last-change          - prime last change time to only sync changes\n"
@@ -78,6 +79,7 @@ int main(int argc, char *argv[], char *envp[]){
 	bool dry_run = false; // don't actually sync
 	bool set_rctime = false; // prime last_rctime so only changes after running will be sent
 	bool print_vers_and_exit = false;
+	bool oneshot = false;
 	fs::path config_path = DEFAULT_CONFIG_PATH;
 	
 	ConfigOverrides config_overrides;
@@ -90,13 +92,14 @@ int main(int argc, char *argv[], char *envp[]){
 		{"seed",            no_argument,       0, 's'},
 		{"set-last-change", no_argument,       0, 'S'},
 		{"nproc",           required_argument, 0, 'n'},
+		{"oneshot",         no_argument,       0, 'o'},
 		{"dry-run",         no_argument,       0, 'd'},
 		{"threads",         required_argument, 0, 't'},
 		{"version",         no_argument,       0, 'V'},
 		{0, 0, 0, 0}
 	};
 	
-	while((opt = getopt_long(argc, argv, "c:hvqsSn:dt:V", long_options, &option_ind)) != -1){
+	while((opt = getopt_long(argc, argv, "c:hvqsSn:odt:V", long_options, &option_ind)) != -1){
 		switch(opt){
 			case 0:
 				// flag set
@@ -124,6 +127,9 @@ int main(int argc, char *argv[], char *envp[]){
 					Logging::log.error("Invalid number of processes.");
 					abort();
 				}
+				break;
+			case 'o':
+				oneshot = true;
 				break;
 			case 'd':
 				dry_run = true;
@@ -155,7 +161,7 @@ int main(int argc, char *argv[], char *envp[]){
 	}
 	
 	Crawler crawler(config_path, get_env_size(envp), config_overrides);
-	crawler.poll_base(seed, dry_run, set_rctime);
+	crawler.poll_base(seed, dry_run, set_rctime, oneshot);
 	
 	return 0;
 }
