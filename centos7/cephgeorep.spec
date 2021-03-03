@@ -3,8 +3,8 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           cephgeorep
-Version:        1.2.2
-Release:        2%{?dist}
+Version:        1.2.3
+Release:        1%{?dist}
 Summary:        Ceph File System Remote Sync Daemon
 
 License:        GPL+
