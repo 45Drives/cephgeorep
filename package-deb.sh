@@ -31,8 +31,8 @@ command -v docker > /dev/null 2>&1 || {
 }
 
 # if docker image DNE, build it
-if [[ "$(docker images -q ubuntu-builder 2> /dev/null)" == "" ]]; then
-	docker build -t ubuntu-builder - < docker/ubuntu
+if [[ "$(docker images -q cephgeorep-ubuntu-builder 2> /dev/null)" == "" ]]; then
+	docker build -t cephgeorep-ubuntu-builder - < docker/ubuntu
 	res=$?
 	if [ $res -ne 0 ]; then
 		echo "Building docker image failed."
@@ -45,7 +45,7 @@ make clean
 mkdir -p dist/ubuntu
 
 # mirror current directory to working directory in container, and mirror dist/ubuntu to .. for deb output
-docker run -u $(id -u):$(id -g) -w /home/deb/build -it -v$(pwd):/home/deb/build -v$(pwd)/dist/ubuntu:/home/deb --rm ubuntu-builder dpkg-buildpackage -us -uc -b
+docker run -u $(id -u):$(id -g) -w /home/deb/build -it -v$(pwd):/home/deb/build -v$(pwd)/dist/ubuntu:/home/deb --rm cephgeorep-ubuntu-builder dpkg-buildpackage -us -uc -b
 res=$?
 if [ $res -ne 0 ]; then
 	echo "Packaging failed."
