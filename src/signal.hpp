@@ -20,6 +20,7 @@
 #pragma once
 
 #include "rctime.hpp"
+#include "status.hpp"
 
 class Crawler;
 
@@ -36,5 +37,5 @@ namespace signal_handling{
 }
 
 namespace l{
-	void exit(int num, int status = 1);
+	void exit(int num, int status = Status::NOT_RUNNING);
 }

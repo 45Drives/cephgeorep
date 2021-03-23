@@ -34,6 +34,7 @@ void sig_hdlr(int signum){
 		signal_handling::crawler_->write_last_rctime();
 		signal_handling::crawler_->delete_snap();
 	}
+	Status::status.set(Status::NOT_RUNNING);
 	switch(signum){
 		case SIGINT:
 		case SIGTERM:
