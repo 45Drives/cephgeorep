@@ -31,6 +31,7 @@ namespace Logging{
 
 Logger::Logger(int log_level){
 	log_level_ = log_level;
+	
 }
 
 void Logger::message(const std::string &msg, int lvl) const{

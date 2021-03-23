@@ -36,5 +36,5 @@ namespace signal_handling{
 }
 
 namespace l{
-	void exit(int num);
+	void exit(int num, int status = 1);
 }

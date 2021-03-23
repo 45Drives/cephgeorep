@@ -19,6 +19,7 @@
 
 #include "exec.hpp"
 #include "signal.hpp"
+#include "status.hpp"
 #include <algorithm>
 
 #ifndef NO_PARALLEL_SORT
@@ -303,9 +304,10 @@ void Syncer::launch_procs(std::vector<fs::path> &queue, uintmax_t total_bytes){
 					if(num_ssh_fails_to_inc == 0){
 						if(std::next(destination_) == destinations_.end()){
 							Logging::log.error("No more backup destinations to try.");
-							l::exit(EXIT_FAILURE);
+							l::exit(EXIT_FAILURE, Status::ALL_HOSTS_DOWN);
 						}
 						Logging::log.message("Trying next destination", 1);
+						Status::status.set(Status::HOST_DOWN);
 						++destination_; // increment destination itr if all procs fail
 						num_ssh_fails_to_inc = nproc - 1;
 					}else{

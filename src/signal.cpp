@@ -19,6 +19,7 @@
 
 #include "signal.hpp"
 #include "crawler.hpp"
+#include "status.hpp"
 #include <csignal>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
@@ -55,7 +56,8 @@ void signal_handling::error_cleanup(void){
 		signal_handling::crawler_->delete_snap();
 }
 
-void l::exit(int num){
+void l::exit(int num, int status){
 	signal_handling::error_cleanup();
+	Status::status.set(status);
 	::exit(num);
 }
