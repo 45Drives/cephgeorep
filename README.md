@@ -20,10 +20,10 @@ Since the binary is statically linked, no boost runtime libraries are needed on 
 ## Installation
 ### Current Release
 #### Centos 7
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.2.2/cephgeorep-1.2.2-2.el7.x86_64.rpm`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.2.4/cephgeorep-1.2.4-1.el7.x86_64.rpm`
 #### Ubuntu
-* `wget https://github.com/45Drives/cephgeorep/releases/download/v1.2.2/cephgeorep_1.2.2-2focal_amd64.deb`
-* `dpkg -i cephgeorep_1.2.2-2focal_amd64.deb`
+* `wget https://github.com/45Drives/cephgeorep/releases/download/v1.2.4/cephgeorep_1.2.4-1focal_amd64.deb`
+* `dpkg -i cephgeorep_1.2.4-1focal_amd64.deb`
 
 ### Installing from Source
 * `yum install make gcc gcc-c++ boost boost-devel rsync`

@@ -1,3 +1,9 @@
+cephgeorep (1.2.4-1focal) focal; urgency=low
+
+  * Implement status sharing for prometheus metrics exporter.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 23 Mar 2021 14:55:00 -0400
+
 cephgeorep (1.2.3-1focal) focal; urgency=low
 
   * Add oneshot flag to manually sync changes once and exit.
