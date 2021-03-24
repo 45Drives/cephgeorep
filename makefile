@@ -1,10 +1,10 @@
 TARGET = dist/from_source/cephfssyncd
 LIBS = -lboost_system -lboost_filesystem -lpthread -ltbb
 CC = g++
-CFLAGS = -std=c++17 -g -O2 -Wall
+CFLAGS = -std=c++17 -g -O2 -Wall -Isrc/incl
 
-SOURCE_FILES := $(wildcard src/*.cpp)
-OBJECT_FILES := $(patsubst src/%.cpp, build/%.o, $(SOURCE_FILES))
+SOURCE_FILES := $(shell find src/impl -name *.cpp)
+OBJECT_FILES := $(patsubst src/impl/%.cpp, build/%.o, $(SOURCE_FILES))
 
 ifeq ($(PREFIX),)
 	PREFIX := /opt/45drives/cephgeorep
@@ -15,14 +15,14 @@ endif
 default: $(TARGET)
 all: default
 static: LIBS = -static -lboost_system -lboost_filesystem -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
-static: CFLAGS = -DNO_PARALLEL_SORT -std=c++11 -g -O2 -Wall
+static: CFLAGS = -DNO_PARALLEL_SORT -std=c++11 -g -O2 -Wall -Isrc/incl
 static: default
 
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
-$(OBJECT_FILES): build/%.o : src/%.cpp
+$(OBJECT_FILES): build/%.o : src/impl/%.cpp
 	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $(patsubst build/%.o, src/%.cpp, $@) -o $@
+	$(CC) $(CFLAGS) -c $(patsubst build/%.o, src/impl/%.cpp, $@) -o $@
 
 $(TARGET): $(OBJECT_FILES)
 	mkdir -p dist/from_source
