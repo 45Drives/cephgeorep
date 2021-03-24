@@ -58,6 +58,7 @@ systemctl daemon-reload
 %changelog
 * Wed Mar 24 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.5-1
 - Add EXIT_FAILED (4) status for when cephfssyncd exits with EXIT_FAILURE.
+- Check that Source Directory exists after loading config.
 
 * Tue Mar 23 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.4-1
 - Implement status sharing for prometheus metrics exporter.

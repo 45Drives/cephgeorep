@@ -1,6 +1,7 @@
 cephgeorep (1.2.5-1focal) focal; urgency=low
 
   * Add EXIT_FAILED (4) status for when cephfssyncd exits with EXIT_FAILURE.
+  * Check that Source Directory exists after loading config.
 
  -- Josh Boudreau <jboudreau@45drives.com>  Wed, 24 Mar 2021 12:04:00 -0400
 
