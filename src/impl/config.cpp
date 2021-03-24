@@ -160,6 +160,10 @@ void Config::verify(const fs::path &config_path) const{
 		Logging::log.error("Config does not contain a search directory (Source Directory).");
 		errors = true;
 	}
+	if(!fs::exists(base_path_)){
+		Logging::log.error("Source Directory does not exist.");
+		errors = true;
+	}
 	if(!remote_user_.empty()){
 		Logging::log.warning("Remote User field is deprecated. Instead use `Destination = user@host:directory`.");
 		// just warning
