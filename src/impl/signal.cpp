@@ -34,13 +34,14 @@ void sig_hdlr(int signum){
 		signal_handling::crawler_->write_last_rctime();
 		signal_handling::crawler_->delete_snap();
 	}
-	Status::status.set(Status::NOT_RUNNING);
 	switch(signum){
 		case SIGINT:
 		case SIGTERM:
 		case SIGQUIT:
+			Status::status.set(Status::NOT_RUNNING);
 			exit(EXIT_SUCCESS);
 		default:
+			Status::status.set(Status::EXIT_FAILED);
 			exit(signum);
 	}
 }
@@ -59,6 +60,9 @@ void signal_handling::error_cleanup(void){
 
 void l::exit(int num, int status){
 	signal_handling::error_cleanup();
-	Status::status.set(status);
+	if(num == EXIT_FAILURE && status == Status::NOT_RUNNING)
+		Status::status.set(Status::EXIT_FAILED);
+	else
+		Status::status.set(status);
 	::exit(num);
 }
