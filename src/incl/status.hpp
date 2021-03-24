@@ -38,6 +38,7 @@ namespace Status{
 	const int NOT_RUNNING = 1;
 	const int HOST_DOWN = 2;
 	const int ALL_HOSTS_DOWN = 3;
+	const int EXIT_FAILED = 4;
 	
 	extern StatusSetter status;
 }
