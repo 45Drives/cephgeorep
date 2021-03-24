@@ -3,7 +3,7 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           cephgeorep
-Version:        1.2.4
+Version:        1.2.5
 Release:        1%{?dist}
 Summary:        Ceph File System Remote Sync Daemon
 
@@ -56,6 +56,9 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Wed Mar 24 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.5-1
+- Add EXIT_FAILED (4) status for when cephfssyncd exits with EXIT_FAILURE.
+
 * Tue Mar 23 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.4-1
 - Implement status sharing for prometheus metrics exporter.
 
