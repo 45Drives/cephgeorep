@@ -27,7 +27,7 @@ only into directory tree branches with modified files - instead of wasting time 
 make -j8
 
 %install
-make DESTDIR=%{buildroot} install
+make DESTDIR=%{buildroot} PACKAGING=1 install
 
 %clean
 make DESTDIR=%{buildroot} clean
