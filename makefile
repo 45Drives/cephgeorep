@@ -1,7 +1,7 @@
 TARGET = dist/from_source/cephfssyncd
-LIBS = -lboost_system -lboost_filesystem -lpthread -ltbb
+LIBS = -lboost_system -lboost_filesystem -lpthread
 CC = g++
-CFLAGS = -std=c++17 -g -O2 -Wall -Isrc/incl
+CFLAGS = -g -O2 -Wall -Isrc/incl
 
 SOURCE_FILES := $(shell find src/impl -name *.cpp)
 OBJECT_FILES := $(patsubst src/impl/%.cpp, build/%.o, $(SOURCE_FILES))
@@ -12,11 +12,16 @@ endif
 
 .PHONY: default all static clean clean-build clean-target install uninstall
 
+default: LIBS := -ltbb $(LIBS)
+default: CFLAGS := -std=c++17 $(CFLAGS)
 default: $(TARGET)
 all: default
 static: LIBS = -static -lboost_system -lboost_filesystem -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 static: CFLAGS = -DNO_PARALLEL_SORT -std=c++11 -g -O2 -Wall -Isrc/incl
 static: default
+
+no-par-sort: CFLAGS := -std=c++11 -DNO_PARALLEL_SORT $(CFLAGS)
+no-par-sort: $(TARGET)
 
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
