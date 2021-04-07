@@ -49,23 +49,23 @@ mkdir -p $TMP_DIR
 SOURCE_NAME=cephgeorep-$(grep Version el8/cephgeorep.spec --color=never | awk '{print $2}')
 SOURCE_PATH=$TMP_DIR/$SOURCE_NAME
 mkdir -p $SOURCE_PATH
-SOURCE_LOC=$(dir $SOURCE_PATH)
+SOURCE_LOC="$(dirname "$SOURCE_PATH")"
 
-cp -r src/ makefile $SOURCE_PATH
+cp -r src/ makefile doc/ s3wrap.sh cephfssyncd.service $SOURCE_PATH
 
 pushd $SOURCE_LOC
 tar -czvf $SOURCE_NAME.tar.gz $SOURCE_NAME
 popd
 
 # build rpm from source tar and place it dist/el8 by mirroring dist/el8 to rpmbuild/RPMS
-docker run -u $(id -u):$(id -g) -w /home/rpm/rpmbuild -it -v$(pwd)/dist/tmp:/home/rpm/rpmbuild/SOURCES -v$(pwd)/dist/el8:/home/rpm/rpmbuild/RPMS -v$(pwd)/el8:/home/rpm/rpmbuild/SPECS --rm cephgeorep-el8-builder rpmbuild -ba SPECS/cephgeorep.spec
+docker run -u $(id -u):$(id -g) -w /home/rpm/rpmbuild -it -v$SOURCE_LOC:/home/rpm/rpmbuild/SOURCES -v$(pwd)/dist/el8:/home/rpm/rpmbuild/RPMS -v$(pwd)/el8:/home/rpm/rpmbuild/SPECS --rm cephgeorep-el8-builder rpmbuild -ba SPECS/cephgeorep.spec
 res=$?
 if [ $res -ne 0 ]; then
 	echo "Packaging failed."
 	exit $res
 fi
 
-rm -rf dist/tmp
+rm -rf $SOURCE_LOC
 
 echo "rpm is in dist/el8/"
 
