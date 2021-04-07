@@ -4,7 +4,7 @@
 
 Name:           cephgeorep
 Version:        1.2.5
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Ceph File System Remote Sync Daemon
 
 License:        GPL+
