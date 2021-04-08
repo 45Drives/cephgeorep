@@ -21,7 +21,7 @@ TMP_DIR=/tmp/cephgeorep
 
 if [[ "$#" == 1 && "$1" == "clean" ]]; then
 	rm -rf $TMP_DIR
-	rm -rf dist/el7
+	rm -rf dist/el8
 	exit 0
 fi
 
