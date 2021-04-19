@@ -2,7 +2,6 @@ cephgeorep (1.2.6-1focal) focal; urgency=medium
 
   * Remove many redundant filesystem stat() calls while gathering and
     sorting files to speed up vector sort.
-  * Change config to noreplace in packaging.
 
  -- Josh Boudreau <jboudreau@45drives.com>  Mon, 19 Apr 2021 11:15:00 -0400
 
