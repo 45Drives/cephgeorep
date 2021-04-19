@@ -17,4 +17,4 @@
 #    You should have received a copy of the GNU General Public License
 #    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
 
-./package-deb.sh && ./package-el7.sh && ./package-el8.sh
+./package-deb20.sh && ./package-el7.sh && ./package-el8.sh

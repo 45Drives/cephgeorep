@@ -18,11 +18,11 @@
 #    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
 
 if [[ "$#" == 1 && "$1" == "clean" ]]; then
-	pushd debian
+	pushd ubuntu20
 	rm -f cephgeorep.postrm.debhelper cephgeorep.substvars debhelper-build-stamp files
 	rm -rf .debhelper cephgeorep
 	popd
-	rm -rf dist/ubuntu
+	rm -rf dist/ubuntu20
 	exit 0
 fi
 
@@ -32,8 +32,8 @@ command -v docker > /dev/null 2>&1 || {
 }
 
 # if docker image DNE, build it
-if [[ "$(docker images -q cephgeorep-ubuntu-builder 2> /dev/null)" == "" ]]; then
-	docker build -t cephgeorep-ubuntu-builder - < docker/ubuntu
+if [[ "$(docker images -q cephgeorep-ubuntu20-builder 2> /dev/null)" == "" ]]; then
+	docker build -t cephgeorep-ubuntu20-builder - < docker/ubuntu20
 	res=$?
 	if [ $res -ne 0 ]; then
 		echo "Building docker image failed."
@@ -43,18 +43,18 @@ fi
 
 make clean
 
-mkdir -p dist/ubuntu
+mkdir -p dist/ubuntu20
 
 # mirror current directory to working directory in container, and mirror dist/ubuntu to .. for deb output
-docker run -u $(id -u):$(id -g) -w /home/deb/build -it -v$(pwd):/home/deb/build -v$(pwd)/dist/ubuntu:/home/deb --rm cephgeorep-ubuntu-builder dpkg-buildpackage -us -uc -b
+docker run -u $(id -u):$(id -g) -w /home/deb/build -it -v$(pwd):/home/deb/build -v$(pwd)/ubuntu20:/home/deb/build/debian -v$(pwd)/dist/ubuntu20:/home/deb --rm cephgeorep-ubuntu-builder dpkg-buildpackage -us -uc -b
 res=$?
 if [ $res -ne 0 ]; then
 	echo "Packaging failed."
 	exit $res
 fi
 
-rmdir dist/ubuntu/build
+rmdir dist/ubuntu20/build debian
 
-echo "deb is in dist/ubuntu/"
+echo "deb is in dist/ubuntu20/"
 
 exit 0

@@ -34,12 +34,18 @@
 *.kdev4
 
 # deb packaging
-debian/cephgeorep
-debian/cephgeorep.substvars
-debian/cephgeorep.postrm.debhelper
-debian/debhelper-build-stamp
-debian/files
-debian/.debhelper
+ubuntu20/cephgeorep
+ubuntu20/cephgeorep.substvars
+ubuntu20/cephgeorep.postrm.debhelper
+ubuntu20/debhelper-build-stamp
+ubuntu20/files
+ubuntu20/.debhelper
+ubuntu18/cephgeorep
+ubuntu18/cephgeorep.substvars
+ubuntu18/cephgeorep.postrm.debhelper
+ubuntu18/debhelper-build-stamp
+ubuntu18/files
+ubuntu18/.debhelper
 
 # build output
 dist
