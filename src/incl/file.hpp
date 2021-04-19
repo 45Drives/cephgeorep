@@ -29,7 +29,7 @@ private:
 public:
 	File(void) : status_(), size_(0), path_() {}
 	File(const fs::path &path) : status_(fs::symlink_status(path)), path_(path) {
-		size_ = (fs::is_symlink(status_))? 0 : fs::file_size(path);
+		size_ = (fs::is_regular_file(status_))? fs::file_size(path) : 0;
 	}
 	File(const File &other) : status_(other.status_), size_(other.size_), path_(other.path_) {}
 	~File(void) = default;
