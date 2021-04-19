@@ -3,8 +3,8 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           cephgeorep
-Version:        1.2.5
-Release:        2%{?dist}
+Version:        1.2.6
+Release:        1%{?dist}
 Summary:        Ceph File System Remote Sync Daemon
 
 License:        GPL+
@@ -34,7 +34,7 @@ make DESTDIR=%{buildroot} clean
 
 %files
 %defattr(-,root,root,-)
-%config %{_sysconfdir}/cephfssyncd.conf
+%config(noreplace) %{_sysconfdir}/cephfssyncd.conf
 /lib/systemd/system/cephfssyncd.service
 %{_bindir}/*
 /opt/45drives/%{name}/*
@@ -52,6 +52,11 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Mon Apr 19 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.6-1
+- Remove many redundant filesystem stat() calls while gathering and
+  sorting files to speed up vector sort.
+- Change config to noreplace in packaging.
+
 * Wed Apr 07 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.5-2
 - First EL8 build.
 
