@@ -1,0 +1,5 @@
+cephgeorep (1.2.6-1bionic) bionic; urgency=medium
+
+  * First packaging for Ubuntu 18.04 LTS Bionic Beaver.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 19 Apr 2021 15:22:00 -0400
