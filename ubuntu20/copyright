@@ -7,7 +7,7 @@ Files: *
 Copyright: 2019-2021 Josh Boudreau <jboudreau@45drives.com>
 License: LGPL-2.0+
 
-Files: debian/*
+Files: ubuntu20/*
 Copyright: 2021 Josh Boudreau <jboudreau@45drives.com>
 License: LGPL-2.0+
 
