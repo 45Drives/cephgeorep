@@ -137,7 +137,7 @@ void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 	if(config_.log_level_ >= 2){ // skip loop if not logging
 		Logging::log.message("Files to sync:",2);
 		for(auto &i : file_list_){
-			Logging::log.message(i.string(),2);
+			Logging::log.message(i.path().string(),2);
 		}
 	}
 }
@@ -161,14 +161,17 @@ void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &sn
 	for(fs::directory_iterator itr{current_path}; itr != fs::directory_iterator{}; *itr++){
 		fs::directory_entry entry = *itr;
 		if(ignore_entry(entry)) continue;
-		if(fs::is_directory(entry)){
+		File file(entry);
+		if(fs::is_directory(file.status())){
 			find_new_files_recursive(entry.path(), snap_root, total_bytes); // recurse
-		}else if(fs::is_regular_file(entry)){
-			total_bytes += fs::file_size(entry.path());
+		}else if(fs::is_regular_file(file.status())){
+			total_bytes += file.size();
+			file.path(snap_root/fs::path(".")/fs::relative(entry.path(), snap_root));
 			// cut path at sync dir for rsync /sync_dir/.snap/snapshotX/./rel_path/file
-			file_list_.push_back(snap_root/fs::path(".")/fs::relative(entry.path(), snap_root));
+			file_list_.emplace_back(file);
 		}else if(fs::is_symlink(entry)){
-			file_list_.push_back(snap_root/fs::path(".")/fs::relative(entry.path(), snap_root));
+			file.path(snap_root/fs::path(".")/fs::relative(entry.path().parent_path(), snap_root) / entry.path().filename());
+			file_list_.emplace_back(file);
 		}else{
 			Logging::log.message("Ignoring unknown file type: " + entry.path().string(), 2);
 		}
@@ -181,26 +184,26 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 		fs::path node;
 		queue.pop(node, threads_running);
 		if(queue.done() && node.empty()) return;
-		fs::file_status status = fs::symlink_status(node);
-		if(fs::is_directory(status)){
+		File file(node);
+		if(fs::is_directory(file.status())){
 			// put children into queue
 			for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
 				fs::directory_entry child = *itr;
 				if(ignore_entry(child)) continue;
 				queue.push(child);
 			}
-		}else if(fs::is_regular_file(status)){
-			total_bytes += fs::file_size(node);
-			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node, snap_root);
+		}else if(fs::is_regular_file(file.status())){
+			file.path(snap_root/fs::path(".")/fs::relative(node, snap_root));
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
-				file_list_.push_back(formatted_path);
+				file_list_.emplace_back(file);
 			}
-		}else if(fs::is_symlink(status)){
-			fs::path formatted_path = snap_root/fs::path(".")/fs::relative(node.parent_path(), snap_root) / node.filename();
+			total_bytes += file.size();
+		}else if(fs::is_symlink(file.status())){
+			file.path(snap_root/fs::path(".")/fs::relative(node.parent_path(), snap_root) / node.filename());
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
-				file_list_.push_back(formatted_path);
+				file_list_.emplace_back(file);
 			}
 		}else{
 			Logging::log.message("Ignoring unknown file type: " + node.string(), 2);

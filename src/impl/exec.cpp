@@ -74,34 +74,32 @@ uintmax_t SyncProcess::payload_count(void) const{
 	return files_.size();
 }
 
-void SyncProcess::add(const fs::path &file){
-	files_.emplace_back(file);
-	curr_arg_sz_ += strlen(file.c_str()) + 1 + sizeof(char *);
-	fs::file_status status = fs::symlink_status(file);
-	if(!fs::is_symlink(status))
-		curr_bytes_sz_ += fs::file_size(file);
+void SyncProcess::add(const File &file){
+	files_.emplace_back(file.path());
+	curr_arg_sz_ += strlen(file.path().c_str()) + 1 + sizeof(char *);
+	if(!fs::is_symlink(file.status()))
+		curr_bytes_sz_ += file.size();
 }
 
-bool SyncProcess::full_test(const fs::path &file) const{
-	fs::file_status status = fs::symlink_status(file);
-	if(fs::is_symlink(status))
-		return (curr_arg_sz_ + strlen(file.c_str()) + 1 + sizeof(char *) >= max_arg_sz_);
-	return (curr_arg_sz_ + strlen(file.c_str()) + 1 + sizeof(char *) >= max_arg_sz_)
-	|| (curr_bytes_sz_ + fs::file_size(file) > max_bytes_sz_);
+bool SyncProcess::full_test(const File &file) const{
+	if(fs::is_symlink(file.status()))
+		return (curr_arg_sz_ + strlen(file.path().c_str()) + 1 + sizeof(char *) >= max_arg_sz_);
+	return (curr_arg_sz_ + strlen(file.path().c_str()) + 1 + sizeof(char *) >= max_arg_sz_)
+	|| (curr_bytes_sz_ + file.size() > max_bytes_sz_);
 }
 
-bool SyncProcess::large_file(const fs::path &file) const{
-	return curr_bytes_sz_ < max_bytes_sz_ && fs::file_size(file) >= max_bytes_sz_;
+bool SyncProcess::large_file(const File &file) const{
+	return curr_bytes_sz_ < max_bytes_sz_ && file.size() >= max_bytes_sz_;
 }
 
-void SyncProcess::consume(std::vector<fs::path> &queue){
-	while(!queue.empty() && (!full_test(queue.front()) || large_file(queue.front()))){
+void SyncProcess::consume(std::vector<File> &queue){
+	while(!queue.empty() && (!full_test(queue.front().path()) || large_file(queue.front().path()))){
 		consume_one(queue);
 	}
 }
 
-void SyncProcess::consume_one(std::vector<fs::path> &queue){
-	add(fs::path(queue.back()));
+void SyncProcess::consume_one(std::vector<File> &queue){
+	add(queue.back().path());
 	queue.pop_back();
 }
 
@@ -231,7 +229,7 @@ size_t Syncer::get_max_arg_sz(void) const{
 	return arg_max_sz;
 }
 
-void Syncer::launch_procs(std::vector<fs::path> &queue, uintmax_t total_bytes){
+void Syncer::launch_procs(std::vector<File> &queue, uintmax_t total_bytes){
 	int wstatus;
 	
 	// cap nproc to between 1 and number of files
@@ -249,14 +247,12 @@ void Syncer::launch_procs(std::vector<fs::path> &queue, uintmax_t total_bytes){
 		std::execution::par,
 #endif
 		queue.begin(), queue.end(),
-		[](const fs::path &first, const fs::path &second){
-		fs::file_status first_status = fs::symlink_status(first);
-		fs::file_status second_status = fs::symlink_status(second);
-		if(fs::is_symlink(first_status))
+		[](const File &first, const File &second){
+		if(fs::is_symlink(first.status()))
 			return true;
-		if(fs::is_symlink(second_status))
+		if(fs::is_symlink(second.status()))
 			return false;
-		return fs::file_size(first) < fs::file_size(second);
+		return first.size() < second.size();
 	});
 	
 	// round-robin distribute until procs are full to total_bytes/nproc
@@ -366,7 +362,7 @@ void Syncer::launch_procs(std::vector<fs::path> &queue, uintmax_t total_bytes){
 	}
 }
 
-void Syncer::distribute_files(std::vector<fs::path> &queue, std::list<SyncProcess> &procs) const{
+void Syncer::distribute_files(std::vector<File> &queue, std::list<SyncProcess> &procs) const{
 	// create roster for round robin distribution
 	std::list<SyncProcess *> distribute_pool;
 	for(std::list<SyncProcess>::iterator itr = procs.begin(); itr != procs.end(); ++itr){

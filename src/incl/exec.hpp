@@ -21,6 +21,7 @@
 
 #include "alert.hpp"
 #include "config.hpp"
+#include "file.hpp"
 #include <vector>
 #include <list>
 #include <boost/filesystem.hpp>
@@ -101,22 +102,22 @@ public:
 	uintmax_t payload_count(void) const;
 	/* Return number of files in payload.
 	 */
-	void add(const fs::path &file);
+	void add(const File &file);
 	/* Add one file to the payload.
 	 * Incrememnts curr_arg_sz_ and curr_bytes_sz_ accordingly.
 	 */
-	bool full_test(const fs::path &file) const;
+	bool full_test(const File &file) const;
 	/* Returns true if curr_arg_sz_ or curr_bytes_sz_ exceed the maximums
 	 * if file were to be added.
 	 */
-	bool large_file(const fs::path &file) const;
+	bool large_file(const File &file) const;
 	/* Check if file size is larger than maximum payload by itself.
 	 * If this wasn't checked, large files would never sync.
 	 */
-	void consume(std::vector<fs::path> &queue);
+	void consume(std::vector<File> &queue);
 	/* Pop files from queue and push into files_ vector until full.
 	 */
-	void consume_one(std::vector<fs::path> &queue);
+	void consume_one(std::vector<File> &queue);
 	/* Only pop and push one file.
 	 */
 	void sync_batch(void);
@@ -174,11 +175,11 @@ public:
 	size_t get_max_arg_sz(void) const;
 	/* Determine max_arg_sz_ from stack limits
 	 */
-	void launch_procs(std::vector<fs::path> &queue, uintmax_t total_bytes);
+	void launch_procs(std::vector<File> &queue, uintmax_t total_bytes);
 	/* Creates SyncProcesses and distributes files across each one. Assigns each process an ID then launches
 	 * them in parallel. Waits for processes to return and relaunches if there are files remaining.
 	 */
-	void distribute_files(std::vector<fs::path> &queue, std::list<SyncProcess> &procs) const;
+	void distribute_files(std::vector<File> &queue, std::list<SyncProcess> &procs) const;
 	/* Round robin distribution of files until all processes are full.
 	 */
 };

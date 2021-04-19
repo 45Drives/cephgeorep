@@ -23,6 +23,7 @@
 #include "config.hpp"
 #include "rctime.hpp"
 #include "concurrent_queue.hpp"
+#include "file.hpp"
 #include <atomic>
 #include <mutex>
 #include <list>
@@ -38,7 +39,7 @@ private:
 	std::mutex file_list_mt_;
 	/* Make file_list_ thread safe for insertion.
 	 */
-	std::vector<fs::path> file_list_;
+	std::vector<File> file_list_;
 	/* List of files to send to remote backup.
 	 */
 	LastRctime last_rctime_;
