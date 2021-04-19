@@ -18,7 +18,7 @@ default: $(TARGET)
 all: default
 static: LIBS = -static -lboost_system -lboost_filesystem -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 static: CFLAGS = -DNO_PARALLEL_SORT -std=c++11 -g -O2 -Wall -Isrc/incl
-static: default
+static: $(TARGET)
 
 no-par-sort: CFLAGS := -std=c++11 -DNO_PARALLEL_SORT $(CFLAGS)
 no-par-sort: $(TARGET)
