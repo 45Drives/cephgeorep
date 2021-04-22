@@ -139,9 +139,11 @@ void SyncProcess::sync_batch(){
 	argv.push_back(NULL);
 	
 	pid_ = fork(); // create child process
+	int error;
 	switch(pid_){
 		case -1:
-			Logging::log.error("Forking failed");
+			error = errno;
+			Logging::log.error(std::string("Forking failed: ") + strerror(error));
 			l::exit(EXIT_FAILURE);
 		case 0: // child process
 			{
@@ -377,4 +379,5 @@ void Syncer::distribute_files(std::vector<File> &queue, std::list<SyncProcess> &
 		// circularly iterate
 		if(proc_itr == distribute_pool.end()) proc_itr = distribute_pool.begin();
 	}
+	queue.shrink_to_fit(); // free up memory ahead of forks
 }
