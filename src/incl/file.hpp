@@ -23,15 +23,18 @@ namespace fs = boost::filesystem;
 
 class File{
 private:
-	fs::file_status status_;
 	uintmax_t size_;
+	fs::file_status status_;
 	fs::path path_;
 public:
-	File(void) : status_(), size_(0), path_() {}
+	File(void) : size_(0), status_(), path_() {}
 	File(const fs::path &path) : status_(fs::symlink_status(path)), path_(path) {
 		size_ = (fs::is_regular_file(status_))? fs::file_size(path) : 0;
 	}
-	File(const File &other) : status_(other.status_), size_(other.size_), path_(other.path_) {}
+	File(const fs::path &path, const fs::file_status &status) : status_(status), path_(path){
+		size_ = (fs::is_regular_file(status_))? fs::file_size(path) : 0;
+	}
+	File(const File &other) : size_(other.size_), status_(other.status_), path_(other.path_) {}
 	~File(void) = default;
 	const fs::file_status &status(void) const{
 		return status_;
