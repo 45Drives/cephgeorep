@@ -14,21 +14,27 @@ Since the binary is statically linked, no boost runtime libraries are needed on 
 * Initialize configuration file: `cephfssyncd -d` (This can be skipped if you installed from .rpm or .deb)
 * Edit according to [Configuration](#configuration): `vim /etc/ceph/cephfssyncd.conf`
 * Verify settings with dry run before seeding: `cephfssyncd -s -d`
-* Seed remote destination (this may take a while): `cephfssyncd -s`
+* Set up passwordless SSH from the sender to the receiver
 * Enable daemon: `systemctl enable --now cephfssyncd`
 
 ## Installation
 ### Current Release
 #### Centos 7
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.2/cephgeorep-1.2.5-1.el7.x86_64.rpm`
-#### Ubuntu
-* `wget https://github.com/45Drives/cephgeorep/releases/download/v1.2/cephgeorep_1.2.5-1focal_amd64.deb`
-* `dpkg -i cephgeorep_1.2.5-1focal_amd64.deb`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.2.7/cephgeorep-1.2.7-1.el7.x86_64.rpm`
+#### Centos 8
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.2.7/cephgeorep-1.2.7-1.el8.x86_64.rpm`
+#### Ubuntu 20.04
+* `wget https://github.com/45Drives/cephgeorep/releases/download/v1.2.7/cephgeorep_1.2.7-1focal_amd64.deb`
+* `apt install ./cephgeorep_1.2.7-1focal_amd64.deb`
+#### Ubuntu 18.04
+* `wget https://github.com/45Drives/cephgeorep/releases/download/v1.2.7/cephgeorep_1.2.7-1bionic_amd64.deb`
+* `apt install ./cephgeorep_1.2.7-1bionic_amd64.deb`
 
 ### Installing from Source
-* `yum install make gcc gcc-c++ boost boost-devel rsync`
+* Install Boost development libraries
 * `git clone https://github.com/45drives/cephgeorep`
 * `cd cephgeorep`
+* `git checkout tags/v1.2.7`
 * `make -j8` or `make -j8 static` to statically link libraries
 * `sudo make install`
 #### Uninstalling from Source
@@ -133,9 +139,7 @@ Log Level = 1
 With this setup, `cephfssynd` will call the s3cmd wrapper script, which in turn calls `s3cmd put ...` for each new file passed to it by `cephfssyncd`, maintaining the directory tree hierarchy.
 
 ## Notes
-* If your backup server is down, cephfssyncd will try to launch rsync or scp and fail, however it will retry. All new files in the server created while cephfssyncd is waiting for rsync or scp to succeed will be synced on the next cycle.  
 * Windows does not update the `mtime` attribute when drag/dropping or copying a file, so files that are moved into a shared folder will not sync if their Last Modified time is earlier than the most recent sync. 
 * When the daemon is killed with SIGINT, SIGTERM, or SIGQUIT, it saves the last sync timestamp to disk in the directory specified in the configuration file to pick up where it left off on the next launch. If the daemon is killed with SIGKILL or if power is lost to the system causing an abrupt shutdown, the daemon will resync all files modified since the previously saved timestamp.
-* If the REMOTE_USER is specified as a user that does not exist on the remote backup server, `rsync` or `scp` will prompt for the user's password. Since it doesn't exist, when SSH fails the daemon will act as if the remote server is down and retry `rsync` or `scp` periodically.
 
 [![45Drives Logo](https://www.45drives.com/img/45-drives-brand.png)](https://www.45drives.com)
