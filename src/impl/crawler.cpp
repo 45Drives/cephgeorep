@@ -193,14 +193,15 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 		if(!nodes_left) return;
 		// put all child directories back in queue
 		for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
-			fs::file_status status = fs::symlink_status(*itr);
-			if(fs::is_directory(status)){
-				// put child into queue
-				if(!ignore_entry(*itr))
+			if(!ignore_entry(*itr)){
+				fs::file_status status = fs::symlink_status(*itr);
+				if(fs::is_directory(status)){
+					// put child into queue
 					queue.push(*itr);
-			}else{
-				// save non-directory children in temp queue
-				files_to_enqueue.emplace_back(*itr, status);
+				}else{
+					// save non-directory children in temp queue
+					files_to_enqueue.emplace_back(*itr, status);
+				}
 			}
 		}
 		for(File &file : files_to_enqueue){
