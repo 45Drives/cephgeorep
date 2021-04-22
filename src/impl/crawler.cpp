@@ -120,7 +120,7 @@ void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 		std::atomic<uintmax_t> total_bytes_at(0);
 		std::atomic<int> threads_running(0);
 		std::vector<std::thread> threads;
-		ConcurrentQueue<fs::path> queue;
+		ConcurrentQueue<File> queue;
 		// seed list with root node
 		queue.push(snap_path);
 		// create threads
@@ -178,35 +178,35 @@ void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &sn
 	}
 }
 
-void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::path &snap_root, std::atomic<uintmax_t> &total_bytes, std::atomic<int> &threads_running){
+void Crawler::find_new_files_mt_bfs(ConcurrentQueue<File> &queue, const fs::path &snap_root, std::atomic<uintmax_t> &total_bytes, std::atomic<int> &threads_running){
 	threads_running++;
-	while(!queue.done()){
-		fs::path node;
-		queue.pop(node, threads_running);
-		if(queue.done() && node.empty()) return;
-		File file(node);
-		if(fs::is_directory(file.status())){
+	bool files_left = true;
+	while(files_left){
+		File node;
+		files_left = queue.pop(node, threads_running);
+		if(!files_left) return;
+		if(fs::is_directory(node.status())){
 			// put children into queue
-			for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
+			for(fs::directory_iterator itr{node.path()}; itr != fs::directory_iterator{}; *itr++){
 				fs::directory_entry child = *itr;
 				if(ignore_entry(child)) continue;
-				queue.push(child);
+				queue.push(child.path());
 			}
-		}else if(fs::is_regular_file(file.status())){
-			file.path(snap_root/fs::path(".")/fs::relative(node, snap_root));
+		}else if(fs::is_regular_file(node.status())){
+			node.path(snap_root/fs::path(".")/fs::relative(node.path(), snap_root));
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
-				file_list_.emplace_back(file);
+				file_list_.push_back(node);
 			}
-			total_bytes += file.size();
-		}else if(fs::is_symlink(file.status())){
-			file.path(snap_root/fs::path(".")/fs::relative(node.parent_path(), snap_root) / node.filename());
+			total_bytes += node.size();
+		}else if(fs::is_symlink(node.status())){
+			node.path(snap_root/fs::path(".")/fs::relative(node.path().parent_path(), snap_root) / node.path().filename());
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
-				file_list_.emplace_back(file);
+				file_list_.push_back(node);
 			}
 		}else{
-			Logging::log.message("Ignoring unknown file type: " + node.string(), 2);
+			Logging::log.message("Ignoring unknown file type: " + node.path().string(), 2);
 		}
 	}
 }

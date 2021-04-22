@@ -28,12 +28,12 @@
 template<class T>
 class ConcurrentQueue{
 private:
-	std::mutex mutex_;
-	std::condition_variable cv_;
+	mutable std::mutex mutex_;
+	std::condition_variable empty_;
 	std::queue<T> queue_;
 	std::atomic<bool> done_;
 public:
-	ConcurrentQueue() : queue_(), done_(false){}
+	ConcurrentQueue() : mutex_(), empty_(), queue_(), done_(false){}
 	~ConcurrentQueue(void) = default;
 	size_t size(void) const{
 		return queue_.size();
@@ -42,35 +42,27 @@ public:
 		return queue_.empty();
 	}
 	void push(const T &val){
-		{
-			std::unique_lock<std::mutex> lk(mutex_);
-			queue_.push(val);
+		std::unique_lock<std::mutex> lk(mutex_);
+		queue_.push(val);
+		empty_.notify_all();
+	}
+	bool pop(T &val, std::atomic<int> &threads_running){
+		// return true if successfully got item, false if done
+		std::unique_lock<std::mutex> lk(mutex_);
+		threads_running--;
+		if(threads_running <= 0 && queue_.empty()){
+			done_ = true;
+			empty_.notify_all();
 		}
-		cv_.notify_one();
-	}
-	void pop(T &val, std::atomic<int> &threads_running){
-		{
-			if(--threads_running <= 0 && queue_.empty()){
-				wake_all();
-				val = T();
-				return;
-			}
-			std::unique_lock<std::mutex> lk(mutex_);
-			cv_.wait(lk, [this](){ return !this->empty() || this->done_; });
-			threads_running++;
-			if(done_){
-				val = T();
-				return;
-			}
-			val = queue_.front();
-			queue_.pop();
+		while(queue_.empty() && !done_){
+			empty_.wait(lk);
 		}
-	}
-	void wake_all(void){
-		done_ = true;
-		cv_.notify_all();
-	}
-	bool done() const{
-		return done_;
+		if(done_ && queue_.empty()){
+			return false;
+		}
+		val = queue_.front();
+		queue_.pop();
+		threads_running++;
+		return true;
 	}
 };
