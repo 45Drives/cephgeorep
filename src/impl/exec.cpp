@@ -248,10 +248,6 @@ void Syncer::launch_procs(std::vector<File> &queue, uintmax_t total_bytes){
 #endif
 		queue.begin(), queue.end(),
 		[](const File &first, const File &second){
-		if(fs::is_symlink(first.status()))
-			return true;
-		if(fs::is_symlink(second.status()))
-			return false;
 		return first.size() < second.size();
 	});
 	
