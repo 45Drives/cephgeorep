@@ -29,6 +29,7 @@ extern "C"{
 
 Crawler::Crawler(const fs::path &config_path, size_t envp_size, const ConfigOverrides &config_overrides)
 		: config_(config_path, config_overrides)
+		, file_list_()
 		, last_rctime_(config_.last_rctime_path_)
 		, syncer(envp_size, config_){
 	base_path_ = config_.base_path_;
@@ -133,6 +134,7 @@ void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 		Logging::log.error("Invalid number of worker threads: " + std::to_string(config_.threads_));
 		l::exit(EXIT_FAILURE);
 	}
+	file_list_.shrink_to_fit();
 	// log list of new files
 	if(config_.log_level_ >= 2){ // skip loop if not logging
 		Logging::log.message("Files to sync:",2);
@@ -184,37 +186,52 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 	fs::path node;
 	File child;
 	std::vector<File> files_to_enqueue;
+	files_to_enqueue.reserve(128);
+	size_t snap_root_len = snap_root.string().length();
 	while(nodes_left){
 		nodes_left = queue.pop(node, threads_running);
 		if(!nodes_left) return;
 		// put all child directories back in queue
 		for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
-			if(ignore_entry(*itr)) continue;
-			child = File(*itr);
-			if(fs::is_directory(child.status())){
+			fs::file_status status = fs::symlink_status(*itr);
+			if(fs::is_directory(status)){
 				// put child into queue
-				queue.push(child.path());
+				if(!ignore_entry(*itr))
+					queue.push(*itr);
 			}else{
 				// save non-directory children in temp queue
-				files_to_enqueue.push_back(child);
+				files_to_enqueue.emplace_back(*itr, status);
 			}
 		}
 		for(File &file : files_to_enqueue){
-			if(fs::is_regular_file(file.status())){
-				file.path(snap_root/fs::path(".")/fs::relative(file.path(), snap_root));
-				{
-					std::unique_lock<std::mutex> lk(file_list_mt_);
-					file_list_.push_back(file);
-				}
-				total_bytes += file.size();
-			}else if(fs::is_symlink(child.status())){
-				file.path(snap_root/fs::path(".")/fs::relative(node, snap_root) / file.path().filename());
-				{
-					std::unique_lock<std::mutex> lk(file_list_mt_);
-					file_list_.push_back(file);
-				}
-			}else{
-				Logging::log.message("Ignoring unknown file type: " + file.path().string(), 2);
+			total_bytes += file.size();
+			
+			// split file path with /./
+			// allocate new path
+			char *split_path = new char[file.path().string().length() + 2 + 1]; // original path + ./ + \0
+			// make copy of pointer for iteration
+			char *dst_ptr = split_path;
+			// make pointer to iterate through snap path
+			const char *src_ptr = snap_root.c_str();
+			// copy snap path into new path
+			while(*src_ptr)
+				*(dst_ptr++) = *(src_ptr++); // copy snap root
+			// append /.
+			*(dst_ptr++) = '/';
+			*(dst_ptr++) = '.';
+			// set src pointer to original path starting after the snap path root
+			src_ptr = file.path().c_str() + snap_root_len;
+			// copy the rest of the original path into the new path
+			while(*src_ptr)
+				*(dst_ptr++) = *(src_ptr++);
+			// finally, append nul
+			*dst_ptr = '\0';
+			
+			file.path(split_path);
+			delete[] split_path;
+			{
+				std::unique_lock<std::mutex> lk(file_list_mt_);
+				file_list_.push_back(std::move(file));
 			}
 		}
 		files_to_enqueue.clear();
