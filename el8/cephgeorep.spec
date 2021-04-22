@@ -52,6 +52,12 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Thu Apr 22 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.7-1
+- Fixed deadlock issue with ConcurrentQueue while multithreaded crawling.
+- Optimized multithreaded crawl to cut crawl time almost in half.
+- Optimized vector sort compare function to speed up sort before launching
+  sync program.
+
 * Mon Apr 19 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.6-1
 - Remove many redundant filesystem stat() calls while gathering and
   sorting files to speed up vector sort.
