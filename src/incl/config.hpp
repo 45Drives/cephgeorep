@@ -107,7 +107,7 @@ private:
 	/* Delay between taking a snapshot and crawling through the directory
 	 * in milliseconds.
 	 */
-	fs::path last_rctime_path_;
+	std::string last_rctime_path_;
 	/* Metadata path to store last_rctime.dat in.
 	 */
 	std::string exec_bin_;
@@ -129,7 +129,7 @@ private:
 	std::string remote_host_;
 	/* Host of destination directory. Optional.
 	 */
-	fs::path remote_directory_;
+	std::string remote_directory_;
 	/* Backup directory to place files in. Optional.
 	 */
 	std::string destinations_;

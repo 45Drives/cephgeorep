@@ -81,14 +81,14 @@ Config::Config(const fs::path &config_path, const ConfigOverrides &config_overri
 		}else if(key == "Remote Host"){
 			remote_host_ = value;
 		}else if(key == "Remote Directory"){
-			remote_directory_ = fs::path(value);
+			remote_directory_ = value;
 		}else if(key == "Destination"){
 			if(destinations_.empty())
 				destinations_ = value;
 			else
 				destinations_ += "," + value;
 		}else if(key == "Metadata Directory"){
-			last_rctime_path_ = fs::path(value).append(LAST_RCTIME_NAME);
+			last_rctime_path_ = value.append(LAST_RCTIME_NAME);
 		}else if(key == "Sync Period"){
 			try{
 				sync_period_s_ = std::chrono::seconds(stoi(value));
@@ -272,13 +272,13 @@ void Config::dump(void) const{
 	ss << "remote settings:" << std::endl;
 	ss << "Remote User = " << remote_user_ << std::endl;
 	ss << "Remote Host = " << remote_host_ << std::endl;
-	ss << "Remote Directory = " << remote_directory_.string() << std::endl;
+	ss << "Remote Directory = " << remote_directory_ << std::endl;
 	ss << "Destination = " << destinations_ << std::endl;
 	ss << std::endl;
 	ss << "daemon settings:" << std::endl;
 	ss << "Exec = " << exec_bin_ << std::endl;
 	ss << "Flags = " << exec_flags_ << std::endl;
-	ss << "Metadata Directory = " << last_rctime_path_.string() << std::endl;
+	ss << "Metadata Directory = " << last_rctime_path_ << std::endl;
 	ss << "Sync Period = " << sync_period_s_.count() << " (seconds)" << std::endl;
 	ss << "Propagation Delay = " << prop_delay_ms_.count() << " (milliseconds)" << std::endl;
 	ss << "Processes = " << nproc_ << std::endl;
