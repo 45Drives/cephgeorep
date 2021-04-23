@@ -25,6 +25,8 @@ namespace fs = boost::filesystem;
 
 #define XATTR_SIZE 1024
 
+class File;
+
 class LastRctime{
 	/* holds timestamp of previous file sync
 	 * to determine whether files are newly
@@ -53,10 +55,11 @@ public:
 	/* creates file to store last_rctime_
 	 * and initializes to 0.0
 	 */
-	bool is_newer(const fs::path &path) const;
+	bool is_newer(const File &file) const;
 	/* calls get_rctime on path, returns true
 	 * if rctime of path is > last_rctime_
 	 */
+	timespec get_rctime(const File &file) const;
 	timespec get_rctime(const fs::path &path) const;
 	/* returns timespec of mtime if path is a file
 	 * or ceph.dir.rctime if path is a directory

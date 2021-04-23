@@ -20,6 +20,7 @@
 #include "rctime.hpp"
 #include "alert.hpp"
 #include "signal.hpp"
+#include "file.hpp"
 #include <fstream>
 
 extern "C" {
@@ -81,8 +82,47 @@ void LastRctime::init_last_rctime(void) const{
 	f.close();
 }
 
-bool LastRctime::is_newer(const fs::path &path) const{
-	return get_rctime(path) > last_rctime_;
+bool LastRctime::is_newer(const File &file) const{
+	return get_rctime(file) > last_rctime_;
+}
+
+timespec LastRctime::get_rctime(const File &file) const{
+	timespec rctime;
+	if(file.is_directory()){
+		char value[XATTR_SIZE];
+		if(lgetxattr(file.path(), "ceph.dir.rctime", value, XATTR_SIZE) == -1){
+			int err = errno;
+			Logging::log.warning(std::string("getxattr failed: ") + strerror(err));
+			Logging::log.warning(std::string("Cannot read ceph.dir.rctime of ") + file.path());
+			rctime.tv_sec = 0;
+			rctime.tv_nsec = 0;
+		}else{
+			// value = <seconds> + '.09' + <nanoseconds>
+			char *seconds = value;
+			// cut value at '.'
+			char *ptr = value;
+			while(*ptr != '.' && *ptr != '\0')
+				ptr++;
+			*ptr = '\0'; // cut string
+			ptr += 3; // advance past .09
+			char *nanoseconds = ptr;
+			rctime.tv_sec = (time_t)strtoul(seconds, &ptr, 10);
+			rctime.tv_nsec = strtol(nanoseconds, &ptr, 10);
+		}
+	}else{ // file
+		struct stat stat;
+		if(lstat(file.path(), &stat) == -1){
+			int err = errno;
+			Logging::log.warning(std::string("stat failed: ") + strerror(err));
+			Logging::log.warning(std::string("Cannot read mtime of ") + file.path());
+			rctime.tv_sec = 0;
+			rctime.tv_nsec = 0;
+		}else{
+			rctime.tv_sec = stat.st_mtim.tv_sec;
+			rctime.tv_nsec = stat.st_mtim.tv_nsec;
+		}
+	}
+	return rctime;
 }
 
 timespec LastRctime::get_rctime(const fs::path &path) const{
