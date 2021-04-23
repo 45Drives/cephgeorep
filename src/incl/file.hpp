@@ -18,34 +18,82 @@
  */
 
 #pragma once
-#include <boost/filesystem.hpp>
-namespace fs = boost::filesystem;
+
+#include "alert.hpp"
+#include "signal.hpp"
+#include <string>
+
+extern "C" {
+	#include <sys/stat.h>
+}
 
 class File{
 private:
-	uintmax_t size_;
-	fs::file_status status_;
-	fs::path path_;
+	off_t size_;
+	bool is_directory_;
+	size_t path_len_;
+	char *path_;
+	inline void init(const char *path, size_t snap_root_len, const struct stat &st){
+		size_ = st.st_size;
+		is_directory_ = S_ISDIR(st.st_mode);
+		if(is_directory_){
+			path_ = new char[strlen(path) + 1];
+			strcpy(path_, path);
+		}else{
+			// split file path with /./
+			// allocate new path
+			path_ = new char[strlen(path) + 2 + 1]; // original path + ./ + \0
+			// make copy of pointer for iteration
+			char *dst_ptr = path_;
+			// make pointer to iterate through snap path
+			const char *src_ptr = path;
+			// copy snap path into new path
+			const char *snap_root_end = path + snap_root_len;
+			while(src_ptr < snap_root_end)
+				*(dst_ptr++) = *(src_ptr++); // copy snap root
+			// append /.
+			*(dst_ptr++) = '/';
+			*(dst_ptr++) = '.';
+			// set src pointer to original path starting after the snap path root
+			src_ptr = snap_root_end;
+			// copy the rest of the original path into the new path
+			while(*src_ptr)
+				*(dst_ptr++) = *(src_ptr++);
+			// finally, append nul
+			*dst_ptr = '\0';
+			path_len_ = dst_ptr - path_;
+		}
+	}
 public:
-	File(void) : size_(0), status_(), path_() {}
-	File(const fs::path &path) : status_(fs::symlink_status(path)), path_(path) {
-		size_ = (fs::is_regular_file(status_))? fs::file_size(path) : 0;
+	File(void) : size_(0), is_directory_(false), path_len_(0), path_(0) {}
+	File(const char *path, size_t snap_root_len) : path_len_(0){
+		struct stat st;
+		int res = lstat(path, &st);
+		if(res == -1){
+			int err = errno;
+			Logging::log.error(std::string("Error calling stat on file: ") + strerror(err));
+			l::exit(EXIT_FAILURE);
+		}
+		init(path, snap_root_len, st);
 	}
-	File(const fs::path &path, const fs::file_status &status) : status_(status), path_(path){
-		size_ = (fs::is_regular_file(status_))? fs::file_size(path) : 0;
+	File(const char *path, size_t snap_root_len, const struct stat &st) : path_len_(0){
+		init(path, snap_root_len, st);
 	}
-	File(const File &other) : size_(other.size_), status_(other.status_), path_(other.path_) {}
-	~File(void) = default;
-	const fs::file_status &status(void) const{
-		return status_;
+	File(const File &other) : size_(other.size_), is_directory_(other.is_directory_), path_len_(other.path_len_){
+		path_ = new char[strlen(other.path_) + 1];
+		strcpy(path_, other.path_);
+	}
+	~File(void){
+		if(path_)
+			delete[] path_;
 	}
 	uintmax_t size(void) const{
 		return size_;
 	}
-	const fs::path &path(void) const{
-		return path_;
+	bool is_directory(void) const{
+		return is_directory_;
 	}
-	void path(const fs::path &formatted_path){
-		path_ = formatted_path;
+	const char *path(void) const{
+		return path_;
 	}
 };
