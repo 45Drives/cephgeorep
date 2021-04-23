@@ -30,8 +30,8 @@ extern "C"{
 Crawler::Crawler(const fs::path &config_path, size_t envp_size, const ConfigOverrides &config_overrides)
 		: config_(config_path, config_overrides)
 		, file_list_()
-		, last_rctime_(config_.last_rctime_path_)
-		, syncer(envp_size, config_){
+		, last_rctime_(config_.last_rctime_path_){
+// 		, syncer(envp_size, config_){
 	base_path_ = config_.base_path_;
 	set_signal_handlers(this);
 }
@@ -69,10 +69,10 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime, bool oneshot){
 			if(!file_list_.empty()){
 				if(dry_run){
 					std::string msg = config_.exec_bin_ + " " + config_.exec_flags_ + " <file list> ";
-					msg += syncer.construct_destination(config_.remote_user_, config_.remote_host_, config_.remote_directory_);
+					//msg += syncer.construct_destination(config_.remote_user_, config_.remote_host_, config_.remote_directory_);
 					Logging::log.message(msg, 1);
 				}else if(!set_rctime){
-					syncer.launch_procs(file_list_, total_bytes);
+					//syncer.launch_procs(file_list_, total_bytes);
 				}
 			}
 			// clear sync queue
@@ -139,43 +139,84 @@ void Crawler::trigger_search(const fs::path &snap_path, uintmax_t &total_bytes){
 	if(config_.log_level_ >= 2){ // skip loop if not logging
 		Logging::log.message("Files to sync:",2);
 		for(auto &i : file_list_){
-			Logging::log.message(i.path().string(),2);
+			Logging::log.message(i.path(),2);
 		}
 	}
 }
 
-bool Crawler::ignore_entry(const fs::path &path) const{
-	if(config_.ignore_hidden_ && path.filename().string().front() == '.'){
+inline const char *get_last_of(const char *string, char test){
+	const char *last = nullptr;
+	while(*string++ != '\0')
+		if(*string == test)
+			last = string;
+	return last;
+}
+
+inline const char *get_filename(const char *path){
+	const char *file_name =  get_last_of(path, '/');
+	if(file_name == nullptr)
+		return nullptr;
+	return file_name+1;
+}
+
+inline bool check_hidden(const char *file_name){
+	// /^\./
+	return *file_name == '.';
+}
+
+inline bool check_win_lock(const char *file_name){
+	// /^~\$/
+	return (file_name[0] == '~' && file_name[1] == '$');
+}
+
+inline bool check_vim_swap(const char *file_name){
+	// /^\..*\.swpx?$/
+	// move to end
+	if(!check_hidden(file_name))
+		return false;
+	const char *ext = get_last_of(file_name, '.');
+	if(ext == nullptr)
+		return false;
+	return (
+		   ext[1] == 's'
+		&& ext[2] == 'w'
+		&& ext[3] == 'p'
+		&& (
+			   ext[4] == '\0' /* ends in .swp */
+			|| (
+				   ext[4] == 'x'
+				&& ext[5] == '\0' /* ends in .swpx */
+			)
+		)
+	);
+}
+
+bool Crawler::ignore_entry(const File &file) const{
+	const char *file_name = get_filename(file.path());
+	if(config_.ignore_hidden_ && check_hidden(file_name)){
 		return true;
 	}
-	if(config_.ignore_win_lock_ && path.filename().string().substr(0,2) == "~$"){
+	if(config_.ignore_win_lock_ && check_win_lock(file_name)){
 		return true;
 	}
-	if(config_.ignore_vim_swap_ == true && path.filename().string().front() == '.'){
-		if(path.extension() == ".swp" || path.extension() == ".swpx"){
-			return true;
-		}
+	if(config_.ignore_vim_swap_ == true && check_vim_swap(file_name)){
+		return true;
 	}
-	return !last_rctime_.is_newer(path);
+	return !last_rctime_.is_newer(file);
 }
 
 void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &snap_root, uintmax_t &total_bytes){
+	size_t snap_root_len = snap_root.string().length();
 	for(fs::directory_iterator itr{current_path}; itr != fs::directory_iterator{}; *itr++){
 		fs::directory_entry entry = *itr;
-		if(ignore_entry(entry)) continue;
-		File file(entry);
-		if(fs::is_directory(file.status())){
+		const char *path = entry.path().c_str();
+		File file(path, snap_root_len);
+		if(ignore_entry(file)) continue;
+		if(file.is_directory()){
 			find_new_files_recursive(entry.path(), snap_root, total_bytes); // recurse
-		}else if(fs::is_regular_file(file.status())){
-			total_bytes += file.size();
-			file.path(snap_root/fs::path(".")/fs::relative(entry.path(), snap_root));
-			// cut path at sync dir for rsync /sync_dir/.snap/snapshotX/./rel_path/file
-			file_list_.emplace_back(file);
-		}else if(fs::is_symlink(entry)){
-			file.path(snap_root/fs::path(".")/fs::relative(entry.path().parent_path(), snap_root) / entry.path().filename());
-			file_list_.emplace_back(file);
 		}else{
-			Logging::log.message("Ignoring unknown file type: " + entry.path().string(), 2);
+			total_bytes += file.size();
+			file_list_.emplace_back(file);
 		}
 	}
 }
@@ -184,7 +225,6 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 	threads_running++;
 	bool nodes_left = true;
 	fs::path node;
-	File child;
 	std::vector<File> files_to_enqueue;
 	files_to_enqueue.reserve(128);
 	size_t snap_root_len = snap_root.string().length();
@@ -193,43 +233,19 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 		if(!nodes_left) return;
 		// put all child directories back in queue
 		for(fs::directory_iterator itr{node}; itr != fs::directory_iterator{}; *itr++){
-			if(!ignore_entry(*itr)){
-				fs::file_status status = fs::symlink_status(*itr);
-				if(fs::is_directory(status)){
-					// put child into queue
+			File file(itr->path().c_str(), snap_root_len);
+			if(!ignore_entry(file)){
+				if(file.is_directory()){
+					// put child directory into queue
 					queue.push(*itr);
 				}else{
 					// save non-directory children in temp queue
-					files_to_enqueue.emplace_back(*itr, status);
+					files_to_enqueue.push_back(std::move(file));
 				}
 			}
 		}
 		for(File &file : files_to_enqueue){
 			total_bytes += file.size();
-			
-			// split file path with /./
-			// allocate new path
-			char *split_path = new char[file.path().string().length() + 2 + 1]; // original path + ./ + \0
-			// make copy of pointer for iteration
-			char *dst_ptr = split_path;
-			// make pointer to iterate through snap path
-			const char *src_ptr = snap_root.c_str();
-			// copy snap path into new path
-			while(*src_ptr)
-				*(dst_ptr++) = *(src_ptr++); // copy snap root
-			// append /.
-			*(dst_ptr++) = '/';
-			*(dst_ptr++) = '.';
-			// set src pointer to original path starting after the snap path root
-			src_ptr = file.path().c_str() + snap_root_len;
-			// copy the rest of the original path into the new path
-			while(*src_ptr)
-				*(dst_ptr++) = *(src_ptr++);
-			// finally, append nul
-			*dst_ptr = '\0';
-			
-			file.path(split_path);
-			delete[] split_path;
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
 				file_list_.push_back(std::move(file));

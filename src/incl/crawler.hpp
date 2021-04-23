@@ -19,11 +19,11 @@
 
 #pragma once
 
-#include "exec.hpp"
 #include "config.hpp"
 #include "rctime.hpp"
 #include "concurrent_queue.hpp"
 #include "file.hpp"
+#include "syncer.hpp"
 #include <atomic>
 #include <mutex>
 #include <list>
@@ -51,7 +51,7 @@ private:
 	fs::path snap_path_;
 	/* Path to current snapshot.
 	 */
-	Syncer syncer;
+// 	Syncer syncer;
 	/* Controls executing the sync program.
 	 */
 public:
@@ -82,7 +82,7 @@ public:
 	 * into file_list_, keeps tally of filesize in
 	 * total_bytes.
 	 */
-	bool ignore_entry(const fs::path &path) const;
+	bool ignore_entry(const File &file) const;
 	/* Returns true if file should not be queued or directory should
 	 * not be searched.
 	 */
