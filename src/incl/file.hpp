@@ -108,6 +108,9 @@ public:
 	char *path(void) const{
 		return path_;
 	}
+	void disown_path(void){
+		path_ = nullptr;
+	}
 	size_t path_len(void) const{
 		return path_len_;
 	}

@@ -63,11 +63,12 @@ uintmax_t SyncProcess::payload_sz(void) const{
 }
 
 uintmax_t SyncProcess::payload_count(void) const{
-	return payload_.size() - start_payload_sz_;
+	return payload_.size() - start_payload_sz_ - 2; // subtract NULL and destination
 }
 
 void SyncProcess::add(const std::vector<File>::iterator &itr){
 	payload_.push_back(itr->path());
+	itr->disown_path();
 	curr_mem_usage_ += itr->path_len() + 1 + sizeof(char *);
 	curr_payload_bytes_ += itr->size();
 }
@@ -112,10 +113,13 @@ void SyncProcess::sync_batch(){
 }
 
 void SyncProcess::reset(void){
-	/* clear payload from start_payload_sz_ to end
-	 * set curr_mem_usage_ to start_mem_usage_
-	 * set curr_payload_bytes_ to 0
-	 */
+	for(
+		std::vector<char *>::iterator itr = std::next(payload_.begin(), start_payload_sz_);
+		itr != std::prev(payload_.end(), 2); // 2 before end to avoid deleting dest and NULL
+		++itr
+	){
+		delete[] *itr; // free memory taken by path
+	}
 	payload_.resize(start_payload_sz_);
 	curr_mem_usage_ = start_mem_usage_;
 	curr_payload_bytes_ = 0;
