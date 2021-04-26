@@ -92,7 +92,7 @@ size_t Syncer::get_mem_limit(void) const{
 		int err = errno;
 		Logging::log.warning(std::string("Could not determine ARG_MAX from syscall: ") + strerror(err));
 	}else{
-		if(arg_max_sz > arg_max) arg_max_sz = arg_max;
+		if(arg_max_sz > (size_t)arg_max) arg_max_sz = arg_max;
 	}
 	return arg_max_sz;
 }
@@ -148,8 +148,6 @@ void Syncer::launch_procs(std::vector<File> &queue, uintmax_t total_bytes){
 				case SUCCESS:
 					Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
 					exited_proc->reset();
-					if(!exited_proc->done(queue))
-						exited_proc->consume(queue);
 					break;
 				case SSH_FAIL:
 					{
@@ -208,6 +206,7 @@ void Syncer::launch_procs(std::vector<File> &queue, uintmax_t total_bytes){
 				}
 				procs.erase(exited_proc);
 			}else{
+				exited_proc->consume(queue);
 				{
 					std::string msg = "Launching " + exec_bin_ + " " + exec_flags_ + " with " + std::to_string(exited_proc->payload_count()) + " files.";
 					if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
