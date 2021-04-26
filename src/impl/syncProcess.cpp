@@ -77,7 +77,7 @@ bool SyncProcess::full_test(const File &file) const{
 }
 
 void SyncProcess::consume(std::vector<File> &queue){
-	while(file_itr_ + inc_ < queue.end() && !full_test(*file_itr_)){
+	while(file_itr_ < queue.end() && !full_test(*file_itr_)){
 		add(file_itr_);
 		std::advance(file_itr_, inc_);
 	}
@@ -124,7 +124,7 @@ void SyncProcess::reset(void){
 }
 
 bool SyncProcess::done(const std::vector<File> &queue) const{
-	return (file_itr_ + inc_ >= queue.end()); // no room to advance file_itr_ by nproc_
+	return (file_itr_ >= queue.end()); // no room to advance file_itr_ by nproc_
 }
 
 const std::string &SyncProcess::destination(void) const{
