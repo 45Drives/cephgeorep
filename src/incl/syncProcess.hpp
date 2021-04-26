@@ -10,7 +10,7 @@ class SyncProcess{
 private:
 	int id_;
 	/* Integral ID for each process to be used while printing
-	 * log messages.
+	 * log messages. Also starting point of file_itr_.
 	 */
 	int inc_;
 	/* Amount to increment the file list iterator by.
@@ -77,25 +77,27 @@ public:
 	 */
 	void add(const std::vector<File>::iterator &itr);
 	/* Add one file to the payload.
-	 * Incrememnts curr_arg_sz_ and curr_bytes_sz_ accordingly.
+	 * Incrememnts curr_mem_usage_ and curr_payload_bytes_ accordingly.
 	 */
 	bool full_test(const File &file) const;
 	/* Returns true if curr_mem_usage_ exceeds the maximum
 	 * if file were to be added.
 	 */
 	void consume(std::vector<File> &queue);
-	/* Pop files from queue and push into files_ vector until full.
+	/* Push c string pointers into payload_ vector until memory
+	 * usage is full or end of queue.
 	 */
 	void sync_batch(void);
 	/* Fork and execute sync program with file batch.
 	 */
 	void reset(void);
-	/* clear payload from start_payload_sz_ to end
+	/* free memory taken by path c-strings
+	 * clear payload from start_payload_sz_ to end
 	 * set curr_mem_usage_ to start_mem_usage_
 	 * set curr_payload_bytes_ to 0
 	 */
 	bool done(const std::vector<File> &queue) const;
-	/* Returns queue.end() - file_itr_ <= nrpoc.
+	/* Returns file_itr_ >= queue.end().
 	 */
 	const std::string &destination(void) const;
 	/* Returns sending_to_.
