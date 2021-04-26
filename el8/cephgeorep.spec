@@ -3,7 +3,7 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           cephgeorep
-Version:        1.2.6
+Version:        1.2.8
 Release:        1%{?dist}
 Summary:        Ceph File System Remote Sync Daemon
 
@@ -52,6 +52,13 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Mon Apr 26 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.8-1
+- Signigicant optimizations for modifying file paths and for comparing
+  file size and type to make crawl time up to 6 times faster.
+- Lowered memory usage by using iterators and c-string pointers rather
+  than copying the vector of file objects into partitions to distribute
+  paths amongst sync processes.
+
 * Thu Apr 22 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.7-1
 - Fixed deadlock issue with ConcurrentQueue while multithreaded crawling.
 - Optimized multithreaded crawl to cut crawl time almost in half.

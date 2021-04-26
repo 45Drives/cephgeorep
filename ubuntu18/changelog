@@ -1,3 +1,13 @@
+cephgeorep (1.2.8-1bionic) bionic; urgency=medium
+
+  * Signigicant optimizations for modifying file paths and for comparing
+    file size and type to make crawl time up to 6 times faster.
+  * Lowered memory usage by using iterators and c-string pointers rather
+    than copying the vector of file objects into partitions to distribute
+    paths amongst sync processes.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 26 Apr 2021 10:56:00 -0400
+
 cephgeorep (1.2.7-1bionic) bionic; urgency=high
 
   * Fixed deadlock issue with ConcurrentQueue while multithreaded crawling.
