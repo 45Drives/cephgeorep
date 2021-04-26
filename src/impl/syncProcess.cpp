@@ -14,7 +14,7 @@ SyncProcess::SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &q
 		inc_(nproc),
 		max_mem_usage_(parent->max_mem_usage_),
 		start_mem_usage_(parent->start_mem_usage_),
-		curr_mem_usage_(0),
+		curr_mem_usage_(start_mem_usage_),
 		curr_payload_bytes_(0),
 		exec_bin_(parent->exec_bin_),
 		exec_flags_(parent->exec_flags_),
