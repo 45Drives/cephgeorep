@@ -5,6 +5,7 @@ cephgeorep (1.2.8-1focal) focal; urgency=medium
   * Lowered memory usage by using iterators and c-string pointers rather
     than copying the vector of file objects into partitions to distribute
     paths amongst sync processes.
+  * Make systemd service restart on abnormal exit (killed by signal).
 
  -- Josh Boudreau <jboudreau@45drives.com>  Mon, 26 Apr 2021 10:56:00 -0400
 

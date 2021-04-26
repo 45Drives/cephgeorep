@@ -58,6 +58,7 @@ systemctl daemon-reload
 - Lowered memory usage by using iterators and c-string pointers rather
   than copying the vector of file objects into partitions to distribute
   paths amongst sync processes.
+- Make systemd service restart on abnormal exit (killed by signal).
 
 * Thu Apr 22 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.7-1
 - Fixed deadlock issue with ConcurrentQueue while multithreaded crawling.
