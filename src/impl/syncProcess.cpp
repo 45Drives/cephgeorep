@@ -81,14 +81,12 @@ void SyncProcess::consume(std::vector<File> &queue){
 		add(file_itr_);
 		std::advance(file_itr_, inc_);
 	}
+	sending_to_ = *destination_;
+	if(!destination_->empty()) payload_.push_back((char *)destination_->c_str());
+	payload_.push_back(NULL);
 }
 
 void SyncProcess::sync_batch(){
-	sending_to_ = *destination_;
-	
-	if(!destination_->empty()) payload_.push_back((char *)destination_->c_str());
-	payload_.push_back(NULL);
-	
 	pid_ = fork(); // create child process
 	int error;
 	switch(pid_){
