@@ -24,8 +24,6 @@
 #define SUCCESS 0
 #define PERM_DENY 23
 
-#define MAX_SZ_LIM (32ul*1024ul*1024ul*1024ul)
-
 #include <list>
 #include <vector>
 #include <string>

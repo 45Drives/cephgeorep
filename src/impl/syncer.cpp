@@ -87,7 +87,13 @@ size_t Syncer::get_mem_limit(void) const{
 	getrlimit(RLIMIT_STACK, &lims);
 	size_t arg_max_sz = lims.rlim_cur / 4;
 	arg_max_sz -= 2048; // allow 2048 bytes of headroom
-	if(arg_max_sz > MAX_SZ_LIM) arg_max_sz = MAX_SZ_LIM;
+	long arg_max = sysconf(_SC_ARG_MAX);
+	if(arg_max == -1){
+		int err = errno;
+		Logging::log.warning(std::string("Could not determine ARG_MAX from syscall: ") + strerror(err));
+	}else{
+		if(arg_max_sz > arg_max) arg_max_sz = arg_max;
+	}
 	return arg_max_sz;
 }
 
