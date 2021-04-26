@@ -51,7 +51,7 @@ private:
 	fs::path snap_path_;
 	/* Path to current snapshot.
 	 */
-// 	Syncer syncer;
+	Syncer syncer;
 	/* Controls executing the sync program.
 	 */
 public:
