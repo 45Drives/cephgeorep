@@ -30,8 +30,8 @@ extern "C"{
 Crawler::Crawler(const fs::path &config_path, size_t envp_size, const ConfigOverrides &config_overrides)
 		: config_(config_path, config_overrides)
 		, file_list_()
-		, last_rctime_(config_.last_rctime_path_){
-// 		, syncer(envp_size, config_){
+		, last_rctime_(config_.last_rctime_path_)
+		, syncer(envp_size, config_){
 	base_path_ = config_.base_path_;
 	set_signal_handlers(this);
 }
@@ -69,10 +69,10 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime, bool oneshot){
 			if(!file_list_.empty()){
 				if(dry_run){
 					std::string msg = config_.exec_bin_ + " " + config_.exec_flags_ + " <file list> ";
-					//msg += syncer.construct_destination(config_.remote_user_, config_.remote_host_, config_.remote_directory_);
+					msg += syncer.construct_destination(config_.remote_user_, config_.remote_host_, config_.remote_directory_);
 					Logging::log.message(msg, 1);
 				}else if(!set_rctime){
-					//syncer.launch_procs(file_list_, total_bytes);
+					syncer.launch_procs(file_list_, total_bytes);
 				}
 			}
 			// clear sync queue
@@ -216,7 +216,7 @@ void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &sn
 			find_new_files_recursive(entry.path(), snap_root, total_bytes); // recurse
 		}else{
 			total_bytes += file.size();
-			file_list_.emplace_back(file);
+			file_list_.emplace_back(std::move(file));
 		}
 	}
 }
@@ -240,7 +240,7 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 					queue.push(*itr);
 				}else{
 					// save non-directory children in temp queue
-					files_to_enqueue.push_back(std::move(file));
+					files_to_enqueue.emplace_back(std::move(file));
 				}
 			}
 		}
@@ -248,7 +248,7 @@ void Crawler::find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::
 			total_bytes += file.size();
 			{
 				std::unique_lock<std::mutex> lk(file_list_mt_);
-				file_list_.push_back(std::move(file));
+				file_list_.emplace_back(std::move(file));
 			}
 		}
 		files_to_enqueue.clear();
