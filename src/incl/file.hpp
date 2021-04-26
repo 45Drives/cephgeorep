@@ -79,9 +79,21 @@ public:
 	File(const char *path, size_t snap_root_len, const struct stat &st) : path_len_(0){
 		init(path, snap_root_len, st);
 	}
-	File(const File &other) : size_(other.size_), is_directory_(other.is_directory_), path_len_(other.path_len_){
-		path_ = new char[strlen(other.path_) + 1];
-		strcpy(path_, other.path_);
+	File(const File &other) = delete;
+	File(File &&other)
+		: size_(std::move(other.size_))
+		, is_directory_(std::move(other.is_directory_))
+		, path_len_(std::move(other.path_len_))
+		, path_(std::move(other.path_)){
+		other.path_ = nullptr;
+	}
+	File &operator=(File &&other){
+		size_ = std::move(other.size_);
+		is_directory_ = std::move(other.is_directory_);
+		path_len_ = std::move(other.path_len_);
+		path_ = std::move(other.path_);
+		other.path_ = nullptr;
+		return *this;
 	}
 	~File(void){
 		if(path_)
@@ -93,7 +105,10 @@ public:
 	bool is_directory(void) const{
 		return is_directory_;
 	}
-	const char *path(void) const{
+	char *path(void) const{
 		return path_;
+	}
+	size_t path_len(void) const{
+		return path_len_;
 	}
 };
