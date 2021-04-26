@@ -12,25 +12,27 @@ private:
 	/* Integral ID for each process to be used while printing
 	 * log messages.
 	 */
+	int inc_;
+	/* Amount to increment the file list iterator by.
+	 */
 	pid_t pid_;
 	/* PID of process.
 	 */
-	size_t start_arg_sz_;
+	size_t start_payload_sz_;
+	/* Count of elements in argv for sync process without any files added
+	 */
+	size_t max_mem_usage_;
+	/* Maximum number of bytes allowed in environment and argv of called
+	 * process.
+	 */
+	size_t start_mem_usage_;
 	/* Number of bytes contained in the environment and in the
 	 * executable path and flags.
 	 */
-	size_t max_arg_sz_;
-	/* Maximum number of bytes allowed in environment and argv of called
-	 * process. Roughly 1/4 of stack.
-	 */
-	size_t curr_arg_sz_;
+	size_t curr_mem_usage_;
 	/* Keeps track of bytes in argument vector.
 	 */
-	uintmax_t max_bytes_sz_;
-	/* Number of bytes of files on disk for each process to sync.
-	 * Equal to total bytes divided by number of processes.
-	 */
-	uintmax_t curr_bytes_sz_;
+	uintmax_t curr_payload_bytes_;
 	/* Keeps track of payload size.
 	 */
 	std::string exec_bin_;
@@ -45,11 +47,14 @@ private:
 	std::string sending_to_;
 	/* For printing failures after iterator changes.
 	 */
-	std::vector<File>::reverse_iterator file_itr_;
-	/* List of files to sync.
+	std::vector<File>::iterator file_itr_;
+	/* Iterator to list of files to sync.
+	 */
+	std::vector<char *> payload_;
+	/* argv for sync process
 	 */
 public:
-	SyncProcess(Syncer *parent, uintmax_t max_bytes_sz, std::vector<File> &queue);
+	SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &queue);
 	/* Constructor. Grabs members from parent pointer.
 	 */
 	~SyncProcess();
@@ -70,33 +75,27 @@ public:
 	uintmax_t payload_count(void) const;
 	/* Return number of files in payload.
 	 */
-	void add(const File &file);
+	void add(const std::vector<File>::iterator &itr);
 	/* Add one file to the payload.
 	 * Incrememnts curr_arg_sz_ and curr_bytes_sz_ accordingly.
 	 */
 	bool full_test(const File &file) const;
-	/* Returns true if curr_arg_sz_ or curr_bytes_sz_ exceed the maximums
+	/* Returns true if curr_mem_usage_ exceeds the maximum
 	 * if file were to be added.
-	 */
-	bool large_file(const File &file) const;
-	/* Check if file size is larger than maximum payload by itself.
-	 * If this wasn't checked, large files would never sync.
 	 */
 	void consume(std::vector<File> &queue);
 	/* Pop files from queue and push into files_ vector until full.
 	 */
-	void consume_one(std::vector<File> &queue);
-	/* Only pop and push one file.
-	 */
 	void sync_batch(void);
 	/* Fork and execute sync program with file batch.
 	 */
-	void clear_file_list(void);
-	/* Clear files_ and reset curr_arg_sz_ and curr_bytes_sz_ to
-	 * start_arg_sz_ and 0, respectively.
+	void reset(void);
+	/* clear payload from start_payload_sz_ to end
+	 * set curr_mem_usage_ to start_mem_usage_
+	 * set curr_payload_bytes_ to 0
 	 */
-	bool payload_empty(void) const;
-	/* Returns files_.empty().
+	bool done(const std::vector<File> &queue) const;
+	/* Returns queue.end() - file_itr_ <= nrpoc.
 	 */
 	const std::string &destination(void) const;
 	/* Returns sending_to_.
