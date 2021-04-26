@@ -65,10 +65,14 @@ Syncer::Syncer(size_t envp_size, const Config &config)
 	}
 	if(destinations_.empty())
 		destinations_.push_back(construct_destination(config.remote_user_, config.remote_host_, config.remote_directory_));
-	destination_ = destinations_.begin();
-	if(!destination_->empty()){
-		start_mem_usage_ += destination_->length() + 1 + sizeof(char *);
+	int max_destination_len = 0;
+	for(const std::string &dest : destinations_){
+		int test_len = dest.length();
+		if(test_len > max_destination_len)
+			max_destination_len = test_len;
 	}
+	destination_ = destinations_.begin();
+	start_mem_usage_ += max_destination_len + 1 + sizeof(char *);
 }
 
 std::string Syncer::construct_destination(std::string remote_user, std::string remote_host, std::string remote_directory) const{
