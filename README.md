@@ -1,7 +1,7 @@
 # cephgeorep
 Ceph File System Remote Sync Daemon  
 For use with a distributed Ceph File System cluster to georeplicate files to a remote backup server.  
-This daemon takes advantage of Ceph's `rctime` directory attribute, which is the value of the highest `mtime` of all the files below a given directory tree. Using this attribute, it selectively recurses only into directory tree branches with modified files - instead of wasting time accessing every branch.
+This daemon takes advantage of Ceph's `rctime` directory attribute, which is the value of the highest `mtime` of all the files below a given directory tree node. Using this attribute, it selectively recurses only into directory tree branches with modified files - instead of wasting time accessing every branch.
 
 ## Prerequisites
 You must have a Ceph file system. `rsync`, `scp`, or similar must be installed on both the local system and the remote backup. You must also set up passwordless SSH from your sender (local) to your receiver (remote backup) with a public/private key pair to allow rsync to send your files without prompting for a password. For compilation, boost development libraries are needed. The binary provided is statically linked, so the server does not need boost to run the daemon.
