@@ -37,6 +37,7 @@ SyncProcess::SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &q
 		char *flag = new char[(*itr).length()+1];
 		strcpy(flag,(*itr).c_str());
 		payload_.push_back(flag);
+		garbage_.push_back(flag);
 	}
 	
 	start_payload_sz_ = payload_.size();
@@ -44,7 +45,10 @@ SyncProcess::SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &q
 	std::advance(file_itr_, id_);
 }
 
-SyncProcess::~SyncProcess(){}
+SyncProcess::~SyncProcess(){
+	for(char *string : garbage_)
+		delete[] string;
+}
 
 int SyncProcess::id() const{
 	return id_;
@@ -83,8 +87,14 @@ void SyncProcess::consume(std::vector<File> &queue){
 		std::advance(file_itr_, inc_);
 	}
 	sending_to_ = *destination_;
-	if(!destination_->empty()) payload_.push_back((char *)destination_->c_str());
+	if(!destination_->empty()){
+		char *dest = new char[destination_->length() + 1];
+		strcpy(dest, destination_->c_str());
+		payload_.push_back(dest);
+		garbage_.push_back(dest);
+	}
 	payload_.push_back(NULL);
+	payload_.shrink_to_fit();
 }
 
 void SyncProcess::sync_batch(){

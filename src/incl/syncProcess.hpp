@@ -53,6 +53,9 @@ private:
 	std::vector<char *> payload_;
 	/* argv for sync process
 	 */
+	std::vector<char *> garbage_;
+	/* Dynamically allocated strings to be deleted in destructor.
+	 */
 public:
 	SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &queue);
 	/* Constructor. Grabs members from parent pointer.
