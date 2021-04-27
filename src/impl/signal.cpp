@@ -59,10 +59,10 @@ void signal_handling::error_cleanup(void){
 }
 
 void l::exit(int num, int status){
-	signal_handling::error_cleanup();
 	if(num == EXIT_FAILURE && status == Status::NOT_RUNNING)
 		Status::status.set(Status::EXIT_FAILED);
 	else
 		Status::status.set(status);
+	signal_handling::error_cleanup();
 	::exit(num);
 }
