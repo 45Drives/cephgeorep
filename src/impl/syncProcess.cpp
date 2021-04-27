@@ -87,12 +87,8 @@ void SyncProcess::consume(std::vector<File> &queue){
 		std::advance(file_itr_, inc_);
 	}
 	sending_to_ = *destination_;
-	if(!destination_->empty()){
-		char *dest = new char[destination_->length() + 1];
-		strcpy(dest, destination_->c_str());
-		payload_.push_back(dest);
-		garbage_.push_back(dest);
-	}
+	if(!destination_->empty())
+		payload_.push_back((char *)destination_->c_str());
 	payload_.push_back(NULL);
 	payload_.shrink_to_fit();
 }
