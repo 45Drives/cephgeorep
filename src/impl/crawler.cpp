@@ -192,17 +192,16 @@ inline bool check_vim_swap(const char *file_name){
 }
 
 bool Crawler::ignore_entry(const File &file) const{
-	const char *file_name = get_filename(file.path());
-	if(config_.ignore_hidden_ && check_hidden(file_name)){
-		return true;
+	if(last_rctime_.is_newer(file)){
+		const char *file_name = get_filename(file.path());
+		return ( // returns true if any of the following tests return true, false if all are false
+			    (config_.ignore_hidden_ && check_hidden(file_name))
+			||  (config_.ignore_win_lock_ && check_win_lock(file_name))
+			||  (config_.ignore_vim_swap_ && check_vim_swap(file_name))
+		);
+	}else{
+		return true; // ignore if older than current last_rctime_
 	}
-	if(config_.ignore_win_lock_ && check_win_lock(file_name)){
-		return true;
-	}
-	if(config_.ignore_vim_swap_ == true && check_vim_swap(file_name)){
-		return true;
-	}
-	return !last_rctime_.is_newer(file);
 }
 
 void Crawler::find_new_files_recursive(fs::path current_path, const fs::path &snap_root, uintmax_t &total_bytes){
