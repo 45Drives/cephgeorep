@@ -106,7 +106,7 @@ void Crawler::create_snap(const timespec &rctime){
 	Logging::log.message("Creating snapshot: " + snap_path_.string(), 2);
 	fs::create_directories(snap_path_, ec);
 	if(ec){
-		Logging::log.error("Error creating path: " + snap_path_.string());
+		Logging::log.error("Error creating snapshot path: " + ec.message());
 		l::exit(EXIT_FAILURE);
 	}
 }
@@ -260,8 +260,8 @@ void Crawler::delete_snap(void) const{
 	Logging::log.message("Removing snapshot: " + snap_path_.string(), 2);
 	fs::remove(snap_path_, ec);
 	if(ec){
-		Logging::log.error("Error removing path: " + snap_path_.string());
-		l::exit(EXIT_FAILURE);
+		Logging::log.error("Error removing snapshot path: " + ec.message());
+		exit(EXIT_FAILURE);
 	}
 }
 
