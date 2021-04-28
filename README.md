@@ -6,9 +6,6 @@ This daemon takes advantage of Ceph's `rctime` directory attribute, which is the
 ## Prerequisites
 You must have a Ceph file system. `rsync`, `scp`, or similar must be installed on both the local system and the remote backup. You must also set up passwordless SSH from your sender (local) to your receiver (remote backup) with a public/private key pair to allow rsync to send your files without prompting for a password. For compilation, boost development libraries are needed. The binary provided is statically linked, so the server does not need boost to run the daemon.
 
-## Runtime Dependencies
-Since the binary is statically linked, no boost runtime libraries are needed on the system. It only requires that `rsync`, etc. is installed.
-
 ## Quick Start
 * [Install](#installation)
 * Initialize configuration file: `cephfssyncd -d` (This can be skipped if you installed from .rpm or .deb)
@@ -31,7 +28,7 @@ Since the binary is statically linked, no boost runtime libraries are needed on 
 * `apt install ./cephgeorep_1.2.8-1bionic_amd64.deb`
 
 ### Installing from Source
-* Install Boost development libraries
+* Install Boost (libboost-dev) and Thread Building Blocks (libtbb-dev) development libraries
 * `git clone https://github.com/45drives/cephgeorep`
 * `cd cephgeorep`
 * `git checkout tags/v1.2.8`
@@ -101,6 +98,7 @@ Flags:
                                   exits after showing number of files
   -h --help                     - print this message
   -n --nproc <# of processes>   - number of sync processes to run in parallel
+  -o --oneshot                  - manually sync changes once and exit
   -q --quiet                    - set log level to 0
   -s --seed                     - send all files to seed destination
   -S --set-last-change          - prime last change time to only sync changes
@@ -110,6 +108,16 @@ Flags:
   -V --version                  - print version and exit
 ```
 Alternate configuration files can be specified using the `-c --config` flag, which is useful for running multiple instances of cephfssyncd on the same system. `-n --nproc`, `-q --quiet`, `-t --threads` and `-v --verbose` are used to override options from the configuration file. `-s --seed` is used for sending every file to the destination regardless of how old the file is. `-d --dry-run` will run the daemon without actually syncing any files to give the user an idea of how many files will be synced if actually ran. `-d --dry-run` combined with `-v --verbose` will also list all files that would be synced.
+
+## Usage with cron
+
+To have cron take care of when syncing happens, make sure that the systemd service is disabled (`systemctl disable --now cephfssyncd`) and create a cron job entry to execute `cephfssyncd --oneshot`. This can also be done with systemd timers if the systemd unit file is modified to pass the `--oneshot` flag to cephfssyncd.  
+Cron example: sync every sunday at 8 AM.
+```cron
+0 8 * * 0 stdbuf -i0 -o0 -e0 cephfssyncd --oneshot |& ts '[%F %H:%M:%S]' >> /var/log/cephgeorep.log 2>&1
+#         ^ unbuffer output  ^ call with oneshot   ^ pipe into timestamp ^ append to log file       ^ redirect stderr too
+```
+
 ## Usage with s3 Buckets
 
 For use with backing up to aws s3 buckets, there is some special configuration to be done. The wrapper script `s3wrap.sh` included with the binary release allows the daemon to work with `s3cmd` seamlessly. Ensure `s3cmd` is installed and configured on your system, and use the following example configuration file as a starting point:
