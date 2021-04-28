@@ -113,7 +113,7 @@ Alternate configuration files can be specified using the `-c --config` flag, whi
 
 To have cron take care of when syncing happens, make sure that the systemd service is disabled (`systemctl disable --now cephfssyncd`) and create a cron job entry to execute `cephfssyncd --oneshot`. This can also be done with systemd timers if the systemd unit file is modified to pass the `--oneshot` flag to cephfssyncd.  
 Cron example: sync every sunday at 8 AM.
-```cron
+```bash
 0 8 * * 0 stdbuf -i0 -o0 -e0 cephfssyncd --oneshot |& ts '[%F %H:%M:%S]' >> /var/log/cephgeorep.log 2>&1
 #         ^ unbuffer output  ^ call with oneshot   ^ pipe into timestamp ^ append to log file       ^ redirect stderr too
 ```
