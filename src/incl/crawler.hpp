@@ -39,9 +39,6 @@ private:
 	std::mutex file_list_mt_;
 	/* Make file_list_ thread safe for insertion.
 	 */
-	std::vector<File> file_list_;
-	/* List of files to send to remote backup.
-	 */
 	LastRctime last_rctime_;
 	/* Timestamp of last sync.
 	 */
@@ -63,10 +60,6 @@ public:
 	~Crawler(void) = default;
 	/* Default destructor.
 	 */
-	void reset(void);
-	/* Clear file_list_ and set
-	 * payload_bytes_ to 0.
-	 */
 	void poll_base(bool seed, bool dry_run, bool set_rctime, bool oneshot);
 	/* Main loop of program.
 	 * Polls for change in root sync path,
@@ -77,7 +70,7 @@ public:
 	void create_snap(const timespec &rctime);
 	/* Create snapshot in base directory
 	 */
-	void trigger_search(const boost::filesystem::path& snap_path, uintmax_t& total_bytes);
+	void trigger_search(std::vector<File> &file_list, const boost::filesystem::path& snap_path, uintmax_t& total_bytes);
 	/* Queues newly modified/created files
 	 * into file_list_, keeps tally of filesize in
 	 * total_bytes.
@@ -86,12 +79,12 @@ public:
 	/* Returns true if file should not be queued or directory should
 	 * not be searched.
 	 */
-	void find_new_files_recursive(fs::path current_path, const fs::path &snap_root, uintmax_t &total_bytes);
+	void find_new_files_recursive(std::vector<File> &file_list, fs::path current_path, const fs::path &snap_root, uintmax_t &total_bytes);
 	/* Recursive DFS on directory tree to queue files.
 	 * Keeps tally of filesize in total_bytes.
 	 * This is used if threads == 1.
 	 */
-	void find_new_files_mt_bfs(ConcurrentQueue<fs::path> &queue, const fs::path &snap_root, std::atomic<uintmax_t> &total_bytes, std::atomic<int> &threads_running);
+	void find_new_files_mt_bfs(std::vector<File> &file_list, ConcurrentQueue<fs::path> &queue, const fs::path &snap_root, std::atomic<uintmax_t> &total_bytes, std::atomic<int> &threads_running);
 	/* Worker thread function to do multithreaded BFS on directory tree to queue files.
 	 * Keeps tally of filesize in total_bytes.
 	 * This is used if threads > 1.
