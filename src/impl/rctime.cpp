@@ -87,8 +87,8 @@ bool LastRctime::is_newer(const File &file) const{
 }
 
 timespec LastRctime::get_rctime(const File &file) const{
-	timespec rctime;
 	if(file.is_directory()){
+		timespec rctime;
 		char value[XATTR_SIZE];
 		if(lgetxattr(file.path(), "ceph.dir.rctime", value, XATTR_SIZE) == -1){
 			int err = errno;
@@ -109,20 +109,10 @@ timespec LastRctime::get_rctime(const File &file) const{
 			rctime.tv_sec = (time_t)strtoul(seconds, &ptr, 10);
 			rctime.tv_nsec = strtol(nanoseconds, &ptr, 10);
 		}
+		return rctime;
 	}else{ // file
-		struct stat stat;
-		if(lstat(file.path(), &stat) == -1){
-			int err = errno;
-			Logging::log.warning(std::string("stat failed: ") + strerror(err));
-			Logging::log.warning(std::string("Cannot read mtime of ") + file.path());
-			rctime.tv_sec = 0;
-			rctime.tv_nsec = 0;
-		}else{
-			rctime.tv_sec = stat.st_mtim.tv_sec;
-			rctime.tv_nsec = stat.st_mtim.tv_nsec;
-		}
+		return file.rctime();
 	}
-	return rctime;
 }
 
 timespec LastRctime::get_rctime(const fs::path &path) const{

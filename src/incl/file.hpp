@@ -33,6 +33,7 @@ private:
 	bool is_directory_;
 	size_t path_len_;
 	char *path_;
+	timespec rctime_;
 	inline void init(const char *path, size_t snap_root_len, const struct stat &st){
 		size_ = st.st_size;
 		is_directory_ = S_ISDIR(st.st_mode);
@@ -62,10 +63,14 @@ private:
 			// finally, append nul
 			*dst_ptr = '\0';
 			path_len_ = dst_ptr - path_;
+			
+			// get mtime
+			rctime_.tv_sec = st.st_mtim.tv_sec;
+			rctime_.tv_nsec = st.st_mtim.tv_nsec;
 		}
 	}
 public:
-	File(void) : size_(0), is_directory_(false), path_len_(0), path_(0) {}
+	File(void) : size_(0), is_directory_(false), path_len_(0), path_(0), rctime_{0,0} {}
 	File(const char *path, size_t snap_root_len) : path_len_(0){
 		struct stat st;
 		int res = lstat(path, &st);
@@ -84,7 +89,8 @@ public:
 		: size_(std::move(other.size_))
 		, is_directory_(std::move(other.is_directory_))
 		, path_len_(std::move(other.path_len_))
-		, path_(std::move(other.path_)){
+		, path_(std::move(other.path_))
+		, rctime_(std::move(other.rctime_)){
 		other.path_ = nullptr;
 	}
 	File &operator=(File &&other){
@@ -92,6 +98,7 @@ public:
 		is_directory_ = std::move(other.is_directory_);
 		path_len_ = std::move(other.path_len_);
 		path_ = std::move(other.path_);
+		rctime_ = std::move(other.rctime_);
 		other.path_ = nullptr;
 		return *this;
 	}
@@ -113,5 +120,8 @@ public:
 	}
 	size_t path_len(void) const{
 		return path_len_;
+	}
+	timespec rctime(void) const{
+		return rctime_;
 	}
 };
