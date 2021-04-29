@@ -82,6 +82,8 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime, bool oneshot){
 					last_rctime_last_flush = now;
 				}
 			}
+			file_list.clear();
+			file_list = std::vector<File>(); // try to free memory taken by vector
 		}
 		if(oneshot)
 			break;
