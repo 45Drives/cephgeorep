@@ -14,40 +14,16 @@ SyncProcess::SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &q
 		inc_(nproc),
 		max_mem_usage_(parent->max_mem_usage_),
 		start_mem_usage_(parent->start_mem_usage_),
-		curr_mem_usage_(start_mem_usage_),
 		curr_payload_bytes_(0),
-		exec_bin_(parent->exec_bin_),
-		exec_flags_(parent->exec_flags_),
 		destination_(parent->destination_),
-		file_itr_(queue.begin()){ // start at offset of id and later inc by nproc
-	payload_.push_back((char *)exec_bin_.c_str());
+		file_itr_(queue.begin()),
+		payload_(parent->start_payload_){
 	
-	// push back flags
-	boost::tokenizer<boost::escaped_list_separator<char>> tokens(
-		exec_flags_,
-		boost::escaped_list_separator<char>(
-			std::string("\\"), std::string(" "), std::string("\"\'")
-		)
-	);
-	for(
-		boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
-		itr != tokens.end();
-		++itr
-	){
-		char *flag = new char[(*itr).length()+1];
-		strcpy(flag,(*itr).c_str());
-		payload_.push_back(flag);
-		garbage_.push_back(flag);
-	}
+	curr_mem_usage_ = start_mem_usage_;
 	
 	start_payload_sz_ = payload_.size();
 	
 	std::advance(file_itr_, id_);
-}
-
-SyncProcess::~SyncProcess(){
-	for(char *string : garbage_)
-		delete[] string;
 }
 
 int SyncProcess::id() const{

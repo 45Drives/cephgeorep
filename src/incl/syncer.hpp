@@ -59,12 +59,20 @@ private:
 	/* [[<user>@]<host>:][<destination path>]
 	 */
 	std::vector<std::string>::iterator destination_;
+	/* Iterator to current destination.
+	 */
+	std::vector<char *> start_payload_;
+	/* Start of argv to pass to exec bin.
+	 */
+	std::vector<char *> garbage_;
+	/* For cleanup on destruction.
+	 */
 public:
 	Syncer(size_t envp_size, const Config &config);
 	/* Determines max_arg_sz_, start_arg_sz_, and constructs destination_.
 	 */
-	~Syncer(void) = default;
-	/* Default destructor.
+	~Syncer(void);
+	/* Destructor.
 	 */
 	std::string construct_destination(std::string remote_user, std::string remote_host, std::string remote_directory) const;
 	/* Create [<user>@][<host>:][<destination path>] string.
@@ -72,7 +80,7 @@ public:
 	size_t get_mem_limit(void) const;
 	/* Determine max_arg_sz_ from stack limits
 	 */
-	void launch_procs(std::vector<File> &queue, uintmax_t total_bytes);
+	void launch_procs(std::vector<File> &queue);
 	/* Creates SyncProcesses and distributes files across each one. Assigns each process an ID then launches
 	 * them in parallel. Waits for processes to return and relaunches if there are files remaining.
 	 */

@@ -35,12 +35,6 @@ private:
 	uintmax_t curr_payload_bytes_;
 	/* Keeps track of payload size.
 	 */
-	std::string exec_bin_;
-	/* File syncing program name.
-	 */
-	std::string exec_flags_;
-	/* Flags and extra args for program.
-	 */
 	std::vector<std::string>::iterator &destination_;
 	/* [[<user>@]<host>:][<destination path>]
 	 */
@@ -53,15 +47,12 @@ private:
 	std::vector<char *> payload_;
 	/* argv for sync process
 	 */
-	std::vector<char *> garbage_;
-	/* Dynamically allocated strings to be deleted in destructor.
-	 */
 public:
 	SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &queue);
 	/* Constructor. Grabs members from parent pointer.
 	 */
-	~SyncProcess();
-	/* Destructor. Frees memory in garbage vector before returning.
+	~SyncProcess() = default;
+	/* Destructor.
 	 */
 	int id() const;
 	/* Return ID of sync process.

@@ -30,7 +30,6 @@
 #include <execution>
 #endif
 
-
 extern "C" {
 	#include <unistd.h>
 	#include <sys/wait.h>
@@ -43,28 +42,57 @@ Syncer::Syncer(size_t envp_size, const Config &config)
     : exec_bin_(config.exec_bin_), exec_flags_(config.exec_flags_){
 	nproc_ = config.nproc_;
 	max_mem_usage_ = get_mem_limit();
-	start_mem_usage_ = envp_size
-					 + exec_bin_.length() + 1// length of executable name
-					 + exec_flags_.length() + 1 // length of flags
-					 + sizeof(char *) * 2 // size of char pointers
-					 + sizeof(NULL);
-	boost::tokenizer<boost::escaped_list_separator<char>> tokens(
-		config.destinations_,
-		boost::escaped_list_separator<char>(
-			std::string("\\"), std::string(", "), std::string("\"\'")
-		)
-	);
-	for(
-		boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
-		itr != tokens.end();
-		++itr
-	){
-		if(itr->empty())
-			continue;
-		destinations_.emplace_back(*itr);
+	
+	start_mem_usage_ = envp_size;
+	
+	start_payload_.push_back((char *)exec_bin_.c_str());
+	start_mem_usage_ += exec_bin_.length() + 1 + sizeof(char *); // length of executable name
+	
+	// account for flags
+	{
+		boost::tokenizer<boost::escaped_list_separator<char>> tokens(
+			exec_flags_,
+			boost::escaped_list_separator<char>(
+				std::string("\\"), std::string(" "), std::string("\"\'")
+			)
+		);
+		for(
+			boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
+			itr != tokens.end();
+			++itr
+		){
+			// push back flags
+			char *flag = new char[(*itr).length()+1];
+			strcpy(flag, itr->c_str());
+			start_payload_.push_back(flag);
+			garbage_.push_back(flag);
+			// account for their size
+			start_mem_usage_ += itr->length() + 1 + sizeof(char *);
+		}
 	}
+	
+	{
+		boost::tokenizer<boost::escaped_list_separator<char>> tokens(
+			config.destinations_,
+			boost::escaped_list_separator<char>(
+				std::string("\\"), std::string(", "), std::string("\"\'")
+			)
+		);
+		for(
+			boost::tokenizer<boost::escaped_list_separator<char>>::iterator itr = tokens.begin();
+			itr != tokens.end();
+			++itr
+		){
+			if(itr->empty())
+				continue;
+			destinations_.emplace_back(*itr);
+		}
+	}
+	
 	if(destinations_.empty())
 		destinations_.push_back(construct_destination(config.remote_user_, config.remote_host_, config.remote_directory_));
+	
+	// account for destinations
 	int max_destination_len = 0;
 	for(const std::string &dest : destinations_){
 		int test_len = dest.length();
@@ -73,6 +101,13 @@ Syncer::Syncer(size_t envp_size, const Config &config)
 	}
 	destination_ = destinations_.begin();
 	start_mem_usage_ += max_destination_len + 1 + sizeof(char *);
+	
+	start_mem_usage_ += sizeof(NULL);
+}
+
+Syncer::~Syncer(){
+	for(char *string : garbage_)
+		delete[] string;
 }
 
 std::string Syncer::construct_destination(std::string remote_user, std::string remote_host, std::string remote_directory) const{
@@ -87,21 +122,16 @@ std::string Syncer::construct_destination(std::string remote_user, std::string r
 }
 
 size_t Syncer::get_mem_limit(void) const{
-	struct rlimit lims;
-	getrlimit(RLIMIT_STACK, &lims);
-	size_t arg_max_sz = lims.rlim_cur / 4;
-	arg_max_sz -= 2048; // allow 2048 bytes of headroom
 	long arg_max = sysconf(_SC_ARG_MAX);
 	if(arg_max == -1){
 		int err = errno;
 		Logging::log.warning(std::string("Could not determine ARG_MAX from syscall: ") + strerror(err));
-	}else{
-		if(arg_max_sz > (size_t)arg_max) arg_max_sz = arg_max;
+		arg_max = _POSIX_ARG_MAX;
 	}
-	return arg_max_sz;
+	return arg_max - 512; // pad by 0.5K in case env changes
 }
 
-void Syncer::launch_procs(std::vector<File> &queue, uintmax_t total_bytes){
+void Syncer::launch_procs(std::vector<File> &queue){
 	int wstatus;
 	
 	// cap nproc to between 1 and number of files
