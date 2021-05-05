@@ -36,6 +36,7 @@ extern "C" {
 	#include <sys/resource.h>
 	#include <fcntl.h>
 	#include <string.h>
+	#include <limits.h>
 }
 
 Syncer::Syncer(size_t envp_size, const Config &config)
