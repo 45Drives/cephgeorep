@@ -36,11 +36,9 @@ namespace fs = boost::filesystem;
 
 inline size_t get_env_size(char *envp[]){
 	size_t size = 0;
-	while(*envp){
-		size += strlen(*envp++) + 1;
-		size += sizeof(char *);
-	}
-	size += 1; // null terminator
+	while(*envp)
+		size += strlen(*envp++) + 1 + sizeof(char *);
+	size += sizeof(NULL); // null terminator
 	return size;
 }
 
