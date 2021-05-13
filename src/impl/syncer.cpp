@@ -42,9 +42,9 @@ extern "C" {
 Syncer::Syncer(size_t envp_size, const Config &config)
     : exec_bin_(config.exec_bin_), exec_flags_(config.exec_flags_){
 	nproc_ = config.nproc_;
-	max_mem_usage_ = get_mem_limit();
+	max_mem_usage_ = get_mem_limit(envp_size);
 	
-	start_mem_usage_ = envp_size;
+	start_mem_usage_ = 0;
 	
 	start_payload_.push_back((char *)exec_bin_.c_str());
 	start_mem_usage_ += exec_bin_.length() + 1 + sizeof(char *); // length of executable name
@@ -122,14 +122,14 @@ std::string Syncer::construct_destination(std::string remote_user, std::string r
 	return dest;
 }
 
-size_t Syncer::get_mem_limit(void) const{
+size_t Syncer::get_mem_limit(size_t envp_size) const{
 	long arg_max = sysconf(_SC_ARG_MAX);
 	if(arg_max == -1){
 		int err = errno;
 		Logging::log.warning(std::string("Could not determine ARG_MAX from syscall: ") + strerror(err));
 		arg_max = _POSIX_ARG_MAX;
 	}
-	return arg_max - 512; // pad by 0.5K in case env changes
+	return arg_max - envp_size - MEM_LIM_HEADROOM;
 }
 
 void Syncer::launch_procs(std::vector<File> &queue){

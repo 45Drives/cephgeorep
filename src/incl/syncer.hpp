@@ -24,6 +24,8 @@
 #define SUCCESS 0
 #define PERM_DENY 23
 
+#define MEM_LIM_HEADROOM 2048 // POSIX suggests 2048 bytes of headroom for modifying env
+
 #include <list>
 #include <vector>
 #include <string>
@@ -77,7 +79,7 @@ public:
 	std::string construct_destination(std::string remote_user, std::string remote_host, std::string remote_directory) const;
 	/* Create [<user>@][<host>:][<destination path>] string.
 	 */
-	size_t get_mem_limit(void) const;
+	size_t get_mem_limit(size_t envp_size) const;
 	/* Determine max_arg_sz_ from stack limits
 	 */
 	void launch_procs(std::vector<File> &queue);
