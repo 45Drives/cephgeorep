@@ -1,7 +1,10 @@
 #include "syncProcess.hpp"
 #include "syncer.hpp"
 #include "file.hpp"
-#include <unistd.h>
+#include <sstream>
+#include <fstream>
+#include <iomanip>
+#include <ctime>
 #include <boost/tokenizer.hpp>
 
 extern "C" {
@@ -84,7 +87,9 @@ void SyncProcess::sync_batch(){
 				dup2(null_fd, 2);
 				close(null_fd);
 				execvp(payload_[0], payload_.data());
-				int execvp_errno = -errno;
+				error = errno;
+				dump_argv(error);
+				int execvp_errno = -error;
 				exit(execvp_errno);
 			}
 			break;
@@ -113,4 +118,31 @@ bool SyncProcess::done(const std::vector<File> &queue) const{
 
 const std::string &SyncProcess::destination(void) const{
 	return sending_to_;
+}
+
+void SyncProcess::dump_argv(int error) const{
+	std::string log_location = "/var/log/cephgeorep";
+	if(!fs::exists(log_location))
+		fs::create_directories(log_location);
+	std::stringstream log_path_ss;
+	std::time_t now = std::time(nullptr);
+	log_path_ss << log_location << "/exec_fail_" << std::put_time(std::localtime(&now), "%F_%T_%z") << ".log";
+	std::string log_path = log_path_ss.str();
+	if(fs::exists(log_path)){
+		int i = 1;
+		while(fs::exists(log_path + "." + std::to_string(i)))
+			i++;
+		log_path += "." + std::to_string(i);
+	}
+	std::ofstream f;
+	f.open(log_path, std::ios::trunc);
+	if(!f.is_open()){
+		Logging::log.error("Could not dump argv to log file.");
+		return;
+	}
+	f << error << " : " << strerror(error) << std::endl;
+	for(const char *arg : payload_){
+		f << arg << std::endl;
+	}
+	f.close();
 }

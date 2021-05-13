@@ -96,4 +96,8 @@ public:
 	const std::string &destination(void) const;
 	/* Returns sending_to_.
 	 */
+	void dump_argv(int error) const;
+	/* Print errno, strerror(errno), and payload_ to a log file
+	 * when execution fails.
+	 */
 };
