@@ -1,3 +1,22 @@
+/*
+ *    Copyright (C) 2019-2021 Joshua Boudreau <jboudreau@45drives.com>
+ *    
+ *    This file is part of cephgeorep.
+ * 
+ *    cephgeorep is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 2 of the License, or
+ *    (at your option) any later version.
+ * 
+ *    cephgeorep is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ * 
+ *    You should have received a copy of the GNU General Public License
+ *    along with cephgeorep.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "syncProcess.hpp"
 #include "syncer.hpp"
 #include "file.hpp"
@@ -5,6 +24,7 @@
 #include <fstream>
 #include <iomanip>
 #include <ctime>
+#include <csignal>
 #include <boost/tokenizer.hpp>
 
 extern "C" {
@@ -15,10 +35,12 @@ extern "C" {
 SyncProcess::SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &queue)
 	: 	id_(id),
 		inc_(nproc),
+		pid_(0),
 		max_mem_usage_(parent->max_mem_usage_),
 		start_mem_usage_(parent->start_mem_usage_),
 		curr_payload_bytes_(0),
 		destination_(parent->destination_),
+		sending_to_(*destination_),
 		file_itr_(queue.begin()),
 		payload_(parent->start_payload_){
 	
@@ -51,7 +73,6 @@ uintmax_t SyncProcess::payload_count(void) const{
 
 void SyncProcess::add(const std::vector<File>::iterator &itr){
 	payload_.push_back(itr->path());
-	itr->disown_path();
 	curr_mem_usage_ += itr->path_len() + 1 + sizeof(char *);
 	curr_payload_bytes_ += itr->size();
 }
@@ -65,11 +86,11 @@ void SyncProcess::consume(std::vector<File> &queue){
 		add(file_itr_);
 		std::advance(file_itr_, inc_);
 	}
-	sending_to_ = *destination_;
-	if(!destination_->empty())
+	if(!destination_->empty()){
+		sending_to_ = *destination_;
 		payload_.push_back((char *)destination_->c_str());
+	}
 	payload_.push_back(NULL);
-	payload_.shrink_to_fit();
 }
 
 void SyncProcess::sync_batch(){
@@ -82,6 +103,7 @@ void SyncProcess::sync_batch(){
 			l::exit(EXIT_FAILURE);
 		case 0: // child process
 			{
+				signal(SIGINT, SIG_DFL);
 				int null_fd = open("/dev/null", O_WRONLY);
 				dup2(null_fd, 1);
 				dup2(null_fd, 2);
@@ -100,13 +122,6 @@ void SyncProcess::sync_batch(){
 }
 
 void SyncProcess::reset(void){
-	for(
-		std::vector<char *>::iterator itr = std::next(payload_.begin(), start_payload_sz_);
-		itr != std::prev(payload_.end(), 2); // 2 before end to avoid deleting dest and NULL
-		++itr
-	){
-		delete[] *itr; // free memory taken by path
-	}
 	payload_.resize(start_payload_sz_);
 	curr_mem_usage_ = start_mem_usage_;
 	curr_payload_bytes_ = 0;
@@ -140,9 +155,11 @@ void SyncProcess::dump_argv(int error) const{
 		Logging::log.error("Could not dump argv to log file.");
 		return;
 	}
-	f << error << " : " << strerror(error) << std::endl;
+	std::string msg = (error > 0)? strerror(error) : Logging::log.rsync_error(-error);
+	f << error << " : " << msg << std::endl;
 	for(const char *arg : payload_){
-		f << arg << std::endl;
+		if(arg)
+			f << arg << std::endl;
 	}
 	f.close();
 }
