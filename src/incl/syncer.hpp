@@ -22,7 +22,7 @@
 #define SSH_FAIL 255
 #define NOT_INSTALLED 127
 #define SUCCESS 0
-#define PERM_DENY 23
+#define PARTIAL_XFR 23
 
 #define MEM_LIM_HEADROOM 2048 // POSIX suggests 2048 bytes of headroom for modifying env
 
