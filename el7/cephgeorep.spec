@@ -3,8 +3,8 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           cephgeorep
-Version:        1.2.8
-Release:        1%{?dist}
+Version:        1.2.9
+Release:        5%{?dist}
 Summary:        Ceph File System Remote Sync Daemon
 
 License:        GPL+
@@ -56,6 +56,10 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Tue May 18 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.9-1
+- When execution fails from too many arguments, the argv headroom
+  is increased and execution is tried again.
+
 * Mon Apr 26 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.8-1
 - Signigicant optimizations for modifying file paths and for comparing
   file size and type to make crawl time up to 6 times faster.

@@ -1,3 +1,10 @@
+cephgeorep (1.2.9-1bionic) bionic; urgency=medium
+
+  * When execution fails from too many arguments, the argv headroom
+    is increased and execution is tried again.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 18 May 2021 14:47:00 -0400
+
 cephgeorep (1.2.8-1bionic) bionic; urgency=medium
 
   * Signigicant optimizations for modifying file paths and for comparing
