@@ -17,21 +17,21 @@ You must have a Ceph file system. `rsync`, `scp`, or similar must be installed o
 ## Installation
 ### Current Release
 #### Centos 7
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.2.8/cephgeorep-1.2.8-1.el7.x86_64.rpm`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.2.9/cephgeorep-1.2.9-1.el7.x86_64.rpm`
 #### Centos 8
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.2.8/cephgeorep-1.2.8-1.el8.x86_64.rpm`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/v1.2.9/cephgeorep-1.2.9-1.el8.x86_64.rpm`
 #### Ubuntu 20.04
-* `wget https://github.com/45Drives/cephgeorep/releases/download/v1.2.8/cephgeorep_1.2.8-1focal_amd64.deb`
-* `apt install ./cephgeorep_1.2.8-1focal_amd64.deb`
+* `wget https://github.com/45Drives/cephgeorep/releases/download/v1.2.9/cephgeorep_1.2.9-1focal_amd64.deb`
+* `apt install ./cephgeorep_1.2.9-1focal_amd64.deb`
 #### Ubuntu 18.04
-* `wget https://github.com/45Drives/cephgeorep/releases/download/v1.2.8/cephgeorep_1.2.8-1bionic_amd64.deb`
-* `apt install ./cephgeorep_1.2.8-1bionic_amd64.deb`
+* `wget https://github.com/45Drives/cephgeorep/releases/download/v1.2.9/cephgeorep_1.2.9-1bionic_amd64.deb`
+* `apt install ./cephgeorep_1.2.9-1bionic_amd64.deb`
 
 ### Installing from Source
 * Install Boost (libboost-dev) and Thread Building Blocks (libtbb-dev) development libraries
 * `git clone https://github.com/45drives/cephgeorep`
 * `cd cephgeorep`
-* `git checkout tags/v1.2.8`
+* `git checkout tags/v1.2.9`
 * `make -j8` or `make -j8 static` to statically link libraries
 * `sudo make install`
 #### Uninstalling from Source
