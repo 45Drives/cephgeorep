@@ -1,3 +1,11 @@
+cephgeorep (1.2.9-1focal) focal; urgency=medium
+
+  * When execution fails from too many arguments, the argv headroom
+    is increased and execution is tried again.
+  * STDOUT and STDERR of sync process are logged to a file on failure.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 19 May 2021 16:42:00 -0400
+
 cephgeorep (1.2.8-1focal) focal; urgency=medium
 
   * Signigicant optimizations for modifying file paths and for comparing
