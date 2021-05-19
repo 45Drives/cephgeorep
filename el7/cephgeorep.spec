@@ -56,9 +56,10 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
-* Tue May 18 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.9-1
+* Wed May 19 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.9-1
 - When execution fails from too many arguments, the argv headroom
   is increased and execution is tried again.
+- STDOUT and STDERR of sync process are logged to a file on failure.
 
 * Mon Apr 26 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.8-1
 - Signigicant optimizations for modifying file paths and for comparing
