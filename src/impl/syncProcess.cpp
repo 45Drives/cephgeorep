@@ -39,6 +39,7 @@ SyncProcess::SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &q
 		max_mem_usage_(parent->max_mem_usage_),
 		start_mem_usage_(parent->start_mem_usage_),
 		curr_payload_bytes_(0),
+		pipefd_{-1,-1},
 		destination_(parent->destination_),
 		sending_to_(*destination_),
 		file_itr_(queue.begin()),
@@ -49,6 +50,13 @@ SyncProcess::SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &q
 	start_payload_sz_ = payload_.size();
 	
 	std::advance(file_itr_, id_);
+}
+
+SyncProcess::~SyncProcess(){
+	if(pipefd_[0] != -1)
+		close(pipefd_[0]);
+	if(pipefd_[1] != -1)
+		close(pipefd_[1]);
 }
 
 int SyncProcess::id() const{
@@ -94,6 +102,8 @@ void SyncProcess::consume(std::vector<File> &queue){
 }
 
 void SyncProcess::sync_batch(){
+	pipe(pipefd_);
+	
 	pid_ = fork(); // create child process
 	int error;
 	switch(pid_){
@@ -103,11 +113,13 @@ void SyncProcess::sync_batch(){
 			l::exit(EXIT_FAILURE);
 		case 0: // child process
 			{
+				close(pipefd_[0]);
+				pipefd_[0] = -1;
 				signal(SIGINT, SIG_DFL);
-				int null_fd = open("/dev/null", O_WRONLY);
-				dup2(null_fd, 1);
-				dup2(null_fd, 2);
-				close(null_fd);
+				dup2(pipefd_[1], 1);
+				dup2(pipefd_[1], 2);
+				close(pipefd_[1]);
+				pipefd_[1] = -1;
 				execvp(payload_[0], payload_.data());
 				error = errno;
 				dump_argv(error);
@@ -116,6 +128,8 @@ void SyncProcess::sync_batch(){
 			}
 			break;
 		default: // parent process
+			close(pipefd_[1]);
+			pipefd_[1] = -1;
 			Logging::log.message(std::to_string(pid_) + " started.", 2);
 			break;
 	}
@@ -125,6 +139,10 @@ void SyncProcess::reset(void){
 	payload_.resize(start_payload_sz_);
 	curr_mem_usage_ = start_mem_usage_;
 	curr_payload_bytes_ = 0;
+	if(pipefd_[0] != -1)
+		close(pipefd_[0]);
+	if(pipefd_[1] != -1)
+		close(pipefd_[1]);
 }
 
 bool SyncProcess::done(const std::vector<File> &queue) const{
@@ -135,13 +153,13 @@ const std::string &SyncProcess::destination(void) const{
 	return sending_to_;
 }
 
-void SyncProcess::dump_argv(int error) const{
+inline std::string get_unique_log_path(const std::string type){
 	std::string log_location = "/var/log/cephgeorep";
 	if(!fs::exists(log_location))
 		fs::create_directories(log_location);
 	std::stringstream log_path_ss;
 	std::time_t now = std::time(nullptr);
-	log_path_ss << log_location << "/exec_fail_" << std::put_time(std::localtime(&now), "%F_%T_%z") << ".log";
+	log_path_ss << log_location << "/exec_" << type << "_" << std::put_time(std::localtime(&now), "%F_%T_%z") << ".log";
 	std::string log_path = log_path_ss.str();
 	if(fs::exists(log_path)){
 		int i = 1;
@@ -149,8 +167,12 @@ void SyncProcess::dump_argv(int error) const{
 			i++;
 		log_path += "." + std::to_string(i);
 	}
+	return log_path;
+}
+
+void SyncProcess::dump_argv(int error) const{
 	std::ofstream f;
-	f.open(log_path, std::ios::trunc);
+	f.open(get_unique_log_path("fail"), std::ios::trunc);
 	if(!f.is_open()){
 		Logging::log.error("Could not dump argv to log file.");
 		return;
@@ -163,3 +185,28 @@ void SyncProcess::dump_argv(int error) const{
 	}
 	f.close();
 }
+
+void SyncProcess::log_errors() const{
+	std::ofstream f;
+	std::string log_path = get_unique_log_path("error");
+	f.open(log_path, std::ios::trunc);
+	if(!f.is_open()){
+		Logging::log.error("Could not dump stdout/stderr to log file.");
+		return;
+	}
+	char buffer[4*1024];
+	int bytes_read = 0;
+	while((bytes_read = read(pipefd_[0], buffer, sizeof(buffer) - 1)) > 0){
+		buffer[bytes_read] = '\0';
+		f << buffer;
+	}
+	if(bytes_read == -1){
+		int err = errno;
+		Logging::log.error(std::string("Error reading pipe for logging error: ") + strerror(err));
+	}else{
+		Logging::log.message(payload_[0] + std::string(" error details logged in ") + log_path, 0);
+	}
+	
+	f.close();
+}
+

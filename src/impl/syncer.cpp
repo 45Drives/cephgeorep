@@ -187,6 +187,8 @@ void Syncer::launch_procs(std::vector<File> &queue){
 					continue;
 				// check exit code
 				int exit_code = WEXITSTATUS(wstatus);
+				if(exit_code != 0)
+					exited_proc->log_errors();
 				switch(exit_code){
 					case SUCCESS:
 						Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
@@ -215,9 +217,7 @@ void Syncer::launch_procs(std::vector<File> &queue){
 						Logging::log.error(exec_bin_ + " is not installed.");
 						l::exit(EXIT_FAILURE);
 					case PARTIAL_XFR:
-						Logging::log.error("Partial transfer while executing " + exec_bin_ + ", trying again.");
-						exited_proc->dump_argv(-PARTIAL_XFR);
-						exited_proc->sync_batch();
+						Logging::log.error("Partial transfer while executing " + exec_bin_);
 						continue;
 					default:
 					{

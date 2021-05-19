@@ -54,6 +54,9 @@ private:
 	uintmax_t curr_payload_bytes_;
 	/* Keeps track of payload size.
 	 */
+	int pipefd_[2];
+	/* Pipe for logging errors of sync process.
+	 */
 	std::vector<std::string>::iterator &destination_;
 	/* [[<user>@]<host>:][<destination path>]
 	 */
@@ -70,7 +73,7 @@ public:
 	SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &queue);
 	/* Constructor. Grabs members from parent pointer.
 	 */
-	~SyncProcess() = default;
+	~SyncProcess();
 	/* Destructor.
 	 */
 	int id() const;
@@ -118,5 +121,8 @@ public:
 	void dump_argv(int error) const;
 	/* Print errno, strerror(errno), and payload_ to a log file
 	 * when execution fails.
+	 */
+	void log_errors(void) const;
+	/* Print contents of pipe to log file.
 	 */
 };
