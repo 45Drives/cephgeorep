@@ -33,6 +33,9 @@
 .kdev4/
 *.kdev4
 
+# ccls
+.ccls-cache/
+
 # deb packaging
 ubuntu20/cephgeorep
 ubuntu20/cephgeorep.substvars
