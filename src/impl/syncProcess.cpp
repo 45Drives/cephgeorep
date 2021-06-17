@@ -102,6 +102,10 @@ void SyncProcess::consume(std::vector<File> &queue){
 }
 
 void SyncProcess::sync_batch(){
+	if(pipefd_[0] != -1)
+		close(pipefd_[0]);
+	if(pipefd_[1] != -1)
+		close(pipefd_[1]);
 	pipe(pipefd_);
 	
 	pid_ = fork(); // create child process
