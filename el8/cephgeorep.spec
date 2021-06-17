@@ -3,7 +3,7 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           cephgeorep
-Version:        1.2.9
+Version:        1.2.10
 Release:        1%{?dist}
 Summary:        Ceph File System Remote Sync Daemon
 
@@ -52,6 +52,9 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Thu Jun 17 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.10-1
+- Retry batch on partial transfer failure.
+
 * Wed May 19 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.9-1
 - When execution fails from too many arguments, the argv headroom
   is increased and execution is tried again.

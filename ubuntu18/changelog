@@ -1,3 +1,9 @@
+cephgeorep (1.2.10-1bionic) bionic; urgency=medium
+
+  * Retry batch on partial transfer failure.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Thu, 17 Jun 2021 11:05:00 -0300
+
 cephgeorep (1.2.9-1bionic) bionic; urgency=medium
 
   * When execution fails from too many arguments, the argv headroom
