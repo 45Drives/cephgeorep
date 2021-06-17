@@ -218,6 +218,8 @@ void Syncer::launch_procs(std::vector<File> &queue){
 						l::exit(EXIT_FAILURE);
 					case PARTIAL_XFR:
 						Logging::log.error("Partial transfer while executing " + exec_bin_);
+						Logging::log.message("Trying batch again.", 1);
+						exited_proc->sync_batch();
 						continue;
 					default:
 					{
