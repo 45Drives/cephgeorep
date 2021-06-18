@@ -3,7 +3,7 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           cephgeorep
-Version:        1.2.10
+Version:        1.2.11
 Release:        1%{?dist}
 Summary:        Ceph File System Remote Sync Daemon
 
@@ -52,6 +52,9 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Fri Jun 18 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.11-1
+- Replace ':' with '-' in log file names for portability of files.
+
 * Thu Jun 17 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.10-1
 - Retry batch on partial transfer failure.
 
