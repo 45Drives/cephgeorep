@@ -163,7 +163,7 @@ inline std::string get_unique_log_path(const std::string type){
 		fs::create_directories(log_location);
 	std::stringstream log_path_ss;
 	std::time_t now = std::time(nullptr);
-	log_path_ss << log_location << "/exec_" << type << "_" << std::put_time(std::localtime(&now), "%F_%T_%z") << ".log";
+	log_path_ss << log_location << "/exec_" << type << "_" << std::put_time(std::localtime(&now), "%F_%H-%M-%S_%z") << ".log";
 	std::string log_path = log_path_ss.str();
 	if(fs::exists(log_path)){
 		int i = 1;
