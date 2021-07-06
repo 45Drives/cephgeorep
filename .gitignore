@@ -37,18 +37,12 @@
 .ccls-cache/
 
 # deb packaging
-ubuntu20/cephgeorep
-ubuntu20/cephgeorep.substvars
-ubuntu20/cephgeorep.postrm.debhelper
-ubuntu20/debhelper-build-stamp
-ubuntu20/files
-ubuntu20/.debhelper
-ubuntu18/cephgeorep
-ubuntu18/cephgeorep.substvars
-ubuntu18/cephgeorep.postrm.debhelper
-ubuntu18/debhelper-build-stamp
-ubuntu18/files
-ubuntu18/.debhelper
+packaging/ubuntu*/cephgeorep
+packaging/ubuntu*/cephgeorep.substvars
+packaging/ubuntu*/cephgeorep.postrm.debhelper
+packaging/ubuntu*/debhelper-build-stamp
+packaging/ubuntu*/files
+packaging/ubuntu*/.debhelper
 
 # build output
 dist

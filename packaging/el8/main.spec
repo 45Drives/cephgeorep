@@ -1,40 +1,30 @@
-%define        __spec_install_post %{nil}
-%define          debug_package %{nil}
-%define        __os_install_post %{_dbpath}/brp-compress
-
-Name:           cephgeorep
-Version:        1.2.11
-Release:        1%{?dist}
-Summary:        Ceph File System Remote Sync Daemon
-
-License:        GPL+
-URL:            github.com/45drives/cephgeorep/blob/master/README.md
-Source0:        %{name}-%{version}.tar.gz
+Name: ::package_name::
+Version: ::package_version::
+Release: ::package_build_version::%{?dist}
+Summary: ::package_description_short::
+License: ::package_licence::
+URL: ::package_url::
+Source0: %{name}-%{version}.tar.gz
+BuildArch: ::package_architecture_el::
+Requires: ::package_dependencies_el::
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
-Ceph File System Remote Sync Daemon
-For use with a distributed Ceph File System cluster to georeplicate files to a remote backup server.
-This daemon takes advantage of Ceph's rctime directory attribute, which is the value of the highest 
-mtime of all the files below a given directory tree. Using this attribute, it selectively recurses 
-only into directory tree branches with modified files - instead of wasting time accessing every branch.
+::package_title::
+::package_description_long::
 
 %prep
 %setup -q
 
 %build
-# empty
+make -j$(nproc)
 
 %install
-rm -rf %{buildroot}
-mkdir -p  %{buildroot}
-
-# in builddir
-cp -a * %{buildroot}
+make DESTDIR=%{buildroot} PACKAGING=1 install
 
 %clean
-rm -rf %{buildroot}
+make DESTDIR=%{buildroot} clean
 
 %files
 %defattr(-,root,root,-)
@@ -85,6 +75,9 @@ systemctl daemon-reload
 - Remove many redundant filesystem stat() calls while gathering and
   sorting files to speed up vector sort.
 - Change config to noreplace in packaging.
+
+* Wed Apr 07 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.5-2
+- First EL8 build.
 
 * Wed Mar 24 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.5-1
 - Add EXIT_FAILED (4) status for when cephfssyncd exits with EXIT_FAILURE.

@@ -1,0 +1,17 @@
+Source: ::package_name::
+Section: ::package_category::
+Priority: ::package_priority::
+Maintainer: ::package_author::
+Build-Depends: debhelper-compat (= 12),
+               libstdc++-dev,
+               libboost-filesystem-dev,
+               g++ (>= 4.8)
+Standards-Version: 4.4.1
+Homepage: ::package_url::
+
+Package: ::package_name::
+Architecture: ::package_architecture_deb::
+Depends: ::package_dependencies_deb::
+Recommends: rsync,
+            bash-completion
+Description: ::package_description_short::
