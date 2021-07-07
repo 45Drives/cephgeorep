@@ -187,7 +187,7 @@ void Syncer::launch_procs(std::vector<File> &queue){
 					continue;
 				// check exit code
 				int exit_code = WEXITSTATUS(wstatus);
-				if(exit_code != 0)
+				if(exit_code > 0)
 					exited_proc->log_errors();
 				switch(exit_code){
 					case SUCCESS:

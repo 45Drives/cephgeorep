@@ -176,7 +176,8 @@ inline std::string get_unique_log_path(const std::string type){
 
 void SyncProcess::dump_argv(int error) const{
 	std::ofstream f;
-	f.open(get_unique_log_path("fail"), std::ios::trunc);
+	std::string log_path = get_unique_log_path("fail");
+	f.open(log_path, std::ios::trunc);
 	if(!f.is_open()){
 		Logging::log.error("Could not dump argv to log file.");
 		return;
@@ -187,6 +188,8 @@ void SyncProcess::dump_argv(int error) const{
 		if(arg)
 			f << arg << std::endl;
 	}
+	Logging::log.message(payload_[0] + std::string(" argv logged in ") + log_path, 0);
+
 	f.close();
 }
 
