@@ -68,7 +68,7 @@ endif
 
 inst-man-pages:
 	mkdir -p $(DESTDIR)/usr/share/man/man8
-	gzip -kf doc/man/cephgeorep.8
+	gzip -f --stdout doc/man/cephgeorep.8 > doc/man/cephgeorep.8.gz
 	mv doc/man/cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/
 	ln -sf cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/cephfssyncd.8.gz
 	ln -sf cephgeorep.8.gz $(DESTDIR)/usr/share/man/man8/s3wrap.sh.8.gz
