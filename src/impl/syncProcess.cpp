@@ -120,11 +120,15 @@ void SyncProcess::sync_batch(){
 				close(pipefd_[0]);
 				pipefd_[0] = -1;
 				signal(SIGINT, SIG_DFL);
+				int old_stdout = dup(1);
+				int old_stderr = dup(2);
 				dup2(pipefd_[1], 1);
 				dup2(pipefd_[1], 2);
 				close(pipefd_[1]);
 				pipefd_[1] = -1;
 				execvp(payload_[0], payload_.data());
+				dup2(old_stdout, 1);
+				dup2(old_stderr, 2);
 				error = errno;
 				dump_argv(error);
 				int execvp_errno = -error;
