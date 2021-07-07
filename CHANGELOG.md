@@ -1,3 +1,3 @@
-## Cephgeorep 1.2.11-3
+## Cephgeorep 1.2.12-1
 
-* Fix argv logging on exec error
+* Fix logging argv on exec error.
