@@ -190,7 +190,7 @@ void SyncProcess::dump_argv(int error) const{
 	f << error << " : " << msg << std::endl;
 	for(const char *arg : payload_){
 		if(arg)
-			f << arg << std::endl;
+			f << std::string(arg) << std::endl;
 	}
 	Logging::log.message(payload_[0] + std::string(" argv logged in ") + log_path, 0);
 
