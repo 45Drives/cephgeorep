@@ -1,3 +1,3 @@
-## Cephgeorep 1.2.11-2
+## Cephgeorep 1.2.11-3
 
-* First build with auto-packaging.
+* Fix argv logging on exec error

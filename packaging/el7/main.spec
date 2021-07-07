@@ -47,6 +47,8 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Wed Jul 07 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.11-3
+- Fix argv logging on exec error
 * Wed Jul 07 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.11-2
 - First build with auto-packaging.
 * Fri Jun 18 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.11-1

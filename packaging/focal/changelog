@@ -1,3 +1,9 @@
+cephgeorep (1.2.11-3focal) focal; urgency=medium
+
+  * Fix argv logging on exec error
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 07 Jul 2021 13:23:20 -0300
+
 cephgeorep (1.2.11-2focal) focal; urgency=medium
 
   * First build with auto-packaging.
