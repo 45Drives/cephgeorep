@@ -23,6 +23,9 @@ static: $(TARGET)
 no-par-sort: CFLAGS := -std=c++11 -DNO_PARALLEL_SORT $(CFLAGS)
 no-par-sort: $(TARGET)
 
+LIBS += $(EXTRA_LIBS)
+CFLAGS += $(EXTRA_CFLAGS)
+
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
 $(OBJECT_FILES): build/%.o : src/impl/%.cpp

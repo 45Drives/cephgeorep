@@ -18,7 +18,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 %setup -q
 
 %build
-make -j$(nproc) static
+make -j$(nproc) EXTRA_CFLAGS="-D_GLIBXX_USE_CXX11_ABI=0" static
 
 %install
 make DESTDIR=%{buildroot} PACKAGING=1 install
