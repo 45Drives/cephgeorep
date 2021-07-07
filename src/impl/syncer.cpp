@@ -189,6 +189,8 @@ void Syncer::launch_procs(std::vector<File> &queue){
 				int exit_code = WEXITSTATUS(wstatus);
 				if(int8_t(exit_code) > 0)
 					exited_proc->log_errors();
+				else if(int8_t(exit_code) < 0)
+					exited_proc->dump_argv(-exit_code);
 				switch(exit_code){
 					case SUCCESS:
 						Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
