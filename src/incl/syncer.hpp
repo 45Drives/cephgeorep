@@ -24,7 +24,9 @@
 #define SUCCESS 0
 #define PARTIAL_XFR 23
 
+#ifndef MEM_LIM_HEADROOM
 #define MEM_LIM_HEADROOM 2048 // POSIX suggests 2048 bytes of headroom for modifying env
+#endif
 
 #include <list>
 #include <vector>
