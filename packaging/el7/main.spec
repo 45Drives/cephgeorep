@@ -19,7 +19,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 %setup -q
 
 %build
-make -j$(nproc) EXTRA_CFLAGS="-D_GLIBXX_USE_CXX11_ABI=0 -DMEM_LIM_HEADROOM=4096" static
+make -j$(nproc) EXTRA_CFLAGS="-D_GLIBXX_USE_CXX11_ABI=0 -DMEM_LIM_HEADROOM=6144" static
 
 %install
 make DESTDIR=%{buildroot} PACKAGING=1 install

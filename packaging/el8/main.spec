@@ -19,7 +19,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 %setup -q
 
 %build
-make -j$(nproc) EXTRA_CFLAGS="-DMEM_LIM_HEADROOM=4096"
+make -j$(nproc) EXTRA_CFLAGS="-DMEM_LIM_HEADROOM=6144"
 
 %install
 make DESTDIR=%{buildroot} PACKAGING=1 install
