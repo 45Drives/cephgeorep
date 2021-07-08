@@ -49,6 +49,7 @@ systemctl daemon-reload
 %changelog
 * Wed Jul 07 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.12-1
 - Fix logging argv on exec error.
+- Fix memory headroom for executing rsync.
 * Wed Jul 07 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.11-2
 - First build with auto-packaging.
 * Fri Jun 18 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.11-1

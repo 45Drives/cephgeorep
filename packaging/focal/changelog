@@ -1,6 +1,7 @@
 cephgeorep (1.2.12-1focal) focal; urgency=medium
 
   * Fix logging argv on exec error.
+  * Fix memory headroom for executing rsync.
 
  -- Josh Boudreau <jboudreau@45drives.com>  Wed, 07 Jul 2021 13:37:05 -0300
 
