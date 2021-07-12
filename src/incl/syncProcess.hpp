@@ -25,7 +25,13 @@
 class Syncer;
 class File;
 
+struct ExecError{
+	bool exec_failed_ = false;
+	int errno_ = 0;
+};
+
 class SyncProcess{
+	friend class Syncer;
 private:
 	int id_;
 	/* Integral ID for each process to be used while printing
@@ -69,6 +75,9 @@ private:
 	std::vector<char *> payload_;
 	/* argv for sync process.
 	 */
+	ExecError *exec_error_;
+	/* Struct pointer for returning errno from exec fail.
+	 */
 public:
 	SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &queue);
 	/* Constructor. Grabs members from parent pointer.
@@ -102,6 +111,9 @@ public:
 	void consume(std::vector<File> &queue);
 	/* Push c string pointers into payload_ vector until memory
 	 * usage is full or end of queue.
+	 */
+	void change_destination(void);
+	/* Pop last item in payload_ (destination) and replace with new destination.
 	 */
 	void sync_batch(void);
 	/* Fork and execute sync program with file batch.

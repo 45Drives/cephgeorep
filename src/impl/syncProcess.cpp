@@ -30,6 +30,7 @@
 extern "C" {
 	#include <unistd.h>
 	#include <fcntl.h>
+	#include <sys/mman.h>
 }
 
 SyncProcess::SyncProcess(Syncer *parent, int id, int nproc, std::vector<File> &queue)
@@ -101,6 +102,16 @@ void SyncProcess::consume(std::vector<File> &queue){
 	payload_.push_back(NULL);
 }
 
+void SyncProcess::change_destination(){
+	if(!destination_->empty()){
+		payload_.pop_back();
+		payload_.pop_back();
+		sending_to_ = *destination_;
+		payload_.push_back((char *)destination_->c_str());
+		payload_.push_back(NULL);
+	}
+}
+
 void SyncProcess::sync_batch(){
 	if(pipefd_[0] != -1)
 		close(pipefd_[0]);
@@ -108,6 +119,12 @@ void SyncProcess::sync_batch(){
 		close(pipefd_[1]);
 	pipe(pipefd_);
 	
+	exec_error_ = (ExecError *)mmap(NULL, sizeof(ExecError), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	if (exec_error_ == (void *)-1){
+		Logging::log.error(strerror(errno));
+		l::exit(EXIT_FAILURE);
+	}
+
 	pid_ = fork(); // create child process
 	int error;
 	switch(pid_){
@@ -126,8 +143,9 @@ void SyncProcess::sync_batch(){
 				pipefd_[1] = -1;
 				execvp(payload_[0], payload_.data());
 				error = errno;
-				int execvp_errno = -error;
-				exit(execvp_errno);
+				exec_error_->exec_failed_ = true;
+				exec_error_->errno_ = error;
+				exit(CHECK_SHMEM);
 			}
 			break;
 		default: // parent process
