@@ -53,11 +53,13 @@
     ],
     "changelog": {
         "urgency": "medium",
-        "version": "1.2.12",
+        "version": "1.2.13",
         "buildVersion": "1",
         "ignore": [],
-        "date": null,
+        "date": "2021-07-12T15:11:48.192694",
         "packager": "Josh Boudreau <jboudreau@45drives.com>",
-        "changes": []
+        "changes": [
+            "Refactor code to better handle errors while executing sync program."
+        ]
     }
 }
