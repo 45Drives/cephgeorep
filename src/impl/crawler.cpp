@@ -68,7 +68,7 @@ void Crawler::poll_base(bool seed, bool dry_run, bool set_rctime, bool oneshot){
 					msg += syncer.construct_destination(config_.remote_user_, config_.remote_host_, config_.remote_directory_);
 					Logging::log.message(msg, 1);
 				}else if(!set_rctime){
-					syncer.launch_procs(file_list);
+					syncer.sync(file_list);
 				}
 			}
 			// delete snapshot

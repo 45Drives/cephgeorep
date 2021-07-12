@@ -23,6 +23,10 @@
 #define NOT_INSTALLED 127
 #define SUCCESS 0
 #define PARTIAL_XFR 23
+#define TIMEOUT_S_R 30
+#define TIMEOUT_CONN 35
+
+#define CHECK_SHMEM 145
 
 #ifndef MEM_LIM_HEADROOM
 #define MEM_LIM_HEADROOM 2048 // POSIX suggests 2048 bytes of headroom for modifying env
@@ -31,6 +35,8 @@
 #include <list>
 #include <vector>
 #include <string>
+
+enum LAUNCH_PROCS_RET_T {SYNC_SUCCESS, SYNC_FAILED, INC_HEADROOM};
 
 class SyncProcess;
 class Config;
@@ -84,10 +90,14 @@ public:
 	size_t get_mem_limit(size_t envp_size) const;
 	/* Determine max_arg_sz_ from stack limits
 	 */
-	void launch_procs(std::vector<File> &queue);
+	void sync(std::vector<File> &queue);
+	/* Sorts queue, constructs SyncProcess objects, calls launch_procs.
+	 */
+	void launch_procs(std::list<SyncProcess> &procs, std::vector<File> &queue);
 	/* Creates SyncProcesses and distributes files across each one. Assigns each process an ID then launches
 	 * them in parallel. Waits for processes to return and relaunches if there are files remaining.
 	 */
+	LAUNCH_PROCS_RET_T handle_returned_procs(std::list<SyncProcess> &procs, std::vector<File> &queue);
 	void distribute_files(std::vector<File> &queue, std::list<SyncProcess> &procs) const;
 	/* Round robin distribution of files until all processes are full.
 	 */
