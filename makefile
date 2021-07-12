@@ -8,6 +8,7 @@ CFLAGS := $(CFLAGS) $(EXTRA_CFLAGS)
 
 SOURCE_FILES := $(shell find src/impl -name *.cpp)
 OBJECT_FILES := $(patsubst src/impl/%.cpp, build/%.o, $(SOURCE_FILES))
+HEADER_FILES := $(shell find src/incl -name *.hpp)
 
 ifeq ($(PREFIX),)
 	PREFIX := /opt/45drives/cephgeorep
@@ -28,7 +29,7 @@ no-par-sort: $(TARGET)
 
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
-$(OBJECT_FILES): build/%.o : src/impl/%.cpp
+$(OBJECT_FILES): build/%.o : src/impl/%.cpp $(HEADER_FILES)
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $(patsubst build/%.o, src/impl/%.cpp, $@) -o $@
 
