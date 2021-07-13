@@ -47,6 +47,9 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Tue Jul 13 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.13-1
+- Refactor code to better handle errors while executing sync program.
+- Retry batch after SSH fail if other processes succeed.
 * Wed Jul 07 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.12-1
 - Fix logging argv on exec error.
 - Fix memory headroom for executing rsync.

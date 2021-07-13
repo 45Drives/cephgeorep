@@ -3,7 +3,7 @@
     "name": "cephgeorep",
     "title": "Cephgeorep",
     "prerelease": true,
-    "version": "1.2.12",
+    "version": "1.2.13",
     "buildVersion": "1",
     "author": "Josh Boudreau <jboudreau@45drives.com>",
     "url": "https://github.com/45Drives/cephgeorep",
@@ -56,10 +56,8 @@
         "version": "1.2.13",
         "buildVersion": "1",
         "ignore": [],
-        "date": "2021-07-12T15:11:48.192694",
+        "date": null,
         "packager": "Josh Boudreau <jboudreau@45drives.com>",
-        "changes": [
-            "Refactor code to better handle errors while executing sync program."
-        ]
+        "changes": []
     }
 }

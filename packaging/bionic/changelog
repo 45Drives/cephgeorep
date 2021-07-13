@@ -1,3 +1,10 @@
+cephgeorep (1.2.13-1bionic) bionic; urgency=medium
+
+  * Refactor code to better handle errors while executing sync program.
+  * Retry batch after SSH fail if other processes succeed.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 13 Jul 2021 08:45:35 -0300
+
 cephgeorep (1.2.12-1bionic) bionic; urgency=medium
 
   * Fix logging argv on exec error.
