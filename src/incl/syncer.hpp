@@ -19,15 +19,13 @@
 
 #pragma once
 
-#define SSH_FAIL 255
-#define NOT_INSTALLED 127
 #define SUCCESS 0
 #define PROTOCOL_STREAM 12
 #define PARTIAL_XFR 23
 #define TIMEOUT_S_R 30
 #define TIMEOUT_CONN 35
-
 #define CHECK_SHMEM 145
+#define SSH_FAIL 255
 
 #ifndef MEM_LIM_HEADROOM
 #define MEM_LIM_HEADROOM 2048 // POSIX suggests 2048 bytes of headroom for modifying env

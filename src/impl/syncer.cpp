@@ -273,6 +273,18 @@ LAUNCH_PROCS_RET_T Syncer::handle_returned_procs(std::list<SyncProcess> &procs, 
 				return SYNC_FAILED;
 			}
 			switch(exit_code){
+			case PROTOCOL_STREAM:
+			case PARTIAL_XFR:
+			case TIMEOUT_S_R:
+			case TIMEOUT_CONN:
+				if(ends_with(exec_bin_, "rsync")){
+					Logging::log.error(Logging::log.rsync_error(exit_code));
+					Logging::log.message("Trying batch again.", 1);
+					exited_proc->sync_batch();
+					break;
+				}
+				Logging::log.error("Unknown exit code from " + exec_bin_ + ": " + std::to_string(exit_code));
+				return SYNC_FAILED;
 			case SSH_FAIL:
 				{
 					std::string msg = exec_bin_ + " failed to connect to " + exited_proc->destination() + ". Is the server running and connected to your network?";
@@ -298,21 +310,6 @@ LAUNCH_PROCS_RET_T Syncer::handle_returned_procs(std::list<SyncProcess> &procs, 
 					}
 				}
 				break;
-			case NOT_INSTALLED:
-				Logging::log.error(exec_bin_ + " is not installed.");
-				return SYNC_FAILED;
-			case PARTIAL_XFR:
-			case TIMEOUT_S_R:
-			case TIMEOUT_CONN:
-			case PROTOCOL_STREAM:
-				if(ends_with(exec_bin_, "rsync")){
-					Logging::log.error(Logging::log.rsync_error(exit_code));
-					Logging::log.message("Trying batch again.", 1);
-					exited_proc->sync_batch();
-					break;
-				}
-				Logging::log.error("Unknown exit code from " + exec_bin_ + ": " + std::to_string(exit_code));
-				return SYNC_FAILED;
 			default:
 				Logging::log.error("Unknown exit code from " + exec_bin_ + ": " + std::to_string(exit_code));
 				if(ends_with(exec_bin_, "rsync")){
