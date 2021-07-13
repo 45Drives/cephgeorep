@@ -160,7 +160,7 @@ void Syncer::sync(std::vector<File> &queue){
 			}
 		}
 	}while(res != SYNC_SUCCESS && res != SYNC_FAILED);
-	if(SYNC_FAILED)
+	if(res == SYNC_FAILED)
 		l::exit(EXIT_FAILURE);
 }
 
@@ -190,8 +190,9 @@ static inline bool ends_with(const std::string& str, const std::string& suffix){
 
 LAUNCH_PROCS_RET_T Syncer::handle_returned_procs(std::list<SyncProcess> &procs, std::vector<File> &queue){
 	int wstatus;
-	int num_ssh_fails_to_inc = procs.size(); // increment destination_ when ssh fails and this is 0
+	const unsigned int num_ssh_fails_to_inc = procs.size(); // increment destination_ when ssh fails and this is 0
 	int nproc = procs.size();
+	std::vector<SyncProcess *> ssh_fail_procs; // hold on to procs that fail from SSH error
 	while(!procs.empty()){ // while files are remaining in batch queues
 		// wait for a child to change state then relaunch remaining batches
 		pid_t exited_pid = wait(&wstatus);
@@ -211,7 +212,7 @@ LAUNCH_PROCS_RET_T Syncer::handle_returned_procs(std::list<SyncProcess> &procs, 
 		// check exit code
 		int exit_code = WEXITSTATUS(wstatus);
 
-		if(exit_code == 0){
+		if(exit_code == 0){ // success
 			Logging::log.message(std::to_string(exited_pid) + " exited successfully.",2);
 			Status::status.set(Status::OK);
 			exited_proc->reset();
@@ -231,6 +232,15 @@ LAUNCH_PROCS_RET_T Syncer::handle_returned_procs(std::list<SyncProcess> &procs, 
 				}
 				exited_proc->sync_batch();
 			}
+			for(SyncProcess *proc_ptr : ssh_fail_procs){
+				{
+					std::string msg = "Retrying since others succeeded.";
+					if(nproc > 1) msg = "Proc " + std::to_string(proc_ptr->id()) + ": " + msg;
+					Logging::log.message(msg, 1);
+				}
+				proc_ptr->sync_batch();
+			}
+			ssh_fail_procs.clear();
 		}else if(exit_code == CHECK_SHMEM && exited_proc->exec_error_ && exited_proc->exec_error_->exec_failed_){
 			int returned_errno = exited_proc->exec_error_->errno_;
 			exited_proc->dump_argv(returned_errno);
@@ -265,15 +275,18 @@ LAUNCH_PROCS_RET_T Syncer::handle_returned_procs(std::list<SyncProcess> &procs, 
 					if(nproc > 1) msg = "Proc " + std::to_string(exited_proc->id()) + ": " + msg;
 					Logging::log.warning(msg);
 				}
-				if(--num_ssh_fails_to_inc == 0){
-					Logging::log.message("Trying next destination", 1);
+				ssh_fail_procs.push_back(&(*exited_proc));
+				if(ssh_fail_procs.size() >= num_ssh_fails_to_inc){
 					Status::status.set(Status::HOST_DOWN);
 					if(++destination_ == destinations_.end()){ // increment destination itr if all procs fail
 						destination_ = destinations_.begin();
 						Logging::log.message("Waiting for 30 seconds before trying first destination again.", 1);
 						std::this_thread::sleep_for(std::chrono::seconds(30));
+						Logging::log.message("Trying first destination again.", 1);
+					}else{
+						Logging::log.message("Trying next destination.", 1);
 					}
-					num_ssh_fails_to_inc = procs.size();
+					ssh_fail_procs.clear();
 					// restart all procs
 					for(SyncProcess &proc : procs){
 						proc.change_destination();
@@ -287,6 +300,7 @@ LAUNCH_PROCS_RET_T Syncer::handle_returned_procs(std::list<SyncProcess> &procs, 
 			case PARTIAL_XFR:
 			case TIMEOUT_S_R:
 			case TIMEOUT_CONN:
+			case PROTOCOL_STREAM:
 				if(ends_with(exec_bin_, "rsync")){
 					Logging::log.error(Logging::log.rsync_error(exit_code));
 					Logging::log.message("Trying batch again.", 1);
