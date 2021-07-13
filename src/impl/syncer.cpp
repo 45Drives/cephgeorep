@@ -267,7 +267,11 @@ LAUNCH_PROCS_RET_T Syncer::handle_returned_procs(std::list<SyncProcess> &procs, 
 			}
 			return SYNC_FAILED;
 		}else{ // rsync error
-			exited_proc->log_errors();
+			std::string error_message = exited_proc->log_errors();
+			if(exit_code == PROTOCOL_STREAM && ends_with(exec_bin_, "rsync") && error_message.find("command not found") != std::string::npos){
+				Logging::log.error("Destination does not have rsync installed.");
+				return SYNC_FAILED;
+			}
 			switch(exit_code){
 			case SSH_FAIL:
 				{
