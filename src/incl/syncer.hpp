@@ -22,6 +22,7 @@
 #define SSH_FAIL 255
 #define NOT_INSTALLED 127
 #define SUCCESS 0
+#define PROTOCOL_STREAM 12
 #define PARTIAL_XFR 23
 #define TIMEOUT_S_R 30
 #define TIMEOUT_CONN 35
