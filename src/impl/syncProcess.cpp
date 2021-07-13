@@ -210,19 +210,21 @@ void SyncProcess::dump_argv(int error) const{
 	f.close();
 }
 
-void SyncProcess::log_errors() const{
+std::string SyncProcess::log_errors() const{
 	std::ofstream f;
+	std::stringstream str;
 	std::string log_path = get_unique_log_path("error");
 	f.open(log_path, std::ios::trunc);
 	if(!f.is_open()){
 		Logging::log.error("Could not dump stdout/stderr to log file.");
-		return;
+		return "";
 	}
 	char buffer[4*1024];
 	int bytes_read = 0;
 	while((bytes_read = read(pipefd_[0], buffer, sizeof(buffer) - 1)) > 0){
 		buffer[bytes_read] = '\0';
 		f << buffer;
+		str << buffer;
 	}
 	if(bytes_read == -1){
 		int err = errno;
@@ -232,5 +234,6 @@ void SyncProcess::log_errors() const{
 	}
 	
 	f.close();
+	return str.str();
 }
 

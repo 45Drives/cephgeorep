@@ -134,7 +134,7 @@ public:
 	/* Print errno, strerror(errno), and payload_ to a log file
 	 * when execution fails.
 	 */
-	void log_errors(void) const;
-	/* Print contents of pipe to log file.
+	std::string log_errors(void) const;
+	/* Print contents of pipe to log file and return contents as string.
 	 */
 };
