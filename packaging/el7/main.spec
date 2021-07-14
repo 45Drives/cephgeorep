@@ -47,6 +47,8 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Wed Jul 14 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.13-2
+- Fix version number in header file so -V displays proper version.
 * Tue Jul 13 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.13-1
 - Refactor code to better handle errors while executing sync program.
 - Retry batch after SSH fail if other processes succeed.

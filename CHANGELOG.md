@@ -1,4 +1,3 @@
-## Cephgeorep 1.2.13-1
+## Cephgeorep 1.2.13-2
 
-* Refactor code to better handle errors while executing sync program.
-* Retry batch after SSH fail if other processes succeed.
+* Fix version number in header file so -V displays proper version.
