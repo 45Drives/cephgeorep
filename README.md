@@ -17,15 +17,15 @@ You must have a Ceph file system. `rsync`, `scp`, or similar must be installed o
 ## Installation
 ### Current Release
 #### Centos 7
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep-1.2.13-1.el7.x86_64.rpm`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep-1.2.13-2.el7.x86_64.rpm`
 #### Centos 8
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep-1.2.13-1.el8.x86_64.rpm`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep-1.2.13-2.el8.x86_64.rpm`
 #### Ubuntu 20.04
-* `wget https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep_1.2.13-1focal_amd64.deb`
-* `apt install ./cephgeorep_1.2.13-1focal_amd64.deb`
+* `wget https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep_1.2.13-2focal_amd64.deb`
+* `apt install ./cephgeorep_1.2.13-2focal_amd64.deb`
 #### Ubuntu 18.04
-* `wget https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep_1.2.13-1bionic_amd64.deb`
-* `apt install ./cephgeorep_1.2.13-1bionic_amd64.deb`
+* `wget https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep_1.2.13-2bionic_amd64.deb`
+* `apt install ./cephgeorep_1.2.13-2bionic_amd64.deb`
 
 ### Installing from Source
 * Install Boost (libboost-dev) and Thread Building Blocks (libtbb-dev) development libraries
