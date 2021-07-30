@@ -1,3 +1,3 @@
-## Cephgeorep 1.2.13-2
+## Cephgeorep 1.2.13-3
 
-* Fix version number in header file so -V displays proper version.
+* Add libtbb-dev to deb dependencies.

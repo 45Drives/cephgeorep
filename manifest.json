@@ -4,7 +4,7 @@
     "title": "Cephgeorep",
     "prerelease": true,
     "version": "1.2.13",
-    "buildVersion": "2",
+    "buildVersion": "3",
     "author": "Josh Boudreau <jboudreau@45drives.com>",
     "url": "https://github.com/45Drives/cephgeorep",
     "category": "utils",
@@ -25,7 +25,8 @@
         "deb": [
             "libstdc++6",
             "libboost-filesystem-dev | libboost-all-dev",
-            "libboost-system-dev | libboost-all-dev"
+            "libboost-system-dev | libboost-all-dev",
+            "libtbb-dev"
         ],
         "el": []
     },
@@ -54,7 +55,7 @@
     "changelog": {
         "urgency": "medium",
         "version": "1.2.13",
-        "buildVersion": "2",
+        "buildVersion": "3",
         "ignore": [],
         "date": null,
         "packager": "Josh Boudreau <jboudreau@45drives.com>",

@@ -1,3 +1,9 @@
+cephgeorep (1.2.13-3bionic) bionic; urgency=medium
+
+  * Add libtbb-dev to deb dependencies.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Fri, 30 Jul 2021 08:28:35 -0300
+
 cephgeorep (1.2.13-2bionic) bionic; urgency=medium
 
   * Fix version number in header file so -V displays proper version.

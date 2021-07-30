@@ -17,15 +17,15 @@ You must have a Ceph file system. `rsync`, `scp`, or similar must be installed o
 ## Installation
 ### Current Release
 #### Centos 7
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep-1.2.13-2.el7.x86_64.rpm`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep-1.2.13-3.el7.x86_64.rpm`
 #### Centos 8
-* `yum install https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep-1.2.13-2.el8.x86_64.rpm`
+* `yum install https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep-1.2.13-3.el8.x86_64.rpm`
 #### Ubuntu 20.04
-* `wget https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep_1.2.13-2focal_amd64.deb`
-* `apt install ./cephgeorep_1.2.13-2focal_amd64.deb`
+* `wget https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep_1.2.13-3focal_amd64.deb`
+* `apt install ./cephgeorep_1.2.13-3focal_amd64.deb`
 #### Ubuntu 18.04
-* `wget https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep_1.2.13-2bionic_amd64.deb`
-* `apt install ./cephgeorep_1.2.13-2bionic_amd64.deb`
+* `wget https://github.com/45Drives/cephgeorep/releases/download/1.2.13/cephgeorep_1.2.13-3bionic_amd64.deb`
+* `apt install ./cephgeorep_1.2.13-3bionic_amd64.deb`
 
 ### Installing from Source
 * Install Boost (libboost-dev) and Thread Building Blocks (libtbb-dev) development libraries
@@ -72,7 +72,7 @@ Log Level = 1
 # propagate the modification time of a file all the way back to
 # the root of the sync directory.
 ```
-You can also specify a different config file with the command line argument `-c` or `--config`, i.e. `cephfssynd -c /alternate/path/to/config.conf`. If you are planning on running multiple instances of `cephfssyncd` with different config files, be sure to have unique paths for `Metadata Directory` for each config.  
+You can also specify a different config file with the command line argument `-c` or `--config`, i.e. `cephfssyncd -c /alternate/path/to/config.conf`. If you are planning on running multiple instances of `cephfssyncd` with different config files, be sure to have unique paths for `Metadata Directory` for each config.  
 
 \* The Ceph file system has a propagation delay for recursive ctime to make its way from the changed file to the
 top level directory it's contained in. To account for this delay in deep directory trees, there is a user-defined
@@ -144,7 +144,7 @@ Processes = 1                 # number of parallel sync processes to launch
 Threads = 8                   # number of worker threads to search for files
 Log Level = 1
 ```
-With this setup, `cephfssynd` will call the s3cmd wrapper script, which in turn calls `s3cmd put ...` for each new file passed to it by `cephfssyncd`, maintaining the directory tree hierarchy.
+With this setup, `cephfssyncd` will call the s3cmd wrapper script, which in turn calls `s3cmd put ...` for each new file passed to it by `cephfssyncd`, maintaining the directory tree hierarchy.
 
 ## Notes
 * Windows does not update the `mtime` attribute when drag/dropping or copying a file, so files that are moved into a shared folder will not sync if their Last Modified time is earlier than the most recent sync. 

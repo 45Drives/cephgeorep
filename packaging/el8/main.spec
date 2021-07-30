@@ -47,6 +47,8 @@ systemctl stop cephfssyncd.service
 systemctl daemon-reload
 
 %changelog
+* Fri Jul 30 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.13-3
+- Add libtbb-dev to deb dependencies.
 * Wed Jul 14 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.13-2
 - Fix version number in header file so -V displays proper version.
 * Tue Jul 13 2021 Josh Boudreau <jboudreau@45drives.com> 1.2.13-1
