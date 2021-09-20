@@ -3,19 +3,14 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH CEPHGEOREP 8 "February 02 2021" "cephgeorep 1.1.4"
+.TH CEPHGEOREP 8 "May 18 2021" "cephgeorep 1.2.11"
 .\" Please adjust this date whenever revising the manpage.
 
 .SH NAME
 cephgeorep \- an efficient unidirectional remote backup daemon for CephFS
 
 .SH SYNOPSIS
-.B cephfssyncd
-[ -c 
-.I path/to/config/file
-] [
-.I -dhnqstv
-]
+.BI "cephfssyncd \fR[-c \fP" "path/to/config/file\fR] [\fP-cdhnqsStv\fR]\fP"
 
 .SH DESCRIPTION
 .B Ceph File System Remote Sync Daemon
@@ -26,76 +21,127 @@ This daemon takes advantage of Ceph's
 directory attribute, which is the value of the highest mtime of all the files below a given directory tree. Using this attribute, it selectively recurses only into directory tree branches with modified files - instead of wasting time accessing every branch.
 
 .SH OPTIONS
-.IP "-c, --config <path/to/config/file>"
+.TP
+.BI "\-c\fR,\fP \-\^\-config " "path/to/config/file"
 Pass an alternate configuration file path. This is useful for running multiple instances of
 .B cephgeorep
 on the same system.
 Default config: /etc/ceph/cephfssyncd.conf
-.IP "-d, --dry-run"
+.TP
+.BI "\-d\fR,\fP \-\^\-dry-run"
 Print the total number of files and payload size that would be synced if ran without this flag.
-When combined with -v, all files will also be listed.
+When combined with \fI-v\fP, all files will also be listed.
 Exits before syncing.
-.IP "-h, --help"
+.TP
+.BI "\-h\fR,\fP \-\^\-help"
 Print the usage message and exit.
-.IP "-n, --nproc <# of processes>"
+.TP
+.BI "\-n\fR,\fP \-\^\-nproc " "# of processes"
 Specify the number of sync processes to run in parallel, overriding the value in the configuration file.
-.IP "-q, --quiet"
+.TP
+.BI "\-o\fR,\fP \-\^\-oneshot"
+Manually sync changes once and exit.
+.TP
+.BI "\-q\fR,\fP \-\^\-quiet"
 Set the log level to 0, muting output.
-.IP "-s, --seed"
+.TP
+.BI "\-s\fR,\fP \-\^\-seed"
 Send every file to seed the destination.
-.IP "-t, --threads <# of threads>"
+.TP
+.BI "\-S\fR,\fP \-\^\-set-last-change"
+Prime last change time to only sync changes that occur after running with this flag. Use this when you want to start using
+.B cephgeorep
+with an existing backup without needing to resync everything.
+.TP
+.BI "\-t\fR,\fP \-\^\-threads " "# of threads"
 Specify the number of worker threads to search for files, overriding the value in the configuration file. Greatly reduces file search time.
-.IP "-v, --verbose"
+.TP
+.BI "\-v\fR,\fP \-\^\-verbose"
 Set the log level to 2, showing debug log output.
+.TP
+.BI "\-V\fR,\fP \-\^\-version"
+Print the release version and exit.
 
 .SH CONFIGURATION
-The default configuration file location is /etc/cephfssyncd.conf, which can be overridden with the 
-.I -c, --config
+The default configuration file location is \fI/etc/cephfssyncd.conf\fP, which can be overridden with the 
+.I -c\fR,\fP --config
 option.
 .P
 Configuration format is 
-.B "Key = value"
+.BI "Key \fR=\fP " value
 pairs.
 
 .P
-.I "Local Backup Settings"
-.IP "Source Directory = </path/to/sync>"
+.SS "Local Backup Settings"
+.TP
+.BI "Source Directory \fR=\fP " /path/to/sync
 The full path to the directory you want to backup.
-.IP "Ignore Hidden = <true|false>"
+.TP
+.BI "Ignore Hidden \fR=\fP " true\fR|\fPfalse
 Ignore files beginning with ".".
-.IP "Ignore Windows Lock = <true|false>"
+.TP
+.BI "Ignore Windows Lock \fR=\fP " true\fR|\fPfalse
 Ignore files beginning with "~$".
-.IP "Ignore Vim Swap = <true|false>"
+.TP
+.BI "Ignore Vim Swap \fR=\fP " true\fR|\fPfalse
 Ignore vim .swp files (.<filename>.swp, .<filename>.swpx).
 
 .P
-.I "Remote Settings"
-.IP "Remote User = <user>"
-The user on remote backup machine to connect as while syncing. (optional)
-.IP "Remote Host = <hostname|IP address>"
-The remote backup machine hostname or IP address.
-.IP "Remote Directory = </path/to/remote/destination>"
-The directory to place files in the remote backup machine.
+.SS "Remote Settings"
+.TP
+.BI "Destination \fR=\fP " \fR[[\fPuser@\fR]\fPhost:\fR][\fPpath\fR]\fP
+Comma or space separated list of backup destinations. If multiple destinations are defined, they are only
+used as failovers - data will not be duplicated to each destination. Multiple failovers are intended to be used with multiple
+gateways to a single backup storage pool. This parameter can appear multiple times if you do not want to put the list on one line.
+Valid destination examples:
+.IP
+root@ceph-backup:/mnt/tank
+.IP
+ceph-backup:/mnt/tank
+.IP
+/mnt/tank
 
 .P
-.I "Daemon Settings"
-.IP "Exec = <rsync|scp|...>"
+.SS "Daemon Settings"
+.TP
+.BI "Exec \fR=\fP " rsync\fR|\fPscp\fR|\fP...
 The program to use for syncing. To sync to s3 buckets: set this to /opt/45drives/cephgeorep/s3wrap.sh, set the flags to only the bucket name, and leave all Remote Settings fields blank.
-.IP "Flags = <-a --relative|...>"
+.TP
+.BI "Flags \fR=\fP " "-a --relative\fR|\fP..."
 Execution flags for above program, space delimited. For proper usage with rsync, leave the default -a --relative options.
-.IP "Metadata Directory = </var/lib/cephfssync/|...>"
+.TP
+.BI "Metadata Directory \fR=\fP " /var/lib/cephfssync/\fR|\fP...
 Directory to store metadata for keeping track of file modification times.
-.IP "Sync Period = <time in seconds>"
+.TP
+.BI "Sync Period \fR=\fP " "time in seconds"
 The polling period in seconds between each check for file changes. Default is 10. To push this daemon to quasi-synchronous replication, set this to 0.
-.IP "Propagation Delay = <time in milliseconds>
+.TP
+.BI "Propagation Delay \fR=\fP " "time in milliseconds"
 The time in milliseconds between taking a snapshot and searching for files. This may not be needed anymore with the newest release of Ceph. Default is 100.
-.IP "Processes = <# of processes>"
+.TP
+.BI "Processes \fR=\fP " "# of processes"
 The number of sync processes to launch in parallel. Default is 4. This speeds up sending large batches of files.
-.IP "Threads = <# of threads>"
+.TP
+.BI "Threads \fR=\fP " "# of threads"
 The number of worker threads to search for files. Default is 8. For very large directory trees, increasing this number speeds up finding files.
-.IP "Log Level = <0|1|2>"
+.TP
+.BI "Log Level \fR=\fP " "0\fR|\fP1\fR|\fP2"
 The log level output. Choosing 0 mutes all output to stdout, but errors are still printed to stderr. Choosing 1 will show useful information messages, and 2 shows very verbose debug output. Default is 1.
+
+.SS "Deprecated Settings"
+These settings are still valid, but a warning will be given while using them. The following remote settings cannot be used if
+.I Destination
+is set.
+.TP
+.BI "Remote User \fR=\fP " "user"
+The user on remote backup machine to connect as while syncing. (optional)
+.TP
+.BI "Remote Host \fR=\fP " "hostname\fR|\fPIP address"
+The remote backup machine hostname or IP address.
+.TP
+.BI "Remote Directory \fR=\fP " "/path/to/remote/destination"
+The directory to place files in the remote backup machine.
 
 .SH AUTHOR
 .B cephgeorep
-was created by Josh Boudreau <jboudreau@45drives.com> and is maintained by the research and development team at 45Drives.
+was created by \fBJosh Boudreau\fP <\fIjboudreau@45drives.com\fP> and is maintained by the \fBResearch and Development\fP team at \fB45Drives\fP.

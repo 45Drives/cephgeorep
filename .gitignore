@@ -26,12 +26,6 @@
 *.a
 *.lib
 
-# Executables
-*.exe
-*.out
-*.app
-cephfssyncd
-
 # Kate swap file
 *.kate-swp
 
@@ -39,10 +33,16 @@ cephfssyncd
 .kdev4/
 *.kdev4
 
+# ccls
+.ccls-cache/
+
 # deb packaging
-debian/cephgeorep
-debian/cephgeorep.substvars
-debian/cephgeorep.postrm.debhelper
-debian/debhelper-build-stamp
-debian/files
-debian/.debhelper
+packaging/ubuntu*/cephgeorep
+packaging/ubuntu*/cephgeorep.substvars
+packaging/ubuntu*/cephgeorep.postrm.debhelper
+packaging/ubuntu*/debhelper-build-stamp
+packaging/ubuntu*/files
+packaging/ubuntu*/.debhelper
+
+# build output
+dist

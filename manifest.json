@@ -1,0 +1,64 @@
+{
+    "__version": "45D-R1",
+    "name": "cephgeorep",
+    "title": "Cephgeorep",
+    "prerelease": false,
+    "version": "1.2.13",
+    "buildVersion": "3",
+    "author": "Josh Boudreau <jboudreau@45drives.com>",
+    "url": "https://github.com/45Drives/cephgeorep",
+    "category": "utils",
+    "priority": "optional",
+    "licence": "GPL-3.0+",
+    "architecture": {
+        "deb": "amd64",
+        "el": "x86_64"
+    },
+    "description": {
+        "long": "An efficient unidirectional remote backup daemon for CephFS.",
+        "short": "An efficient unidirectional remote backup daemon for CephFS."
+    },
+    "defaults": {
+        "urgency": "medium"
+    },
+    "dependencies": {
+        "deb": [
+            "libstdc++6",
+            "libboost-filesystem-dev | libboost-all-dev",
+            "libboost-system-dev | libboost-all-dev",
+            "libtbb-dev"
+        ],
+        "el": []
+    },
+    "releases": [
+        {
+            "image": "cephgeorep-ubuntu-focal-builder",
+            "codeName": "focal",
+            "type": "deb"
+        },
+        {
+            "image": "cephgeorep-ubuntu-bionic-builder",
+            "codeName": "bionic",
+            "type": "deb"
+        },
+        {
+            "image": "cephgeorep-rocky-el8-builder",
+            "codeName": "el8",
+            "type": "el"
+        },
+        {
+            "image": "cephgeorep-centos-el7-builder",
+            "codeName": "el7",
+            "type": "el"
+        }
+    ],
+    "changelog": {
+        "urgency": "medium",
+        "version": "1.2.13",
+        "buildVersion": "3",
+        "ignore": [],
+        "date": null,
+        "packager": "Josh Boudreau <jboudreau@45drives.com>",
+        "changes": []
+    }
+}

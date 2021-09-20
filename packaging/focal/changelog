@@ -1,0 +1,203 @@
+cephgeorep (1.2.13-3focal) focal; urgency=medium
+
+  * Add libtbb-dev to deb dependencies.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Fri, 30 Jul 2021 08:28:35 -0300
+
+cephgeorep (1.2.13-2focal) focal; urgency=medium
+
+  * Fix version number in header file so -V displays proper version.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 14 Jul 2021 07:04:39 -0300
+
+cephgeorep (1.2.13-1focal) focal; urgency=medium
+
+  * Refactor code to better handle errors while executing sync program.
+  * Retry batch after SSH fail if other processes succeed.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 13 Jul 2021 08:45:35 -0300
+
+cephgeorep (1.2.12-1focal) focal; urgency=medium
+
+  * Fix logging argv on exec error.
+  * Fix memory headroom for executing rsync.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 07 Jul 2021 13:37:05 -0300
+
+cephgeorep (1.2.11-2focal) focal; urgency=medium
+
+  * First build with auto-packaging.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 07 Jul 2021 11:07:43 -0300
+
+cephgeorep (1.2.11-1focal) focal; urgency=low
+
+  * Replace ':' with '-' in log file names for portability of files.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Fri, 18 Jun 2021 10:41:00 -0300
+
+cephgeorep (1.2.10-1focal) focal; urgency=medium
+
+  * Retry batch on partial transfer failure.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Thu, 17 Jun 2021 11:05:00 -0300
+
+cephgeorep (1.2.9-1focal) focal; urgency=medium
+
+  * When execution fails from too many arguments, the argv headroom
+    is increased and execution is tried again.
+  * STDOUT and STDERR of sync process are logged to a file on failure.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 19 May 2021 16:42:00 -0400
+
+cephgeorep (1.2.8-1focal) focal; urgency=medium
+
+  * Signigicant optimizations for modifying file paths and for comparing
+    file size and type to make crawl time up to 6 times faster.
+  * Lowered memory usage by using iterators and c-string pointers rather
+    than copying the vector of file objects into partitions to distribute
+    paths amongst sync processes.
+  * Make systemd service restart on abnormal exit (killed by signal).
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 26 Apr 2021 10:56:00 -0400
+
+cephgeorep (1.2.7-1focal) focal; urgency=high
+
+  * Fixed deadlock issue with ConcurrentQueue while multithreaded crawling.
+  * Optimized multithreaded crawl to cut crawl time almost in half.
+  * Optimized vector sort compare function to speed up sort before launching
+    sync program.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Thu, 22 Apr 2021 14:25:00 -0400
+
+cephgeorep (1.2.6-1focal) focal; urgency=medium
+
+  * Remove many redundant filesystem stat() calls while gathering and
+    sorting files to speed up vector sort.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 19 Apr 2021 11:15:00 -0400
+
+cephgeorep (1.2.5-1focal) focal; urgency=low
+
+  * Add EXIT_FAILED (4) status for when cephfssyncd exits with EXIT_FAILURE.
+  * Check that Source Directory exists after loading config.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 24 Mar 2021 12:04:00 -0400
+
+cephgeorep (1.2.4-1focal) focal; urgency=low
+
+  * Implement status sharing for prometheus metrics exporter.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 23 Mar 2021 14:55:00 -0400
+
+cephgeorep (1.2.3-1focal) focal; urgency=low
+
+  * Add oneshot flag to manually sync changes once and exit.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 03 Mar 2021 13:56:00 -0400
+
+cephgeorep (1.2.2-2focal) focal; urgency=low
+
+  * Overhaul packaging using Docker.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 02 Mar 2021 12:44:00 -0400
+
+cephgeorep (1.2.2-1focal) focal; urgency=low
+
+  * Use parallel execution policy for sorting file list, shortening time between
+   finding files and sending files.
+
+  * Added verbose exit status logging for rsync errors.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 01 Mar 2021 14:52:00 -0400
+
+cephgeorep (1.2.1-1focal) focal; urgency=low
+
+  * Updated man page formatting.
+
+  * Moved version definition to its own header file.
+
+  * --version now prints cephgeorep VERS instead of cephgeorep vVERS
+
+  * add -V flag along with --version
+
+  * add bash tab completion script
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 17 Feb 2021 11:35:00 -0400
+
+cephgeorep (1.2.0-1focal) focal; urgency=low
+
+  * Added -S --set-last-change flag to prime the last change time to only 
+   sync changes that occur after running with this flag.
+
+  * Added --version flag to print version and exit.
+
+  * Implemented destination failover with multiple destinations
+   when SSH fails. Output of rsync is muted to clean up log messages.
+
+  * Last rctime now flushes to disk and snap path is deleted in the
+   signal handler, and before exiting in Logging::log.error().
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 02 Feb 2021 3:29:00 -0400
+
+cephgeorep (1.1.4-1focal) focal; urgency=medium
+
+  * Fixed crash with self-referencing symlinks.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Fri, 05 Feb 2021 01:15:00 -0400
+
+cephgeorep (1.1.3-4focal) focal; urgency=low
+
+  * Added configuration template to be installed from deb to /etc
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Thu, 04 Feb 2021 01:36:00 -0400
+ 
+cephgeorep (1.1.3-3focal) focal; urgency=low
+
+  * Updated man page to be installed to man 8 instead of man 1.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 02 Feb 2021 02:23:00 -0400
+
+cephgeorep (1.1.3-2focal) focal; urgency=low
+
+  * Updated paths to configuration file and metadata in man page.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 01 Feb 2021 04:44:00 -0400
+
+cephgeorep (1.1.3-1focal) focal; urgency=high
+
+  * Fixed a bug where new_rctime isn't initialized when declared so
+    a random value would be assigned.
+
+  * Periodically flush last sync timestamp to disk, at most once per hour.
+
+  * Add postinst script to trigger systemctl daemon-reload.
+
+  * Add prerm and postrm scripts to stop systemd unit and
+    tirgger daemon-reload.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 01 Feb 2021 03:11:00 -0400
+
+cephgeorep (1.1.2-1) focal; urgency=high
+
+  * Fix crash while reading configuration when = is missing.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Thu, 21 Jan 2021 12:36:00 -0400
+
+cephgeorep (1.1.1-3) focal; urgency=low
+
+  * Remove symlink to s3wrap.sh in /usr/local from installed files.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Thu, 21 Jan 2021 10:20:00 -0400
+
+cephgeorep (1.1.1-2) focal; urgency=low
+
+  * Add man page entry for cephgeorep(1).
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 20 Jan 2021 16:23:00 -0400
+
+cephgeorep (1.1.1-1) focal; urgency=medium
+
+  * Initial Ubuntu release of cephgeorep.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 20 Jan 2021 15:38:06 -0400

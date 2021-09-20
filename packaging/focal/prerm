@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+systemctl stop cephfssyncd.service

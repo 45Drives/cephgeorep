@@ -1,0 +1,28 @@
+_CephfssyncdCompleteBash () {
+	local cur
+	local prev
+	
+	COMPREPLY=()
+	
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+	
+	case "$prev" in
+		-c|--config)
+			local IFS=$'\n'
+			compopt -o filenames
+			COMPREPLY=($(compgen -f -- $cur))
+			;;
+		-n|--nproc|-t|--threads)
+			COMPREPLY=()
+			;;
+		*)
+			COMPREPLY=(
+				$(compgen -W '-c --config -d --dry-run -h --help -n --nproc -o --oneshot -q --quiet -s --seed -S --set-last-change -t --threads -v --verbose -V --version' -- $cur)
+			)
+			;;
+	esac
+	return 0
+}
+
+complete -F _CephfssyncdCompleteBash cephfssyncd

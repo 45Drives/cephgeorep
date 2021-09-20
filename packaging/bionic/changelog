@@ -1,0 +1,77 @@
+cephgeorep (1.2.13-3bionic) bionic; urgency=medium
+
+  * Add libtbb-dev to deb dependencies.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Fri, 30 Jul 2021 08:28:35 -0300
+
+cephgeorep (1.2.13-2bionic) bionic; urgency=medium
+
+  * Fix version number in header file so -V displays proper version.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 14 Jul 2021 07:04:39 -0300
+
+cephgeorep (1.2.13-1bionic) bionic; urgency=medium
+
+  * Refactor code to better handle errors while executing sync program.
+  * Retry batch after SSH fail if other processes succeed.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Tue, 13 Jul 2021 08:45:35 -0300
+
+cephgeorep (1.2.12-1bionic) bionic; urgency=medium
+
+  * Fix logging argv on exec error.
+  * Fix memory headroom for executing rsync.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 07 Jul 2021 13:37:05 -0300
+
+cephgeorep (1.2.11-2bionic) bionic; urgency=medium
+
+  * First build with auto-packaging.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 07 Jul 2021 11:07:43 -0300
+
+cephgeorep (1.2.11-1bionic) bionic; urgency=low
+
+  * Replace ':' with '-' in log file names for portability of files.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Fri, 18 Jun 2021 10:41:00 -0300
+
+cephgeorep (1.2.10-1bionic) bionic; urgency=medium
+
+  * Retry batch on partial transfer failure.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Thu, 17 Jun 2021 11:05:00 -0300
+
+cephgeorep (1.2.9-1bionic) bionic; urgency=medium
+
+  * When execution fails from too many arguments, the argv headroom
+    is increased and execution is tried again.
+  * STDOUT and STDERR of sync process are logged to a file on failure.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Wed, 19 May 2021 16:42:00 -0400
+
+cephgeorep (1.2.8-1bionic) bionic; urgency=medium
+
+  * Signigicant optimizations for modifying file paths and for comparing
+    file size and type to make crawl time up to 6 times faster.
+  * Lowered memory usage by using iterators and c-string pointers rather
+    than copying the vector of file objects into partitions to distribute
+    paths amongst sync processes.
+  * Make systemd service restart on abnormal exit (killed by signal).
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 26 Apr 2021 10:56:00 -0400
+
+cephgeorep (1.2.7-1bionic) bionic; urgency=high
+
+  * Fixed deadlock issue with ConcurrentQueue while multithreaded crawling.
+  * Optimized multithreaded crawl to cut crawl time almost in half.
+  * Optimized vector sort compare function to speed up sort before launching
+    sync program.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Thu, 22 Apr 2021 14:25:00 -0400
+
+cephgeorep (1.2.6-1bionic) bionic; urgency=medium
+
+  * First packaging for Ubuntu 18.04 LTS Bionic Beaver.
+
+ -- Josh Boudreau <jboudreau@45drives.com>  Mon, 19 Apr 2021 15:22:00 -0400
