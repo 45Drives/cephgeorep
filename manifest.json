@@ -2,7 +2,7 @@
     "__version": "45D-R1",
     "name": "cephgeorep",
     "title": "Cephgeorep",
-    "prerelease": true,
+    "prerelease": false,
     "version": "1.2.13",
     "buildVersion": "3",
     "author": "Josh Boudreau <jboudreau@45drives.com>",
