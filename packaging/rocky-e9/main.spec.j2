@@ -1,0 +1,50 @@
+%global debug_package %{nil}
+
+Name: {{ name }}
+Version: {{ version }}
+Release: {{ build_number }}%{?dist}
+Summary: {{ description }}
+License: {{ licence }}
+URL: {{ git_url }}
+Source0: %{name}-%{version}.tar.gz
+BuildArch: {{ architecture.rocky }}
+
+
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+
+%description
+{{ title }}
+{{ description }}
+
+%prep
+%setup -q
+
+%build
+make -j$(nproc) EXTRA_CFLAGS="-D_GLIBXX_USE_CXX11_ABI=0 -DMEM_LIM_HEADROOM=4096" static
+
+%install
+make DESTDIR=%{buildroot} PACKAGING=1 install
+
+%clean
+make DESTDIR=%{buildroot} clean
+
+%files
+%defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/cephfssyncd.conf
+/lib/systemd/system/cephfssyncd.service
+%{_bindir}/*
+/opt/45drives/%{name}/*
+%docdir /usr/share/man/man8
+%doc /usr/share/man/man8/*
+/usr/share/bash-completion/completions/*
+
+%post
+systemctl daemon-reload
+
+%preun
+systemctl stop cephfssyncd.service
+
+%postun
+systemctl daemon-reload
+
+%changelog

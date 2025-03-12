@@ -1,0 +1,17 @@
+Source: {{ name }}
+Section: utils
+Priority: optional
+Maintainer: {{ author }}
+Build-Depends: debhelper-compat (= 12),
+               libstdc++-dev,
+               libboost-filesystem-dev,
+               g++ (>= 4.8)
+Standards-Version: 4.4.1
+Homepage: ::package_url::
+
+Package: {{ name }}
+Architecture: {{ architecture.ubuntu }}
+Depends: {{ dependencies.ubuntu_common | join(', ') }}
+Recommends: rsync,
+            bash-completion
+Description: {{ description }}

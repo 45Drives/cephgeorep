@@ -1,56 +1,55 @@
 {
-    "__version": "45D-R1",
+    "schema_version": "45D_AP_V2.0",
     "name": "cephgeorep",
     "title": "Cephgeorep",
-    "prerelease": false,
+    "stable": false,
     "version": "1.2.13",
     "buildVersion": "3",
     "author": "Josh Boudreau <jboudreau@45drives.com>",
-    "url": "https://github.com/45Drives/cephgeorep",
-    "category": "utils",
-    "priority": "optional",
-    "licence": "GPL-3.0+",
+    "git_url": "https://github.com/45Drives/cephgeorep",
+    "license": "GPL-3.0+",
     "architecture": {
-        "deb": "amd64",
-        "el": "x86_64"
+        "ubuntu": "amd64",
+        "rocky": "x86_64"
     },
-    "description": {
-        "long": "An efficient unidirectional remote backup daemon for CephFS.",
-        "short": "An efficient unidirectional remote backup daemon for CephFS."
-    },
+    "description": "An efficient unidirectional remote backup daemon for CephFS.",
     "defaults": {
         "urgency": "medium"
     },
     "dependencies": {
-        "deb": [
+        "ubuntu_common": [
             "libstdc++6",
             "libboost-filesystem-dev | libboost-all-dev",
             "libboost-system-dev | libboost-all-dev",
             "libtbb-dev"
         ],
-        "el": []
+        "rocky_common": []
     },
-    "releases": [
+    "builds": [
         {
-            "image": "cephgeorep-ubuntu-focal-builder",
-            "codeName": "focal",
-            "type": "deb"
+            "image": "ci.cr.45d.io/ci/simple/ubuntu-focal:1",
+            "os_name": "ubuntu-focal",
+            "group": "ubuntu"
         },
         {
-            "image": "cephgeorep-ubuntu-bionic-builder",
-            "codeName": "bionic",
-            "type": "deb"
+            "image": "ci.cr.45d.io/ci/simple/ubuntu-bionic:1",
+            "os_name": "ubuntu-bionic",
+            "group": "ubuntu"
         },
         {
-            "image": "cephgeorep-rocky-el8-builder",
-            "codeName": "el8",
-            "type": "el"
+            "image": "ci.cr.45d.io/ci/simple/rocky-el8:1",
+            "os_name": "rocky-el8",
+            "group": "rocky"
         },
         {
-            "image": "cephgeorep-centos-el7-builder",
-            "codeName": "el7",
-            "type": "el"
+            "image": "ci.cr.45d.io/ci/simple/rocky-el7:1",
+            "os_name": "rocky-el7",
+            "group": "rocky"
         }
+    ],
+    "repos": [
+        "community",
+        "enterprise"
     ],
     "changelog": {
         "urgency": "medium",

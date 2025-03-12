@@ -1,22 +1,20 @@
 %global debug_package %{nil}
 
-Name: ::package_name::
-Version: ::package_version::
-Release: ::package_build_version::%{?dist}
-Summary: ::package_description_short::
-License: ::package_licence::
-URL: ::package_url::
+Name: {{ name }}
+Version: {{ version }}
+Release: {{ build_number }}%{?dist}
+Summary: {{ description }}
+License: {{ licence }}
+URL: {{ git_url }}
 Source0: %{name}-%{version}.tar.gz
-BuildArch: ::package_architecture_el::
+BuildArch: {{ architecture.rocky }}
+
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
-::package_title::
-::package_description_long::
-
-%prep
-%setup -q
+{{ title }}
+{{ description }}
 
 %build
 make -j$(nproc) EXTRA_CFLAGS="-DMEM_LIM_HEADROOM=4096"
