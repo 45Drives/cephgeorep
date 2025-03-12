@@ -4,7 +4,7 @@
     "title": "Cephgeorep",
     "stable": false,
     "version": "1.2.13",
-    "buildVersion": "3",
+    "build_number": "3",
     "author": "Josh Boudreau <jboudreau@45drives.com>",
     "git_url": "https://github.com/45Drives/cephgeorep",
     "license": "GPL-3.0+",
