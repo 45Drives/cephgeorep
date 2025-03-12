@@ -32,7 +32,7 @@
             "group": "ubuntu"
         },
         {
-            "image": "ci.cr.45d.io/ci/simple/ubuntu-bionic:1",
+            "image": "cephgeorep-ubuntu-bionic-builder",
             "os_name": "ubuntu-bionic",
             "group": "ubuntu"
         },
@@ -42,7 +42,7 @@
             "group": "rocky"
         },
         {
-            "image": "ci.cr.45d.io/ci/simple/rocky-el7:1",
+            "image": "cephgeorep-centos-el7-builder",
             "os_name": "rocky-el7",
             "group": "rocky"
         }
